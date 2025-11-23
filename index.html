@@ -14,7 +14,6 @@
     }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
     
-    /* Header */
     .header {
       background: white;
       padding: 20px;
@@ -40,7 +39,6 @@
     .header-title h1 { color: #c35a3f; font-size: 24px; font-weight: 700; }
     .header-title p { color: #666; font-size: 14px; }
     
-    /* Tabs */
     .tabs {
       background: white;
       border-radius: 10px 10px 0 0;
@@ -50,7 +48,7 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     .tab {
-      padding: 12px 24px;
+      padding: 12px 20px;
       border: none;
       background: transparent;
       color: #666;
@@ -68,7 +66,6 @@
       box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
     }
     
-    /* Main card */
     .main-card {
       background: white;
       border-radius: 0 10px 10px 10px;
@@ -100,25 +97,13 @@
       gap: 8px;
       transition: all 0.3s;
     }
-    .btn-primary {
-      background: #c35a3f;
-      color: white;
-    }
+    .btn-primary { background: #c35a3f; color: white; }
     .btn-primary:hover { background: #a84a33; }
-    .btn-secondary {
-      background: #f0f0f0;
-      color: #333;
-    }
+    .btn-secondary { background: #f0f0f0; color: #333; }
     .btn-secondary:hover { background: #e0e0e0; }
-    .btn-success {
-      background: #10b981;
-      color: white;
-    }
+    .btn-success { background: #10b981; color: white; }
     .btn-success:hover { background: #059669; }
-    .btn-small {
-      padding: 8px 16px;
-      font-size: 13px;
-    }
+    .btn-small { padding: 8px 16px; font-size: 13px; }
     
     .search-box {
       position: relative;
@@ -169,7 +154,8 @@
       margin-bottom: 5px;
     }
     .form-group input,
-    .form-group select {
+    .form-group select,
+    .form-group textarea {
       width: 100%;
       padding: 10px;
       border: 1px solid #ddd;
@@ -177,13 +163,16 @@
       font-family: 'Montserrat', sans-serif;
       font-size: 14px;
     }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
     .form-actions {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
     }
     
-    /* Ingredientes de receta */
     .ingredientes-receta {
       margin-bottom: 20px;
       padding: 20px;
@@ -221,6 +210,51 @@
       border-radius: 4px;
       cursor: pointer;
       font-size: 13px;
+    }
+    
+    /* Selector de ingredientes para proveedor */
+    .selector-ingredientes {
+      margin-bottom: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+    .selector-ingredientes h4 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .ingredientes-disponibles {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 10px;
+      background: #f9f9f9;
+    }
+    .ingrediente-checkbox {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .ingrediente-checkbox:hover {
+      background: #f0f0f0;
+    }
+    .ingrediente-checkbox input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+    .ingrediente-checkbox label {
+      cursor: pointer;
+      flex: 1;
+      margin: 0;
     }
     
     .coste-calculado {
@@ -289,6 +323,7 @@
     .icon-btn.edit { color: #c35a3f; }
     .icon-btn.delete { color: #dc2626; }
     .icon-btn.produce { color: #10b981; }
+    .icon-btn.view { color: #3b82f6; }
     
     .empty-state {
       text-align: center;
@@ -317,6 +352,7 @@
     }
     .badge-success { background: #d1fae5; color: #059669; }
     .badge-warning { background: #fef3c7; color: #d97706; }
+    .badge-info { background: #dbeafe; color: #2563eb; }
     
     .summary {
       margin-top: 20px;
@@ -340,7 +376,6 @@
       line-height: 1;
     }
     
-    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -358,19 +393,32 @@
       background: white;
       padding: 30px;
       border-radius: 10px;
-      max-width: 500px;
+      max-width: 600px;
       width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
     }
     .modal-content h3 {
       font-size: 22px;
       color: #333;
       margin-bottom: 20px;
     }
+    
+    .ingredientes-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .ingredientes-list .badge {
+      background: #f0f0f0;
+      color: #333;
+      padding: 6px 12px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <!-- Header -->
     <div class="header">
       <div class="logo-circle">LC</div>
       <div class="header-title">
@@ -379,13 +427,12 @@
       </div>
     </div>
 
-    <!-- Tabs -->
     <div class="tabs">
       <button id="tab-btn-ingredientes" class="tab active" onclick="window.cambiarTab('ingredientes')">📦 Ingredientes</button>
       <button id="tab-btn-recetas" class="tab" onclick="window.cambiarTab('recetas')">👨‍🍳 Recetas</button>
+      <button id="tab-btn-proveedores" class="tab" onclick="window.cambiarTab('proveedores')">🚚 Proveedores</button>
     </div>
 
-    <!-- Main Card -->
     <div class="main-card">
       
       <!-- TAB: INGREDIENTES -->
@@ -423,7 +470,9 @@
               </div>
               <div class="form-group">
                 <label>Proveedor</label>
-                <input type="text" id="ing-proveedor" placeholder="Ej: Mercabarna">
+                <select id="ing-proveedor-select">
+                  <option value="">Sin proveedor</option>
+                </select>
               </div>
               <div class="form-group">
                 <label>Precio (€)</label>
@@ -451,9 +500,6 @@
             <div class="form-actions">
               <button type="button" class="btn btn-secondary" onclick="window.cerrarFormularioIngrediente()">Cancelar</button>
               <button type="submit" class="btn btn-primary">
-                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                </svg>
                 <span id="btn-text-ingrediente">Añadir Ingrediente</span>
               </button>
             </div>
@@ -528,9 +574,6 @@
             <div class="form-actions">
               <button type="button" class="btn btn-secondary" onclick="window.cerrarFormularioReceta()">Cancelar</button>
               <button type="submit" class="btn btn-primary">
-                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                </svg>
                 <span id="btn-text-receta">Guardar Receta</span>
               </button>
             </div>
@@ -541,10 +584,89 @@
         <div id="resumen-recetas" class="summary" style="display: none;"></div>
       </div>
 
+      <!-- TAB: PROVEEDORES -->
+      <div id="tab-proveedores" class="tab-content">
+        <div class="top-bar">
+          <div>
+            <h2>Proveedores</h2>
+            <p>Gestiona tus proveedores y sus productos</p>
+          </div>
+          <button class="btn btn-primary" onclick="window.mostrarFormularioProveedor()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Añadir Proveedor
+          </button>
+        </div>
+
+        <div class="search-box">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" id="busqueda-proveedores" placeholder="Buscar proveedores..." oninput="window.renderizarProveedores()">
+        </div>
+
+        <div id="formulario-proveedor" class="form-card" style="display: none;">
+          <h3>
+            <span id="form-title-proveedor">Nuevo Proveedor</span>
+            <button class="close-btn" onclick="window.cerrarFormularioProveedor()">×</button>
+          </h3>
+          <form onsubmit="window.guardarProveedor(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nombre del proveedor *</label>
+                <input type="text" id="prov-nombre" required placeholder="Ej: Mercabarna">
+              </div>
+              <div class="form-group">
+                <label>Persona de contacto</label>
+                <input type="text" id="prov-contacto" placeholder="Ej: Juan García">
+              </div>
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input type="tel" id="prov-telefono" placeholder="Ej: 934 123 456">
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="prov-email" placeholder="Ej: contacto@proveedor.com">
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Dirección</label>
+                <textarea id="prov-direccion" placeholder="Ej: Calle Example 123, Barcelona"></textarea>
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Notas</label>
+                <textarea id="prov-notas" placeholder="Información adicional..."></textarea>
+              </div>
+            </div>
+
+            <div class="selector-ingredientes">
+              <h4>Ingredientes que suministra</h4>
+              <div class="search-box" style="margin-bottom: 10px;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="buscar-ingredientes-proveedor" placeholder="Buscar ingredientes..." oninput="window.filtrarIngredientesProveedor()">
+              </div>
+              <div class="ingredientes-disponibles" id="lista-ingredientes-proveedor"></div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="window.cerrarFormularioProveedor()">Cancelar</button>
+              <button type="submit" class="btn btn-primary">
+                <span id="btn-text-proveedor">Añadir Proveedor</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div id="tabla-proveedores"></div>
+        <div id="resumen-proveedores" class="summary" style="display: none;"></div>
+      </div>
+
     </div>
   </div>
 
-  <!-- Modal para producir platos -->
+  <!-- Modal producir platos -->
   <div id="modal-producir" class="modal">
     <div class="modal-content">
       <h3>Producir platos</h3>
@@ -564,47 +686,61 @@
     </div>
   </div>
 
+  <!-- Modal ver ingredientes del proveedor -->
+  <div id="modal-ver-proveedor" class="modal">
+    <div class="modal-content">
+      <h3 id="modal-proveedor-titulo"></h3>
+      <div id="modal-proveedor-contenido"></div>
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="window.cerrarModalVerProveedor()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function() {
-      // ==================== DATOS ====================
       let ingredientes = [];
       let recetas = [];
+      let proveedores = [];
       let editandoIngredienteIndex = null;
       let editandoRecetaIndex = null;
+      let editandoProveedorIndex = null;
       let recetaProduciendo = null;
 
-      // ==================== INICIALIZACIÓN ====================
       function init() {
         cargarDatos();
         renderizarIngredientes();
         renderizarRecetas();
+        renderizarProveedores();
       }
 
       function cargarDatos() {
         const ingData = localStorage.getItem('lacaleta_ingredientes');
         const recData = localStorage.getItem('lacaleta_recetas');
+        const provData = localStorage.getItem('lacaleta_proveedores');
         if (ingData) ingredientes = JSON.parse(ingData);
         if (recData) recetas = JSON.parse(recData);
+        if (provData) proveedores = JSON.parse(provData);
       }
 
       function guardarDatos() {
         localStorage.setItem('lacaleta_ingredientes', JSON.stringify(ingredientes));
         localStorage.setItem('lacaleta_recetas', JSON.stringify(recetas));
+        localStorage.setItem('lacaleta_proveedores', JSON.stringify(proveedores));
       }
 
       // ==================== TABS ====================
       window.cambiarTab = function(tab) {
-        // Desactivar todas las pestañas y contenidos
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         
-        // Activar la pestaña y contenido específicos
         document.getElementById('tab-btn-' + tab).classList.add('active');
         document.getElementById('tab-' + tab).classList.add('active');
       };
 
       // ==================== INGREDIENTES ====================
       window.mostrarFormularioIngrediente = function() {
+        actualizarSelectProveedores();
         document.getElementById('formulario-ingrediente').style.display = 'block';
         document.getElementById('ing-nombre').focus();
       };
@@ -617,12 +753,22 @@
         document.getElementById('btn-text-ingrediente').textContent = 'Añadir Ingrediente';
       };
 
+      function actualizarSelectProveedores() {
+        const select = document.getElementById('ing-proveedor-select');
+        select.innerHTML = '<option value="">Sin proveedor</option>';
+        proveedores.forEach((prov, idx) => {
+          select.innerHTML += `<option value="${prov.id}">${prov.nombre}</option>`;
+        });
+      }
+
       window.guardarIngrediente = function(event) {
         event.preventDefault();
         
+        const proveedorId = document.getElementById('ing-proveedor-select').value;
+        
         const ingrediente = {
           nombre: document.getElementById('ing-nombre').value,
-          proveedor: document.getElementById('ing-proveedor').value,
+          proveedorId: proveedorId || null,
           precio: parseFloat(document.getElementById('ing-precio').value) || 0,
           unidad: document.getElementById('ing-unidad').value,
           stockActual: parseFloat(document.getElementById('ing-stockActual').value) || 0,
@@ -643,8 +789,9 @@
 
       window.editarIngrediente = function(index) {
         const ing = ingredientes[index];
+        actualizarSelectProveedores();
         document.getElementById('ing-nombre').value = ing.nombre;
-        document.getElementById('ing-proveedor').value = ing.proveedor || '';
+        document.getElementById('ing-proveedor-select').value = ing.proveedorId || '';
         document.getElementById('ing-precio').value = ing.precio || '';
         document.getElementById('ing-unidad').value = ing.unidad;
         document.getElementById('ing-stockActual').value = ing.stockActual || '';
@@ -664,12 +811,18 @@
         }
       };
 
+      function getNombreProveedor(proveedorId) {
+        if (!proveedorId) return '-';
+        const prov = proveedores.find(p => p.id == proveedorId);
+        return prov ? prov.nombre : '-';
+      }
+
       window.renderizarIngredientes = function() {
         const busqueda = document.getElementById('busqueda-ingredientes').value.toLowerCase();
-        const filtrados = ingredientes.filter(ing => 
-          ing.nombre.toLowerCase().includes(busqueda) ||
-          (ing.proveedor && ing.proveedor.toLowerCase().includes(busqueda))
-        );
+        const filtrados = ingredientes.filter(ing => {
+          const nombreProv = getNombreProveedor(ing.proveedorId).toLowerCase();
+          return ing.nombre.toLowerCase().includes(busqueda) || nombreProv.includes(busqueda);
+        });
 
         const container = document.getElementById('tabla-ingredientes');
         
@@ -693,7 +846,7 @@
             
             html += '<tr>';
             html += `<td><strong>${ing.nombre}</strong></td>`;
-            html += `<td>${ing.proveedor || '-'}</td>`;
+            html += `<td>${getNombreProveedor(ing.proveedorId)}</td>`;
             html += `<td>${ing.precio ? ing.precio.toFixed(2) + ' €/' + ing.unidad : '-'}</td>`;
             html += `<td>`;
             if (ing.stockActual) {
@@ -704,12 +857,8 @@
             }
             html += `</td>`;
             html += `<td><div class="actions">`;
-            html += `<button class="icon-btn edit" onclick="window.editarIngrediente(${realIndex})" title="Editar">`;
-            html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-            html += '</button>';
-            html += `<button class="icon-btn delete" onclick="window.eliminarIngrediente(${realIndex})" title="Eliminar">`;
-            html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
-            html += '</button>';
+            html += `<button class="icon-btn edit" onclick="window.editarIngrediente(${realIndex})" title="Editar">✏️</button>`;
+            html += `<button class="icon-btn delete" onclick="window.eliminarIngrediente(${realIndex})" title="Eliminar">🗑️</button>`;
             html += '</div></td>';
             html += '</tr>';
           });
@@ -725,10 +874,10 @@
         }
       };
 
-      // ==================== RECETAS ====================
+      // ==================== RECETAS (código existente, simplificado) ====================
       window.mostrarFormularioReceta = function() {
         if (ingredientes.length === 0) {
-          alert('Primero debes añadir ingredientes antes de crear recetas');
+          alert('Primero debes añadir ingredientes');
           window.cambiarTab('ingredientes');
           window.mostrarFormularioIngrediente();
           return;
@@ -753,13 +902,13 @@
         const div = document.createElement('div');
         div.className = 'ingrediente-item';
         
-        let opcionesIngredientes = '<option value="">Seleccionar ingrediente...</option>';
+        let opciones = '<option value="">Seleccionar...</option>';
         ingredientes.forEach((ing, idx) => {
-          opcionesIngredientes += `<option value="${idx}">${ing.nombre} (${ing.unidad})</option>`;
+          opciones += `<option value="${idx}">${ing.nombre} (${ing.unidad})</option>`;
         });
         
         div.innerHTML = `
-          <select onchange="window.calcularCosteReceta()">${opcionesIngredientes}</select>
+          <select onchange="window.calcularCosteReceta()">${opciones}</select>
           <input type="number" placeholder="Cantidad" step="0.01" min="0" oninput="window.calcularCosteReceta()">
           <span style="font-size: 12px; color: #666;"></span>
           <button type="button" onclick="this.parentElement.remove(); window.calcularCosteReceta()">Quitar</button>
@@ -798,18 +947,9 @@
           document.getElementById('coste-calculado-form').style.display = 'block';
           document.getElementById('coste-calculado-form').innerHTML = `
             <h4>💰 Cálculo de costes</h4>
-            <div class="coste-row">
-              <span>Coste de ingredientes:</span>
-              <strong>${costeTotal.toFixed(2)} €</strong>
-            </div>
-            <div class="coste-row">
-              <span>Precio de venta:</span>
-              <strong>${precioVenta.toFixed(2)} €</strong>
-            </div>
-            <div class="coste-row">
-              <span>Margen:</span>
-              <strong>${margen.toFixed(2)} € (${margenPct}%)</strong>
-            </div>
+            <div class="coste-row"><span>Coste de ingredientes:</span><strong>${costeTotal.toFixed(2)} €</strong></div>
+            <div class="coste-row"><span>Precio de venta:</span><strong>${precioVenta.toFixed(2)} €</strong></div>
+            <div class="coste-row"><span>Margen:</span><strong>${margen.toFixed(2)} € (${margenPct}%)</strong></div>
           `;
         } else {
           document.getElementById('coste-calculado-form').style.display = 'none';
@@ -834,7 +974,7 @@
         });
 
         if (ingredientesReceta.length === 0) {
-          alert('Debes añadir al menos un ingrediente a la receta');
+          alert('Añade al menos un ingrediente');
           return;
         }
 
@@ -883,7 +1023,7 @@
       };
 
       window.eliminarReceta = function(index) {
-        if (confirm('¿Estás seguro de eliminar esta receta?')) {
+        if (confirm('¿Eliminar esta receta?')) {
           recetas.splice(index, 1);
           guardarDatos();
           renderizarRecetas();
@@ -891,21 +1031,17 @@
       };
 
       function calcularCosteRecetaCompleto(receta) {
-        let costeTotal = 0;
+        let total = 0;
         receta.ingredientes.forEach(item => {
           const ing = ingredientes.find(i => i.id === item.ingredienteId);
-          if (ing) {
-            costeTotal += ing.precio * item.cantidad;
-          }
+          if (ing) total += ing.precio * item.cantidad;
         });
-        return costeTotal;
+        return total;
       }
 
       window.renderizarRecetas = function() {
         const busqueda = document.getElementById('busqueda-recetas').value.toLowerCase();
-        const filtradas = recetas.filter(rec => 
-          rec.nombre.toLowerCase().includes(busqueda)
-        );
+        const filtradas = recetas.filter(r => r.nombre.toLowerCase().includes(busqueda));
 
         const container = document.getElementById('tabla-recetas');
         
@@ -914,37 +1050,31 @@
             <div class="empty-state">
               <div class="icon">👨‍🍳</div>
               <h3>${busqueda ? 'No se encontraron recetas' : 'Aún no hay recetas'}</h3>
-              <p>${busqueda ? 'Intenta con otra búsqueda' : 'Crea tu primera receta para comenzar'}</p>
+              <p>${busqueda ? 'Intenta otra búsqueda' : 'Crea tu primera receta'}</p>
             </div>
           `;
           document.getElementById('resumen-recetas').style.display = 'none';
         } else {
           let html = '<table><thead><tr>';
-          html += '<th>Plato</th><th>Categoría</th><th>Coste</th><th>Precio Venta</th><th>Margen</th><th style="text-align: right;">Acciones</th>';
+          html += '<th>Plato</th><th>Categoría</th><th>Coste</th><th>Precio</th><th>Margen</th><th>Acciones</th>';
           html += '</tr></thead><tbody>';
 
           filtradas.forEach(rec => {
             const realIndex = recetas.indexOf(rec);
             const coste = calcularCosteRecetaCompleto(rec);
             const margen = rec.precioVenta - coste;
-            const margenPct = rec.precioVenta > 0 ? ((margen / rec.precioVenta) * 100).toFixed(0) : 0;
+            const pct = rec.precioVenta > 0 ? ((margen/rec.precioVenta)*100).toFixed(0) : 0;
             
             html += '<tr>';
             html += `<td><strong>${rec.nombre}</strong></td>`;
             html += `<td><span class="badge badge-success">${rec.categoria}</span></td>`;
             html += `<td>${coste.toFixed(2)} €</td>`;
             html += `<td>${rec.precioVenta.toFixed(2)} €</td>`;
-            html += `<td><span class="badge ${margen > 0 ? 'badge-success' : 'badge-warning'}">${margen.toFixed(2)} € (${margenPct}%)</span></td>`;
+            html += `<td><span class="badge ${margen>0?'badge-success':'badge-warning'}">${margen.toFixed(2)} € (${pct}%)</span></td>`;
             html += `<td><div class="actions">`;
-            html += `<button class="icon-btn produce" onclick="window.abrirModalProducir(${realIndex})" title="Producir platos">`;
-            html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
-            html += '</button>';
-            html += `<button class="icon-btn edit" onclick="window.editarReceta(${realIndex})" title="Editar">`;
-            html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-            html += '</button>';
-            html += `<button class="icon-btn delete" onclick="window.eliminarReceta(${realIndex})" title="Eliminar">`;
-            html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
-            html += '</button>';
+            html += `<button class="icon-btn produce" onclick="window.abrirModalProducir(${realIndex})" title="Producir">⬇️</button>`;
+            html += `<button class="icon-btn edit" onclick="window.editarReceta(${realIndex})" title="Editar">✏️</button>`;
+            html += `<button class="icon-btn delete" onclick="window.eliminarReceta(${realIndex})" title="Eliminar">🗑️</button>`;
             html += '</div></td>';
             html += '</tr>';
           });
@@ -953,7 +1083,7 @@
           container.innerHTML = html;
 
           document.getElementById('resumen-recetas').innerHTML = `
-            <div>Total de recetas: <strong>${recetas.length}</strong></div>
+            <div>Total: <strong>${recetas.length}</strong></div>
             <div>Mostrando: <strong>${filtradas.length}</strong></div>
           `;
           document.getElementById('resumen-recetas').style.display = 'flex';
@@ -963,8 +1093,8 @@
       // ==================== PRODUCCIÓN ====================
       window.abrirModalProducir = function(index) {
         recetaProduciendo = index;
-        const receta = recetas[index];
-        document.getElementById('modal-plato-nombre').textContent = receta.nombre;
+        const rec = recetas[index];
+        document.getElementById('modal-plato-nombre').textContent = rec.nombre;
         document.getElementById('modal-cantidad').value = 1;
         window.actualizarDetalleDescuento();
         document.getElementById('modal-producir').classList.add('active');
@@ -977,54 +1107,46 @@
 
       window.actualizarDetalleDescuento = function() {
         if (recetaProduciendo === null) return;
-        
-        const cantidad = parseInt(document.getElementById('modal-cantidad').value) || 1;
-        const receta = recetas[recetaProduciendo];
-        let html = '<ul style="margin: 0; padding-left: 20px;">';
-        
-        receta.ingredientes.forEach(item => {
+        const cant = parseInt(document.getElementById('modal-cantidad').value) || 1;
+        const rec = recetas[recetaProduciendo];
+        let html = '<ul style="margin:0;padding-left:20px;">';
+        rec.ingredientes.forEach(item => {
           const ing = ingredientes.find(i => i.id === item.ingredienteId);
           if (ing) {
-            const descuento = item.cantidad * cantidad;
-            html += `<li>${ing.nombre}: -${descuento} ${ing.unidad}</li>`;
+            html += `<li>${ing.nombre}: -${item.cantidad*cant} ${ing.unidad}</li>`;
           }
         });
-        
         html += '</ul>';
         document.getElementById('modal-descuento-detalle').innerHTML = html;
       };
 
       window.confirmarProduccion = function() {
         if (recetaProduciendo === null) return;
+        const cant = parseInt(document.getElementById('modal-cantidad').value) || 1;
+        const rec = recetas[recetaProduciendo];
         
-        const cantidad = parseInt(document.getElementById('modal-cantidad').value) || 1;
-        const receta = recetas[recetaProduciendo];
-        
-        // Verificar que hay suficiente stock
-        let faltaStock = false;
-        let mensajeError = 'No hay suficiente stock de:\n';
-        
-        receta.ingredientes.forEach(item => {
+        let falta = false;
+        let msg = 'Stock insuficiente:\n';
+        rec.ingredientes.forEach(item => {
           const ing = ingredientes.find(i => i.id === item.ingredienteId);
           if (ing) {
-            const necesario = item.cantidad * cantidad;
+            const necesario = item.cantidad * cant;
             if (ing.stockActual < necesario) {
-              faltaStock = true;
-              mensajeError += `- ${ing.nombre}: necesitas ${necesario} ${ing.unidad}, tienes ${ing.stockActual} ${ing.unidad}\n`;
+              falta = true;
+              msg += `- ${ing.nombre}: necesitas ${necesario}, tienes ${ing.stockActual}\n`;
             }
           }
         });
         
-        if (faltaStock) {
-          alert(mensajeError);
+        if (falta) {
+          alert(msg);
           return;
         }
         
-        // Descontar del stock
-        receta.ingredientes.forEach(item => {
+        rec.ingredientes.forEach(item => {
           const ing = ingredientes.find(i => i.id === item.ingredienteId);
           if (ing) {
-            ing.stockActual -= item.cantidad * cantidad;
+            ing.stockActual -= item.cantidad * cant;
             ing.stockActual = Math.max(0, ing.stockActual);
           }
         });
@@ -1032,10 +1154,190 @@
         guardarDatos();
         renderizarIngredientes();
         window.cerrarModalProducir();
-        alert(`✅ Se han producido ${cantidad} unidades de ${receta.nombre}\n\nEl stock se ha actualizado automáticamente.`);
+        alert(`✅ Producidas ${cant} unidades de ${rec.nombre}`);
       };
 
-      // ==================== INICIO ====================
+      // ==================== PROVEEDORES ====================
+      window.mostrarFormularioProveedor = function() {
+        document.getElementById('formulario-proveedor').style.display = 'block';
+        cargarIngredientesProveedor();
+        document.getElementById('prov-nombre').focus();
+      };
+
+      window.cerrarFormularioProveedor = function() {
+        document.getElementById('formulario-proveedor').style.display = 'none';
+        document.querySelector('#formulario-proveedor form').reset();
+        editandoProveedorIndex = null;
+        document.getElementById('form-title-proveedor').textContent = 'Nuevo Proveedor';
+        document.getElementById('btn-text-proveedor').textContent = 'Añadir Proveedor';
+      };
+
+      function cargarIngredientesProveedor(ingredientesSeleccionados = []) {
+        const container = document.getElementById('lista-ingredientes-proveedor');
+        if (ingredientes.length === 0) {
+          container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Primero añade ingredientes</p>';
+          return;
+        }
+
+        const busqueda = document.getElementById('buscar-ingredientes-proveedor').value.toLowerCase();
+        const filtrados = ingredientes.filter(ing => ing.nombre.toLowerCase().includes(busqueda));
+
+        let html = '';
+        filtrados.forEach(ing => {
+          const checked = ingredientesSeleccionados.includes(ing.id) ? 'checked' : '';
+          html += `
+            <div class="ingrediente-checkbox">
+              <input type="checkbox" id="check-ing-${ing.id}" value="${ing.id}" ${checked}>
+              <label for="check-ing-${ing.id}">${ing.nombre} (${ing.unidad})</label>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html || '<p style="color:#999;padding:10px;">No hay resultados</p>';
+      }
+
+      window.filtrarIngredientesProveedor = function() {
+        const checks = document.querySelectorAll('#lista-ingredientes-proveedor input[type="checkbox"]:checked');
+        const seleccionados = Array.from(checks).map(c => parseInt(c.value));
+        cargarIngredientesProveedor(seleccionados);
+      };
+
+      window.guardarProveedor = function(event) {
+        event.preventDefault();
+
+        const checks = document.querySelectorAll('#lista-ingredientes-proveedor input[type="checkbox"]:checked');
+        const ingredientesIds = Array.from(checks).map(c => parseInt(c.value));
+
+        const proveedor = {
+          nombre: document.getElementById('prov-nombre').value,
+          contacto: document.getElementById('prov-contacto').value,
+          telefono: document.getElementById('prov-telefono').value,
+          email: document.getElementById('prov-email').value,
+          direccion: document.getElementById('prov-direccion').value,
+          notas: document.getElementById('prov-notas').value,
+          ingredientes: ingredientesIds,
+          id: editandoProveedorIndex !== null ? proveedores[editandoProveedorIndex].id : Date.now()
+        };
+
+        if (editandoProveedorIndex !== null) {
+          proveedores[editandoProveedorIndex] = proveedor;
+        } else {
+          proveedores.push(proveedor);
+        }
+
+        guardarDatos();
+        renderizarProveedores();
+        window.cerrarFormularioProveedor();
+      };
+
+      window.editarProveedor = function(index) {
+        const prov = proveedores[index];
+        document.getElementById('prov-nombre').value = prov.nombre;
+        document.getElementById('prov-contacto').value = prov.contacto || '';
+        document.getElementById('prov-telefono').value = prov.telefono || '';
+        document.getElementById('prov-email').value = prov.email || '';
+        document.getElementById('prov-direccion').value = prov.direccion || '';
+        document.getElementById('prov-notas').value = prov.notas || '';
+        
+        cargarIngredientesProveedor(prov.ingredientes || []);
+        
+        editandoProveedorIndex = index;
+        document.getElementById('form-title-proveedor').textContent = 'Editar Proveedor';
+        document.getElementById('btn-text-proveedor').textContent = 'Guardar Cambios';
+        window.mostrarFormularioProveedor();
+      };
+
+      window.eliminarProveedor = function(index) {
+        if (confirm('¿Eliminar este proveedor?')) {
+          proveedores.splice(index, 1);
+          guardarDatos();
+          renderizarProveedores();
+          renderizarIngredientes();
+        }
+      };
+
+      window.verProveedorDetalles = function(index) {
+        const prov = proveedores[index];
+        document.getElementById('modal-proveedor-titulo').textContent = prov.nombre;
+        
+        let html = '<div style="margin-bottom:20px;">';
+        if (prov.contacto) html += `<p><strong>Contacto:</strong> ${prov.contacto}</p>`;
+        if (prov.telefono) html += `<p><strong>Teléfono:</strong> ${prov.telefono}</p>`;
+        if (prov.email) html += `<p><strong>Email:</strong> ${prov.email}</p>`;
+        if (prov.direccion) html += `<p><strong>Dirección:</strong> ${prov.direccion}</p>`;
+        if (prov.notas) html += `<p><strong>Notas:</strong> ${prov.notas}</p>`;
+        html += '</div>';
+
+        html += '<h4 style="margin-top:20px;margin-bottom:10px;">Ingredientes que suministra:</h4>';
+        if (prov.ingredientes && prov.ingredientes.length > 0) {
+          html += '<div class="ingredientes-list">';
+          prov.ingredientes.forEach(ingId => {
+            const ing = ingredientes.find(i => i.id === ingId);
+            if (ing) {
+              html += `<span class="badge">${ing.nombre}</span>`;
+            }
+          });
+          html += '</div>';
+        } else {
+          html += '<p style="color:#999;">No tiene ingredientes asignados</p>';
+        }
+
+        document.getElementById('modal-proveedor-contenido').innerHTML = html;
+        document.getElementById('modal-ver-proveedor').classList.add('active');
+      };
+
+      window.cerrarModalVerProveedor = function() {
+        document.getElementById('modal-ver-proveedor').classList.remove('active');
+      };
+
+      window.renderizarProveedores = function() {
+        const busqueda = document.getElementById('busqueda-proveedores').value.toLowerCase();
+        const filtrados = proveedores.filter(p => p.nombre.toLowerCase().includes(busqueda));
+
+        const container = document.getElementById('tabla-proveedores');
+        
+        if (filtrados.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">🚚</div>
+              <h3>${busqueda ? 'No se encontraron proveedores' : 'Aún no hay proveedores'}</h3>
+              <p>${busqueda ? 'Intenta otra búsqueda' : 'Añade tu primer proveedor'}</p>
+            </div>
+          `;
+          document.getElementById('resumen-proveedores').style.display = 'none';
+        } else {
+          let html = '<table><thead><tr>';
+          html += '<th>Proveedor</th><th>Contacto</th><th>Teléfono</th><th>Ingredientes</th><th>Acciones</th>';
+          html += '</tr></thead><tbody>';
+
+          filtrados.forEach(prov => {
+            const realIndex = proveedores.indexOf(prov);
+            const numIng = prov.ingredientes ? prov.ingredientes.length : 0;
+            
+            html += '<tr>';
+            html += `<td><strong>${prov.nombre}</strong></td>`;
+            html += `<td>${prov.contacto || '-'}</td>`;
+            html += `<td>${prov.telefono || '-'}</td>`;
+            html += `<td><span class="badge badge-info">${numIng} ingrediente${numIng!==1?'s':''}</span></td>`;
+            html += `<td><div class="actions">`;
+            html += `<button class="icon-btn view" onclick="window.verProveedorDetalles(${realIndex})" title="Ver detalles">👁️</button>`;
+            html += `<button class="icon-btn edit" onclick="window.editarProveedor(${realIndex})" title="Editar">✏️</button>`;
+            html += `<button class="icon-btn delete" onclick="window.eliminarProveedor(${realIndex})" title="Eliminar">🗑️</button>`;
+            html += '</div></td>';
+            html += '</tr>';
+          });
+
+          html += '</tbody></table>';
+          container.innerHTML = html;
+
+          document.getElementById('resumen-proveedores').innerHTML = `
+            <div>Total: <strong>${proveedores.length}</strong></div>
+            <div>Mostrando: <strong>${filtrados.length}</strong></div>
+          `;
+          document.getElementById('resumen-proveedores').style.display = 'flex';
+        }
+      };
+
       init();
     })();
   </script>
