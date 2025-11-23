@@ -13,6 +13,8 @@
       min-height: 100vh;
     }
     .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    
+    /* Header */
     .header {
       background: white;
       padding: 20px;
@@ -38,12 +40,44 @@
     .header-title h1 { color: #c35a3f; font-size: 24px; font-weight: 700; }
     .header-title p { color: #666; font-size: 14px; }
     
+    /* Tabs */
+    .tabs {
+      background: white;
+      border-radius: 10px 10px 0 0;
+      display: flex;
+      gap: 5px;
+      padding: 10px 10px 0;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .tab {
+      padding: 12px 24px;
+      border: none;
+      background: transparent;
+      color: #666;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 8px 8px 0 0;
+      transition: all 0.3s;
+    }
+    .tab:hover { background: #f5f5f5; }
+    .tab.active {
+      background: white;
+      color: #c35a3f;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+    }
+    
+    /* Main card */
     .main-card {
       background: white;
-      border-radius: 10px;
+      border-radius: 0 10px 10px 10px;
       padding: 30px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
     
     .top-bar {
       display: flex;
@@ -76,6 +110,15 @@
       color: #333;
     }
     .btn-secondary:hover { background: #e0e0e0; }
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+    .btn-success:hover { background: #059669; }
+    .btn-small {
+      padding: 8px 16px;
+      font-size: 13px;
+    }
     
     .search-box {
       position: relative;
@@ -140,6 +183,72 @@
       gap: 10px;
     }
     
+    /* Ingredientes de receta */
+    .ingredientes-receta {
+      margin-bottom: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+    .ingredientes-receta h4 {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 15px;
+    }
+    .ingrediente-item {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+    .ingrediente-item select,
+    .ingrediente-item input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .ingrediente-item button {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    .coste-calculado {
+      background: #f0fdf4;
+      border: 2px solid #10b981;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .coste-calculado h4 {
+      color: #059669;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    .coste-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #d1fae5;
+    }
+    .coste-row:last-child {
+      border-bottom: none;
+      font-weight: 700;
+      font-size: 18px;
+      color: #059669;
+      padding-top: 15px;
+    }
+    
     table {
       width: 100%;
       border-collapse: collapse;
@@ -179,6 +288,7 @@
     .icon-btn:hover { transform: scale(1.1); }
     .icon-btn.edit { color: #c35a3f; }
     .icon-btn.delete { color: #dc2626; }
+    .icon-btn.produce { color: #10b981; }
     
     .empty-state {
       text-align: center;
@@ -197,6 +307,16 @@
     }
     .stock-low { background: #fee; color: #c00; }
     .stock-ok { background: #efe; color: #060; }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-success { background: #d1fae5; color: #059669; }
+    .badge-warning { background: #fef3c7; color: #d97706; }
     
     .summary {
       margin-top: 20px;
@@ -219,6 +339,33 @@
       padding: 0;
       line-height: 1;
     }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 90%;
+    }
+    .modal-content h3 {
+      font-size: 22px;
+      color: #333;
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
@@ -228,252 +375,669 @@
       <div class="logo-circle">LC</div>
       <div class="header-title">
         <h1>La Caleta 102</h1>
-        <p>Dashboard de Costes - Ingredientes</p>
+        <p>Dashboard de Costes</p>
       </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button id="tab-btn-ingredientes" class="tab active" onclick="window.cambiarTab('ingredientes')">📦 Ingredientes</button>
+      <button id="tab-btn-recetas" class="tab" onclick="window.cambiarTab('recetas')">👨‍🍳 Recetas</button>
     </div>
 
     <!-- Main Card -->
     <div class="main-card">
-      <div class="top-bar">
-        <div>
-          <h2>Ingredientes</h2>
-          <p>Gestiona todos los ingredientes de tu restaurante</p>
+      
+      <!-- TAB: INGREDIENTES -->
+      <div id="tab-ingredientes" class="tab-content active">
+        <div class="top-bar">
+          <div>
+            <h2>Ingredientes</h2>
+            <p>Gestiona todos los ingredientes de tu restaurante</p>
+          </div>
+          <button class="btn btn-primary" onclick="window.mostrarFormularioIngrediente()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Añadir Ingrediente
+          </button>
         </div>
-        <button class="btn btn-primary" onclick="mostrarFormulario()">
+
+        <div class="search-box">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
-          Añadir Ingrediente
-        </button>
+          <input type="text" id="busqueda-ingredientes" placeholder="Buscar ingredientes o proveedores..." oninput="window.renderizarIngredientes()">
+        </div>
+
+        <div id="formulario-ingrediente" class="form-card" style="display: none;">
+          <h3>
+            <span id="form-title-ingrediente">Nuevo Ingrediente</span>
+            <button class="close-btn" onclick="window.cerrarFormularioIngrediente()">×</button>
+          </h3>
+          <form onsubmit="window.guardarIngrediente(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nombre del ingrediente *</label>
+                <input type="text" id="ing-nombre" required placeholder="Ej: Tomate">
+              </div>
+              <div class="form-group">
+                <label>Proveedor</label>
+                <input type="text" id="ing-proveedor" placeholder="Ej: Mercabarna">
+              </div>
+              <div class="form-group">
+                <label>Precio (€)</label>
+                <input type="number" id="ing-precio" step="0.01" min="0" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Unidad de medida</label>
+                <select id="ing-unidad">
+                  <option value="kg">Kilogramos (kg)</option>
+                  <option value="g">Gramos (g)</option>
+                  <option value="l">Litros (L)</option>
+                  <option value="ml">Mililitros (ml)</option>
+                  <option value="unidad">Unidades</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Stock actual</label>
+                <input type="number" id="ing-stockActual" step="0.01" min="0" placeholder="0">
+              </div>
+              <div class="form-group">
+                <label>Stock mínimo</label>
+                <input type="number" id="ing-stockMinimo" step="0.01" min="0" placeholder="0">
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="window.cerrarFormularioIngrediente()">Cancelar</button>
+              <button type="submit" class="btn btn-primary">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                </svg>
+                <span id="btn-text-ingrediente">Añadir Ingrediente</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div id="tabla-ingredientes"></div>
+        <div id="resumen-ingredientes" class="summary" style="display: none;"></div>
       </div>
 
-      <!-- Barra búsqueda -->
-      <div class="search-box">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="text" id="busqueda" placeholder="Buscar ingredientes o proveedores..." oninput="filtrarIngredientes()">
-      </div>
-
-      <!-- Formulario -->
-      <div id="formulario" class="form-card" style="display: none;">
-        <h3>
-          <span id="form-title">Nuevo Ingrediente</span>
-          <button class="close-btn" onclick="cerrarFormulario()">×</button>
-        </h3>
-        <form onsubmit="guardarIngrediente(event)">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Nombre del ingrediente *</label>
-              <input type="text" id="nombre" required placeholder="Ej: Tomate">
-            </div>
-            <div class="form-group">
-              <label>Proveedor</label>
-              <input type="text" id="proveedor" placeholder="Ej: Mercabarna">
-            </div>
-            <div class="form-group">
-              <label>Precio (€)</label>
-              <input type="number" id="precio" step="0.01" min="0" placeholder="0.00">
-            </div>
-            <div class="form-group">
-              <label>Unidad de medida</label>
-              <select id="unidad">
-                <option value="kg">Kilogramos (kg)</option>
-                <option value="g">Gramos (g)</option>
-                <option value="l">Litros (L)</option>
-                <option value="ml">Mililitros (ml)</option>
-                <option value="unidad">Unidades</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Stock actual</label>
-              <input type="number" id="stockActual" step="0.01" min="0" placeholder="0">
-            </div>
-            <div class="form-group">
-              <label>Stock mínimo</label>
-              <input type="number" id="stockMinimo" step="0.01" min="0" placeholder="0">
-            </div>
+      <!-- TAB: RECETAS -->
+      <div id="tab-recetas" class="tab-content">
+        <div class="top-bar">
+          <div>
+            <h2>Recetas</h2>
+            <p>Crea recetas y calcula el coste de tus platos</p>
           </div>
-          <div class="form-actions">
-            <button type="button" class="btn btn-secondary" onclick="cerrarFormulario()">Cancelar</button>
-            <button type="submit" class="btn btn-primary">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-              </svg>
-              <span id="btn-text">Añadir Ingrediente</span>
-            </button>
-          </div>
-        </form>
+          <button class="btn btn-primary" onclick="window.mostrarFormularioReceta()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nueva Receta
+          </button>
+        </div>
+
+        <div class="search-box">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" id="busqueda-recetas" placeholder="Buscar recetas..." oninput="window.renderizarRecetas()">
+        </div>
+
+        <div id="formulario-receta" class="form-card" style="display: none;">
+          <h3>
+            <span id="form-title-receta">Nueva Receta</span>
+            <button class="close-btn" onclick="window.cerrarFormularioReceta()">×</button>
+          </h3>
+          <form onsubmit="window.guardarReceta(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nombre del plato *</label>
+                <input type="text" id="rec-nombre" required placeholder="Ej: Ensalada César">
+              </div>
+              <div class="form-group">
+                <label>Categoría</label>
+                <select id="rec-categoria">
+                  <option value="entrante">Entrante</option>
+                  <option value="principal">Principal</option>
+                  <option value="postre">Postre</option>
+                  <option value="bebida">Bebida</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Precio de venta (€)</label>
+                <input type="number" id="rec-precioVenta" step="0.01" min="0" placeholder="0.00" oninput="window.calcularCosteReceta()">
+              </div>
+              <div class="form-group">
+                <label>Porciones</label>
+                <input type="number" id="rec-porciones" min="1" value="1" placeholder="1">
+              </div>
+            </div>
+
+            <div class="ingredientes-receta">
+              <h4>Ingredientes de la receta</h4>
+              <div id="lista-ingredientes-receta"></div>
+              <button type="button" class="btn btn-secondary btn-small" onclick="window.agregarIngredienteReceta()">+ Añadir ingrediente</button>
+            </div>
+
+            <div id="coste-calculado-form" class="coste-calculado" style="display: none;"></div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-secondary" onclick="window.cerrarFormularioReceta()">Cancelar</button>
+              <button type="submit" class="btn btn-primary">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                </svg>
+                <span id="btn-text-receta">Guardar Receta</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div id="tabla-recetas"></div>
+        <div id="resumen-recetas" class="summary" style="display: none;"></div>
       </div>
 
-      <!-- Tabla -->
-      <div id="tabla-container">
-        <!-- Se llena con JavaScript -->
-      </div>
+    </div>
+  </div>
 
-      <!-- Resumen -->
-      <div id="resumen" class="summary" style="display: none;">
-        <div>Total de ingredientes: <strong id="total">0</strong></div>
-        <div>Mostrando: <strong id="mostrando">0</strong></div>
+  <!-- Modal para producir platos -->
+  <div id="modal-producir" class="modal">
+    <div class="modal-content">
+      <h3>Producir platos</h3>
+      <p style="margin-bottom: 20px; color: #666;">¿Cuántas unidades de <strong id="modal-plato-nombre"></strong> has preparado?</p>
+      <div class="form-group">
+        <label>Cantidad producida</label>
+        <input type="number" id="modal-cantidad" min="1" value="1" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;" oninput="window.actualizarDetalleDescuento()">
+      </div>
+      <div style="margin-top: 20px; padding: 15px; background: #fef3c7; border-radius: 6px; font-size: 14px;">
+        <strong>⚠️ Esto descontará del stock:</strong>
+        <div id="modal-descuento-detalle" style="margin-top: 10px;"></div>
+      </div>
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+        <button class="btn btn-secondary" onclick="window.cerrarModalProducir()">Cancelar</button>
+        <button class="btn btn-success" onclick="window.confirmarProduccion()">Confirmar Producción</button>
       </div>
     </div>
   </div>
 
   <script>
-    // Base de datos en memoria
-    let ingredientes = [];
-    let editandoIndex = null;
+    (function() {
+      // ==================== DATOS ====================
+      let ingredientes = [];
+      let recetas = [];
+      let editandoIngredienteIndex = null;
+      let editandoRecetaIndex = null;
+      let recetaProduciendo = null;
 
-    // Cargar datos al iniciar
-    function cargarDatos() {
-      const datos = localStorage.getItem('lacaleta_ingredientes');
-      if (datos) {
-        ingredientes = JSON.parse(datos);
-        renderizarTabla();
+      // ==================== INICIALIZACIÓN ====================
+      function init() {
+        cargarDatos();
+        renderizarIngredientes();
+        renderizarRecetas();
       }
-    }
 
-    // Guardar datos
-    function guardarDatos() {
-      localStorage.setItem('lacaleta_ingredientes', JSON.stringify(ingredientes));
-    }
+      function cargarDatos() {
+        const ingData = localStorage.getItem('lacaleta_ingredientes');
+        const recData = localStorage.getItem('lacaleta_recetas');
+        if (ingData) ingredientes = JSON.parse(ingData);
+        if (recData) recetas = JSON.parse(recData);
+      }
 
-    // Mostrar formulario
-    function mostrarFormulario() {
-      document.getElementById('formulario').style.display = 'block';
-      document.getElementById('nombre').focus();
-    }
+      function guardarDatos() {
+        localStorage.setItem('lacaleta_ingredientes', JSON.stringify(ingredientes));
+        localStorage.setItem('lacaleta_recetas', JSON.stringify(recetas));
+      }
 
-    // Cerrar formulario
-    function cerrarFormulario() {
-      document.getElementById('formulario').style.display = 'none';
-      document.querySelector('form').reset();
-      editandoIndex = null;
-      document.getElementById('form-title').textContent = 'Nuevo Ingrediente';
-      document.getElementById('btn-text').textContent = 'Añadir Ingrediente';
-    }
-
-    // Guardar ingrediente
-    function guardarIngrediente(event) {
-      event.preventDefault();
-      
-      const ingrediente = {
-        nombre: document.getElementById('nombre').value,
-        proveedor: document.getElementById('proveedor').value,
-        precio: document.getElementById('precio').value,
-        unidad: document.getElementById('unidad').value,
-        stockActual: document.getElementById('stockActual').value,
-        stockMinimo: document.getElementById('stockMinimo').value,
-        id: editandoIndex !== null ? ingredientes[editandoIndex].id : Date.now()
+      // ==================== TABS ====================
+      window.cambiarTab = function(tab) {
+        // Desactivar todas las pestañas y contenidos
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Activar la pestaña y contenido específicos
+        document.getElementById('tab-btn-' + tab).classList.add('active');
+        document.getElementById('tab-' + tab).classList.add('active');
       };
 
-      if (editandoIndex !== null) {
-        ingredientes[editandoIndex] = ingrediente;
-      } else {
-        ingredientes.push(ingrediente);
-      }
+      // ==================== INGREDIENTES ====================
+      window.mostrarFormularioIngrediente = function() {
+        document.getElementById('formulario-ingrediente').style.display = 'block';
+        document.getElementById('ing-nombre').focus();
+      };
 
-      guardarDatos();
-      renderizarTabla();
-      cerrarFormulario();
-    }
+      window.cerrarFormularioIngrediente = function() {
+        document.getElementById('formulario-ingrediente').style.display = 'none';
+        document.querySelector('#formulario-ingrediente form').reset();
+        editandoIngredienteIndex = null;
+        document.getElementById('form-title-ingrediente').textContent = 'Nuevo Ingrediente';
+        document.getElementById('btn-text-ingrediente').textContent = 'Añadir Ingrediente';
+      };
 
-    // Editar ingrediente
-    function editarIngrediente(index) {
-      const ing = ingredientes[index];
-      document.getElementById('nombre').value = ing.nombre;
-      document.getElementById('proveedor').value = ing.proveedor || '';
-      document.getElementById('precio').value = ing.precio || '';
-      document.getElementById('unidad').value = ing.unidad;
-      document.getElementById('stockActual').value = ing.stockActual || '';
-      document.getElementById('stockMinimo').value = ing.stockMinimo || '';
-      
-      editandoIndex = index;
-      document.getElementById('form-title').textContent = 'Editar Ingrediente';
-      document.getElementById('btn-text').textContent = 'Guardar Cambios';
-      mostrarFormulario();
-    }
+      window.guardarIngrediente = function(event) {
+        event.preventDefault();
+        
+        const ingrediente = {
+          nombre: document.getElementById('ing-nombre').value,
+          proveedor: document.getElementById('ing-proveedor').value,
+          precio: parseFloat(document.getElementById('ing-precio').value) || 0,
+          unidad: document.getElementById('ing-unidad').value,
+          stockActual: parseFloat(document.getElementById('ing-stockActual').value) || 0,
+          stockMinimo: parseFloat(document.getElementById('ing-stockMinimo').value) || 0,
+          id: editandoIngredienteIndex !== null ? ingredientes[editandoIngredienteIndex].id : Date.now()
+        };
 
-    // Eliminar ingrediente
-    function eliminarIngrediente(index) {
-      if (confirm('¿Estás seguro de eliminar este ingrediente?')) {
-        ingredientes.splice(index, 1);
+        if (editandoIngredienteIndex !== null) {
+          ingredientes[editandoIngredienteIndex] = ingrediente;
+        } else {
+          ingredientes.push(ingrediente);
+        }
+
         guardarDatos();
-        renderizarTabla();
-      }
-    }
+        renderizarIngredientes();
+        window.cerrarFormularioIngrediente();
+      };
 
-    // Filtrar ingredientes
-    function filtrarIngredientes() {
-      renderizarTabla();
-    }
+      window.editarIngrediente = function(index) {
+        const ing = ingredientes[index];
+        document.getElementById('ing-nombre').value = ing.nombre;
+        document.getElementById('ing-proveedor').value = ing.proveedor || '';
+        document.getElementById('ing-precio').value = ing.precio || '';
+        document.getElementById('ing-unidad').value = ing.unidad;
+        document.getElementById('ing-stockActual').value = ing.stockActual || '';
+        document.getElementById('ing-stockMinimo').value = ing.stockMinimo || '';
+        
+        editandoIngredienteIndex = index;
+        document.getElementById('form-title-ingrediente').textContent = 'Editar Ingrediente';
+        document.getElementById('btn-text-ingrediente').textContent = 'Guardar Cambios';
+        window.mostrarFormularioIngrediente();
+      };
 
-    // Renderizar tabla
-    function renderizarTabla() {
-      const busqueda = document.getElementById('busqueda').value.toLowerCase();
-      const filtrados = ingredientes.filter(ing => 
-        ing.nombre.toLowerCase().includes(busqueda) ||
-        (ing.proveedor && ing.proveedor.toLowerCase().includes(busqueda))
-      );
+      window.eliminarIngrediente = function(index) {
+        if (confirm('¿Estás seguro de eliminar este ingrediente?')) {
+          ingredientes.splice(index, 1);
+          guardarDatos();
+          renderizarIngredientes();
+        }
+      };
 
-      const container = document.getElementById('tabla-container');
-      
-      if (filtrados.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <div class="icon">📦</div>
-            <h3>${busqueda ? 'No se encontraron ingredientes' : 'Aún no hay ingredientes'}</h3>
-            <p>${busqueda ? 'Intenta con otra búsqueda' : 'Añade tu primer ingrediente para comenzar'}</p>
-          </div>
+      window.renderizarIngredientes = function() {
+        const busqueda = document.getElementById('busqueda-ingredientes').value.toLowerCase();
+        const filtrados = ingredientes.filter(ing => 
+          ing.nombre.toLowerCase().includes(busqueda) ||
+          (ing.proveedor && ing.proveedor.toLowerCase().includes(busqueda))
+        );
+
+        const container = document.getElementById('tabla-ingredientes');
+        
+        if (filtrados.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">📦</div>
+              <h3>${busqueda ? 'No se encontraron ingredientes' : 'Aún no hay ingredientes'}</h3>
+              <p>${busqueda ? 'Intenta con otra búsqueda' : 'Añade tu primer ingrediente para comenzar'}</p>
+            </div>
+          `;
+          document.getElementById('resumen-ingredientes').style.display = 'none';
+        } else {
+          let html = '<table><thead><tr>';
+          html += '<th>Ingrediente</th><th>Proveedor</th><th>Precio</th><th>Stock</th><th style="text-align: right;">Acciones</th>';
+          html += '</tr></thead><tbody>';
+
+          filtrados.forEach(ing => {
+            const realIndex = ingredientes.indexOf(ing);
+            const stockBajo = ing.stockActual <= ing.stockMinimo;
+            
+            html += '<tr>';
+            html += `<td><strong>${ing.nombre}</strong></td>`;
+            html += `<td>${ing.proveedor || '-'}</td>`;
+            html += `<td>${ing.precio ? ing.precio.toFixed(2) + ' €/' + ing.unidad : '-'}</td>`;
+            html += `<td>`;
+            if (ing.stockActual) {
+              html += `<span class="stock-badge ${stockBajo ? 'stock-low' : 'stock-ok'}">${ing.stockActual} ${ing.unidad}</span>`;
+              if (stockBajo && ing.stockMinimo) html += ` ⚠️`;
+            } else {
+              html += '-';
+            }
+            html += `</td>`;
+            html += `<td><div class="actions">`;
+            html += `<button class="icon-btn edit" onclick="window.editarIngrediente(${realIndex})" title="Editar">`;
+            html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+            html += '</button>';
+            html += `<button class="icon-btn delete" onclick="window.eliminarIngrediente(${realIndex})" title="Eliminar">`;
+            html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+            html += '</button>';
+            html += '</div></td>';
+            html += '</tr>';
+          });
+
+          html += '</tbody></table>';
+          container.innerHTML = html;
+
+          document.getElementById('resumen-ingredientes').innerHTML = `
+            <div>Total de ingredientes: <strong>${ingredientes.length}</strong></div>
+            <div>Mostrando: <strong>${filtrados.length}</strong></div>
+          `;
+          document.getElementById('resumen-ingredientes').style.display = 'flex';
+        }
+      };
+
+      // ==================== RECETAS ====================
+      window.mostrarFormularioReceta = function() {
+        if (ingredientes.length === 0) {
+          alert('Primero debes añadir ingredientes antes de crear recetas');
+          window.cambiarTab('ingredientes');
+          window.mostrarFormularioIngrediente();
+          return;
+        }
+        document.getElementById('formulario-receta').style.display = 'block';
+        window.agregarIngredienteReceta();
+        document.getElementById('rec-nombre').focus();
+      };
+
+      window.cerrarFormularioReceta = function() {
+        document.getElementById('formulario-receta').style.display = 'none';
+        document.querySelector('#formulario-receta form').reset();
+        document.getElementById('lista-ingredientes-receta').innerHTML = '';
+        document.getElementById('coste-calculado-form').style.display = 'none';
+        editandoRecetaIndex = null;
+        document.getElementById('form-title-receta').textContent = 'Nueva Receta';
+        document.getElementById('btn-text-receta').textContent = 'Guardar Receta';
+      };
+
+      window.agregarIngredienteReceta = function() {
+        const container = document.getElementById('lista-ingredientes-receta');
+        const div = document.createElement('div');
+        div.className = 'ingrediente-item';
+        
+        let opcionesIngredientes = '<option value="">Seleccionar ingrediente...</option>';
+        ingredientes.forEach((ing, idx) => {
+          opcionesIngredientes += `<option value="${idx}">${ing.nombre} (${ing.unidad})</option>`;
+        });
+        
+        div.innerHTML = `
+          <select onchange="window.calcularCosteReceta()">${opcionesIngredientes}</select>
+          <input type="number" placeholder="Cantidad" step="0.01" min="0" oninput="window.calcularCosteReceta()">
+          <span style="font-size: 12px; color: #666;"></span>
+          <button type="button" onclick="this.parentElement.remove(); window.calcularCosteReceta()">Quitar</button>
         `;
-        document.getElementById('resumen').style.display = 'none';
-      } else {
-        let html = '<table><thead><tr>';
-        html += '<th>Ingrediente</th>';
-        html += '<th>Proveedor</th>';
-        html += '<th>Precio</th>';
-        html += '<th>Stock</th>';
-        html += '<th style="text-align: right;">Acciones</th>';
-        html += '</tr></thead><tbody>';
+        
+        container.appendChild(div);
+      };
 
-        filtrados.forEach((ing, idx) => {
-          const realIndex = ingredientes.indexOf(ing);
-          const stockBajo = parseFloat(ing.stockActual || 0) <= parseFloat(ing.stockMinimo || 0);
+      window.calcularCosteReceta = function() {
+        const items = document.querySelectorAll('#lista-ingredientes-receta .ingrediente-item');
+        let costeTotal = 0;
+        let hayDatos = false;
+
+        items.forEach(item => {
+          const select = item.querySelector('select');
+          const input = item.querySelector('input');
+          const span = item.querySelector('span');
           
-          html += '<tr>';
-          html += `<td><strong>${ing.nombre}</strong></td>`;
-          html += `<td>${ing.proveedor || '-'}</td>`;
-          html += `<td>${ing.precio ? parseFloat(ing.precio).toFixed(2) + ' €/' + ing.unidad : '-'}</td>`;
-          html += `<td>`;
-          if (ing.stockActual) {
-            html += `<span class="stock-badge ${stockBajo ? 'stock-low' : 'stock-ok'}">${ing.stockActual} ${ing.unidad}</span>`;
-            if (stockBajo && ing.stockMinimo) html += ` ⚠️ Stock bajo`;
+          if (select.value && input.value) {
+            hayDatos = true;
+            const ing = ingredientes[parseInt(select.value)];
+            const cantidad = parseFloat(input.value);
+            const coste = (ing.precio * cantidad).toFixed(2);
+            costeTotal += parseFloat(coste);
+            span.textContent = `${coste} €`;
           } else {
-            html += '-';
+            span.textContent = '';
           }
-          html += `</td>`;
-          html += `<td><div class="actions">`;
-          html += `<button class="icon-btn edit" onclick="editarIngrediente(${realIndex})">`;
-          html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
-          html += '</button>';
-          html += `<button class="icon-btn delete" onclick="eliminarIngrediente(${realIndex})">`;
-          html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
-          html += '</button>';
-          html += '</div></td>';
-          html += '</tr>';
         });
 
-        html += '</tbody></table>';
-        container.innerHTML = html;
+        const precioVenta = parseFloat(document.getElementById('rec-precioVenta').value) || 0;
+        const margen = precioVenta - costeTotal;
+        const margenPct = precioVenta > 0 ? ((margen / precioVenta) * 100).toFixed(1) : 0;
 
-        document.getElementById('total').textContent = ingredientes.length;
-        document.getElementById('mostrando').textContent = filtrados.length;
-        document.getElementById('resumen').style.display = 'flex';
+        if (hayDatos) {
+          document.getElementById('coste-calculado-form').style.display = 'block';
+          document.getElementById('coste-calculado-form').innerHTML = `
+            <h4>💰 Cálculo de costes</h4>
+            <div class="coste-row">
+              <span>Coste de ingredientes:</span>
+              <strong>${costeTotal.toFixed(2)} €</strong>
+            </div>
+            <div class="coste-row">
+              <span>Precio de venta:</span>
+              <strong>${precioVenta.toFixed(2)} €</strong>
+            </div>
+            <div class="coste-row">
+              <span>Margen:</span>
+              <strong>${margen.toFixed(2)} € (${margenPct}%)</strong>
+            </div>
+          `;
+        } else {
+          document.getElementById('coste-calculado-form').style.display = 'none';
+        }
+      };
+
+      window.guardarReceta = function(event) {
+        event.preventDefault();
+        
+        const items = document.querySelectorAll('#lista-ingredientes-receta .ingrediente-item');
+        const ingredientesReceta = [];
+        
+        items.forEach(item => {
+          const select = item.querySelector('select');
+          const input = item.querySelector('input');
+          if (select.value && input.value) {
+            ingredientesReceta.push({
+              ingredienteId: ingredientes[parseInt(select.value)].id,
+              cantidad: parseFloat(input.value)
+            });
+          }
+        });
+
+        if (ingredientesReceta.length === 0) {
+          alert('Debes añadir al menos un ingrediente a la receta');
+          return;
+        }
+
+        const receta = {
+          nombre: document.getElementById('rec-nombre').value,
+          categoria: document.getElementById('rec-categoria').value,
+          precioVenta: parseFloat(document.getElementById('rec-precioVenta').value) || 0,
+          porciones: parseInt(document.getElementById('rec-porciones').value) || 1,
+          ingredientes: ingredientesReceta,
+          id: editandoRecetaIndex !== null ? recetas[editandoRecetaIndex].id : Date.now()
+        };
+
+        if (editandoRecetaIndex !== null) {
+          recetas[editandoRecetaIndex] = receta;
+        } else {
+          recetas.push(receta);
+        }
+
+        guardarDatos();
+        renderizarRecetas();
+        window.cerrarFormularioReceta();
+      };
+
+      window.editarReceta = function(index) {
+        const rec = recetas[index];
+        document.getElementById('rec-nombre').value = rec.nombre;
+        document.getElementById('rec-categoria').value = rec.categoria;
+        document.getElementById('rec-precioVenta').value = rec.precioVenta;
+        document.getElementById('rec-porciones').value = rec.porciones;
+        
+        document.getElementById('lista-ingredientes-receta').innerHTML = '';
+        rec.ingredientes.forEach(item => {
+          window.agregarIngredienteReceta();
+          const lastItem = document.querySelector('#lista-ingredientes-receta .ingrediente-item:last-child');
+          const ing = ingredientes.find(i => i.id === item.ingredienteId);
+          const ingIndex = ingredientes.indexOf(ing);
+          lastItem.querySelector('select').value = ingIndex;
+          lastItem.querySelector('input').value = item.cantidad;
+        });
+        
+        window.calcularCosteReceta();
+        editandoRecetaIndex = index;
+        document.getElementById('form-title-receta').textContent = 'Editar Receta';
+        document.getElementById('btn-text-receta').textContent = 'Guardar Cambios';
+        window.mostrarFormularioReceta();
+      };
+
+      window.eliminarReceta = function(index) {
+        if (confirm('¿Estás seguro de eliminar esta receta?')) {
+          recetas.splice(index, 1);
+          guardarDatos();
+          renderizarRecetas();
+        }
+      };
+
+      function calcularCosteRecetaCompleto(receta) {
+        let costeTotal = 0;
+        receta.ingredientes.forEach(item => {
+          const ing = ingredientes.find(i => i.id === item.ingredienteId);
+          if (ing) {
+            costeTotal += ing.precio * item.cantidad;
+          }
+        });
+        return costeTotal;
       }
-    }
 
-    // Iniciar app
-    cargarDatos();
+      window.renderizarRecetas = function() {
+        const busqueda = document.getElementById('busqueda-recetas').value.toLowerCase();
+        const filtradas = recetas.filter(rec => 
+          rec.nombre.toLowerCase().includes(busqueda)
+        );
+
+        const container = document.getElementById('tabla-recetas');
+        
+        if (filtradas.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">👨‍🍳</div>
+              <h3>${busqueda ? 'No se encontraron recetas' : 'Aún no hay recetas'}</h3>
+              <p>${busqueda ? 'Intenta con otra búsqueda' : 'Crea tu primera receta para comenzar'}</p>
+            </div>
+          `;
+          document.getElementById('resumen-recetas').style.display = 'none';
+        } else {
+          let html = '<table><thead><tr>';
+          html += '<th>Plato</th><th>Categoría</th><th>Coste</th><th>Precio Venta</th><th>Margen</th><th style="text-align: right;">Acciones</th>';
+          html += '</tr></thead><tbody>';
+
+          filtradas.forEach(rec => {
+            const realIndex = recetas.indexOf(rec);
+            const coste = calcularCosteRecetaCompleto(rec);
+            const margen = rec.precioVenta - coste;
+            const margenPct = rec.precioVenta > 0 ? ((margen / rec.precioVenta) * 100).toFixed(0) : 0;
+            
+            html += '<tr>';
+            html += `<td><strong>${rec.nombre}</strong></td>`;
+            html += `<td><span class="badge badge-success">${rec.categoria}</span></td>`;
+            html += `<td>${coste.toFixed(2)} €</td>`;
+            html += `<td>${rec.precioVenta.toFixed(2)} €</td>`;
+            html += `<td><span class="badge ${margen > 0 ? 'badge-success' : 'badge-warning'}">${margen.toFixed(2)} € (${margenPct}%)</span></td>`;
+            html += `<td><div class="actions">`;
+            html += `<button class="icon-btn produce" onclick="window.abrirModalProducir(${realIndex})" title="Producir platos">`;
+            html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
+            html += '</button>';
+            html += `<button class="icon-btn edit" onclick="window.editarReceta(${realIndex})" title="Editar">`;
+            html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+            html += '</button>';
+            html += `<button class="icon-btn delete" onclick="window.eliminarReceta(${realIndex})" title="Eliminar">`;
+            html += '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+            html += '</button>';
+            html += '</div></td>';
+            html += '</tr>';
+          });
+
+          html += '</tbody></table>';
+          container.innerHTML = html;
+
+          document.getElementById('resumen-recetas').innerHTML = `
+            <div>Total de recetas: <strong>${recetas.length}</strong></div>
+            <div>Mostrando: <strong>${filtradas.length}</strong></div>
+          `;
+          document.getElementById('resumen-recetas').style.display = 'flex';
+        }
+      };
+
+      // ==================== PRODUCCIÓN ====================
+      window.abrirModalProducir = function(index) {
+        recetaProduciendo = index;
+        const receta = recetas[index];
+        document.getElementById('modal-plato-nombre').textContent = receta.nombre;
+        document.getElementById('modal-cantidad').value = 1;
+        window.actualizarDetalleDescuento();
+        document.getElementById('modal-producir').classList.add('active');
+      };
+
+      window.cerrarModalProducir = function() {
+        document.getElementById('modal-producir').classList.remove('active');
+        recetaProduciendo = null;
+      };
+
+      window.actualizarDetalleDescuento = function() {
+        if (recetaProduciendo === null) return;
+        
+        const cantidad = parseInt(document.getElementById('modal-cantidad').value) || 1;
+        const receta = recetas[recetaProduciendo];
+        let html = '<ul style="margin: 0; padding-left: 20px;">';
+        
+        receta.ingredientes.forEach(item => {
+          const ing = ingredientes.find(i => i.id === item.ingredienteId);
+          if (ing) {
+            const descuento = item.cantidad * cantidad;
+            html += `<li>${ing.nombre}: -${descuento} ${ing.unidad}</li>`;
+          }
+        });
+        
+        html += '</ul>';
+        document.getElementById('modal-descuento-detalle').innerHTML = html;
+      };
+
+      window.confirmarProduccion = function() {
+        if (recetaProduciendo === null) return;
+        
+        const cantidad = parseInt(document.getElementById('modal-cantidad').value) || 1;
+        const receta = recetas[recetaProduciendo];
+        
+        // Verificar que hay suficiente stock
+        let faltaStock = false;
+        let mensajeError = 'No hay suficiente stock de:\n';
+        
+        receta.ingredientes.forEach(item => {
+          const ing = ingredientes.find(i => i.id === item.ingredienteId);
+          if (ing) {
+            const necesario = item.cantidad * cantidad;
+            if (ing.stockActual < necesario) {
+              faltaStock = true;
+              mensajeError += `- ${ing.nombre}: necesitas ${necesario} ${ing.unidad}, tienes ${ing.stockActual} ${ing.unidad}\n`;
+            }
+          }
+        });
+        
+        if (faltaStock) {
+          alert(mensajeError);
+          return;
+        }
+        
+        // Descontar del stock
+        receta.ingredientes.forEach(item => {
+          const ing = ingredientes.find(i => i.id === item.ingredienteId);
+          if (ing) {
+            ing.stockActual -= item.cantidad * cantidad;
+            ing.stockActual = Math.max(0, ing.stockActual);
+          }
+        });
+        
+        guardarDatos();
+        renderizarIngredientes();
+        window.cerrarModalProducir();
+        alert(`✅ Se han producido ${cantidad} unidades de ${receta.nombre}\n\nEl stock se ha actualizado automáticamente.`);
+      };
+
+      // ==================== INICIO ====================
+      init();
+    })();
   </script>
 </body>
 </html>
