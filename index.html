@@ -845,6 +845,62 @@
     </div>
   </div>
 
+  <!-- Modal recibir pedido -->
+  <div id="modal-recibir-pedido" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <h3>Recibir Pedido</h3>
+      <p style="margin-bottom: 20px; color: #666;">
+        Verifica las cantidades y precios recibidos. Puedes ajustar los valores si hay diferencias.
+      </p>
+      
+      <div style="background: #f8f8f8; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <strong>Proveedor:</strong> <span id="modal-rec-proveedor"></span><br>
+        <strong>Fecha pedido:</strong> <span id="modal-rec-fecha"></span><br>
+        <strong>Total original:</strong> <span id="modal-rec-total-original"></span>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <h4 style="margin-bottom: 10px;">Ingredientes del pedido:</h4>
+        <table style="font-size: 13px;">
+          <thead>
+            <tr>
+              <th>Ingrediente</th>
+              <th>Pedido</th>
+              <th>Recibido</th>
+              <th>Precio Ped.</th>
+              <th>Precio Real</th>
+              <th>Subtotal</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="modal-rec-items"></tbody>
+        </table>
+      </div>
+
+      <div style="background: #f0fdf4; border: 2px solid #10b981; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+          <div>
+            <strong style="color: #666;">Total Original:</strong><br>
+            <span style="font-size: 20px; font-weight: bold; color: #333;" id="modal-rec-resumen-original">0.00 €</span>
+          </div>
+          <div>
+            <strong style="color: #666;">Total Recibido:</strong><br>
+            <span style="font-size: 20px; font-weight: bold; color: #059669;" id="modal-rec-resumen-recibido">0.00 €</span>
+          </div>
+          <div>
+            <strong style="color: #666;">Varianza:</strong><br>
+            <span style="font-size: 20px; font-weight: bold;" id="modal-rec-resumen-varianza">0.00 €</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn btn-secondary" onclick="window.cerrarModalRecibirPedido()">Cancelar</button>
+        <button class="btn btn-success" onclick="window.confirmarRecepcionPedido()">Confirmar Recepción</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/js-file-download@0.4.12/file-download.js"></script>
   <script>
     // Código JavaScript completo (por brevedad, incluyo versión funcional comprimida)
@@ -1653,25 +1709,169 @@
         alert('✅ Pedido creado');
       };
 
+      let pedidoRecibiendoIndex = null;
+
       window.marcarPedidoRecibido = function(index) {
-        if (!confirm('¿Marcar pedido como recibido? Esto actualizará el stock automáticamente.')) return;
-
+        pedidoRecibiendoIndex = index;
         const pedido = pedidos[index];
-        pedido.estado = 'recibido';
-        pedido.fechaRecepcion = new Date().toISOString();
+        const prov = proveedores.find(p => p.id === pedido.proveedorId);
 
-        // Actualizar stock
-        pedido.ingredientes.forEach(item => {
+        // Llenar información del pedido
+        document.getElementById('modal-rec-proveedor').textContent = prov ? prov.nombre : 'Desconocido';
+        document.getElementById('modal-rec-fecha').textContent = new Date(pedido.fecha).toLocaleDateString('es-ES');
+        document.getElementById('modal-rec-total-original').textContent = pedido.total.toFixed(2) + ' €';
+
+        // Crear copia de items para edición
+        if (!pedido.itemsRecepcion) {
+          pedido.itemsRecepcion = pedido.ingredientes.map(item => ({
+            ...item,
+            cantidadRecibida: item.cantidad,
+            precioReal: item.precioUnitario,
+            estado: 'consolidado'
+          }));
+        }
+
+        renderItemsRecepcion();
+        document.getElementById('modal-recibir-pedido').classList.add('active');
+      };
+
+      function renderItemsRecepcion() {
+        const pedido = pedidos[pedidoRecibiendoIndex];
+        const tbody = document.getElementById('modal-rec-items');
+        
+        let html = '';
+        let totalOriginal = 0;
+        let totalRecibido = 0;
+
+        pedido.itemsRecepcion.forEach((item, idx) => {
           const ing = ingredientes.find(i => i.id === item.ingredienteId);
-          if (ing) {
-            ing.stockActual += item.cantidad;
+          if (!ing) return;
+
+          const subtotalOriginal = item.cantidad * item.precioUnitario;
+          const subtotalRecibido = item.cantidadRecibida * item.precioReal;
+          totalOriginal += subtotalOriginal;
+          
+          if (item.estado !== 'no-entregado') {
+            totalRecibido += subtotalRecibido;
+          }
+
+          const varianzaCant = item.cantidadRecibida - item.cantidad;
+          const varianzaPrecio = item.precioReal - item.precioUnitario;
+
+          html += '<tr>';
+          html += `<td><strong>${ing.nombre}</strong></td>`;
+          html += `<td>${item.cantidad} ${ing.unidad}</td>`;
+          html += `<td>`;
+          if (item.estado === 'no-entregado') {
+            html += '<span style="color:#999;">No entregado</span>';
+          } else {
+            html += `<input type="number" value="${item.cantidadRecibida}" step="0.01" min="0" 
+              style="width:80px;padding:5px;border:1px solid #ddd;border-radius:4px;"
+              onchange="window.actualizarItemRecepcion(${idx}, 'cantidad', this.value)"> ${ing.unidad}`;
+            if (Math.abs(varianzaCant) > 0.01) {
+              html += `<br><small style="color:${varianzaCant > 0 ? '#10b981' : '#ef4444'};">${varianzaCant > 0 ? '+' : ''}${varianzaCant.toFixed(2)}</small>`;
+            }
+          }
+          html += `</td>`;
+          html += `<td>${item.precioUnitario.toFixed(2)} €</td>`;
+          html += `<td>`;
+          if (item.estado === 'no-entregado') {
+            html += '<span style="color:#999;">-</span>';
+          } else {
+            html += `<input type="number" value="${item.precioReal}" step="0.01" min="0" 
+              style="width:80px;padding:5px;border:1px solid #ddd;border-radius:4px;"
+              onchange="window.actualizarItemRecepcion(${idx}, 'precio', this.value)"> €`;
+            if (Math.abs(varianzaPrecio) > 0.01) {
+              html += `<br><small style="color:${varianzaPrecio > 0 ? '#ef4444' : '#10b981'};">${varianzaPrecio > 0 ? '+' : ''}${varianzaPrecio.toFixed(2)} €</small>`;
+            }
+          }
+          html += `</td>`;
+          html += `<td><strong>${item.estado === 'no-entregado' ? '0.00' : subtotalRecibido.toFixed(2)} €</strong></td>`;
+          html += `<td>`;
+          html += `<select onchange="window.cambiarEstadoItem(${idx}, this.value)" style="padding:5px;border:1px solid #ddd;border-radius:4px;">`;
+          html += `<option value="consolidado" ${item.estado === 'consolidado' ? 'selected' : ''}>✅ OK</option>`;
+          html += `<option value="varianza" ${item.estado === 'varianza' ? 'selected' : ''}>⚠️ Varianza</option>`;
+          html += `<option value="no-entregado" ${item.estado === 'no-entregado' ? 'selected' : ''}>❌ No entregado</option>`;
+          html += `</select>`;
+          html += `</td>`;
+          html += '</tr>';
+        });
+
+        tbody.innerHTML = html;
+
+        // Actualizar resumen
+        const varianza = totalRecibido - totalOriginal;
+        document.getElementById('modal-rec-resumen-original').textContent = totalOriginal.toFixed(2) + ' €';
+        document.getElementById('modal-rec-resumen-recibido').textContent = totalRecibido.toFixed(2) + ' €';
+        
+        const varianzaEl = document.getElementById('modal-rec-resumen-varianza');
+        varianzaEl.textContent = (varianza >= 0 ? '+' : '') + varianza.toFixed(2) + ' €';
+        varianzaEl.style.color = varianza > 0 ? '#ef4444' : varianza < 0 ? '#10b981' : '#666';
+      }
+
+      window.actualizarItemRecepcion = function(idx, tipo, valor) {
+        const pedido = pedidos[pedidoRecibiendoIndex];
+        const item = pedido.itemsRecepcion[idx];
+        
+        if (tipo === 'cantidad') {
+          item.cantidadRecibida = parseFloat(valor) || 0;
+          if (Math.abs(item.cantidadRecibida - item.cantidad) > 0.01) {
+            item.estado = 'varianza';
+          } else if (item.estado === 'varianza') {
+            item.estado = 'consolidado';
+          }
+        } else if (tipo === 'precio') {
+          item.precioReal = parseFloat(valor) || 0;
+          if (Math.abs(item.precioReal - item.precioUnitario) > 0.01) {
+            item.estado = 'varianza';
+          } else if (item.estado === 'varianza') {
+            item.estado = 'consolidado';
+          }
+        }
+        
+        renderItemsRecepcion();
+      };
+
+      window.cambiarEstadoItem = function(idx, estado) {
+        const pedido = pedidos[pedidoRecibiendoIndex];
+        pedido.itemsRecepcion[idx].estado = estado;
+        renderItemsRecepcion();
+      };
+
+      window.cerrarModalRecibirPedido = function() {
+        document.getElementById('modal-recibir-pedido').classList.remove('active');
+        pedidoRecibiendoIndex = null;
+      };
+
+      window.confirmarRecepcionPedido = function() {
+        if (!confirm('¿Confirmar recepción del pedido? Esto actualizará el stock con las cantidades recibidas.')) return;
+
+        const pedido = pedidos[pedidoRecibiendoIndex];
+        
+        // Actualizar stock con cantidades reales recibidas
+        let totalRecibido = 0;
+        pedido.itemsRecepcion.forEach(item => {
+          if (item.estado !== 'no-entregado') {
+            const ing = ingredientes.find(i => i.id === item.ingredienteId);
+            if (ing) {
+              ing.stockActual += item.cantidadRecibida;
+            }
+            totalRecibido += item.cantidadRecibida * item.precioReal;
           }
         });
+
+        // Actualizar pedido
+        pedido.estado = 'recibido';
+        pedido.fechaRecepcion = new Date().toISOString();
+        pedido.totalRecibido = totalRecibido;
+        pedido.ingredientes = pedido.itemsRecepcion; // Guardar datos finales
 
         guardarDatos();
         renderizarPedidos();
         renderizarIngredientes();
-        alert('✅ Pedido recibido y stock actualizado');
+        window.cerrarModalRecibirPedido();
+        
+        alert('✅ Pedido recibido y stock actualizado correctamente');
       };
 
       window.eliminarPedido = function(index) {
