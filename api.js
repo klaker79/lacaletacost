@@ -197,4 +197,24 @@ const api = {
     if (!res.ok) throw new Error('Error eliminando pedido');
     return await res.json();
   }
+  
+  ,
+
+  // Ventas
+  async getSales(fecha) {
+    const url = fecha ? `${API_URL}/sales?fecha=${fecha}` : `${API_URL}/sales`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Error cargando ventas');
+    return await res.json();
+  },
+
+  async createSale(venta) {
+    const res = await fetch(`${API_URL}/sales`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(venta)
+    });
+    if (!res.ok) throw new Error('Error registrando venta');
+    return await res.json();
+  }
 };
