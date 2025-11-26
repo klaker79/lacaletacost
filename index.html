@@ -925,15 +925,15 @@
       let recetas = [];
       let proveedores = [];
       let pedidos = [];
-      let editandoIngredienteIndex = null;
-      let editandoRecetaIndex = null;
-      let editandoProveedorIndex = null;
+      let editandoIngredienteId = null;
+      let editandoRecetaId = null;
+      let editandoProveedorId = null;
       let recetaProduciendo = null;
       let chartRentabilidad = null;
       let chartIngredientes = null;
 
-      function init() {
-        cargarDatos();
+      async function init() {
+        await cargarDatos();
         renderizarIngredientes();
         renderizarRecetas();
         renderizarProveedores();
@@ -946,22 +946,16 @@
         }
       }
 
-      function cargarDatos() {
-        const ingData = localStorage.getItem('lacaleta_ingredientes');
-        const recData = localStorage.getItem('lacaleta_recetas');
-        const provData = localStorage.getItem('lacaleta_proveedores');
-        const pedData = localStorage.getItem('lacaleta_pedidos');
-        if (ingData) ingredientes = JSON.parse(ingData);
-        if (recData) recetas = JSON.parse(recData);
-        if (provData) proveedores = JSON.parse(provData);
-        if (pedData) pedidos = JSON.parse(pedData);
-      }
-
-      function guardarDatos() {
-        localStorage.setItem('lacaleta_ingredientes', JSON.stringify(ingredientes));
-        localStorage.setItem('lacaleta_recetas', JSON.stringify(recetas));
-        localStorage.setItem('lacaleta_proveedores', JSON.stringify(proveedores));
-        localStorage.setItem('lacaleta_pedidos', JSON.stringify(pedidos));
+      async function cargarDatos() {
+        try {
+          ingredientes = await api.getIngredientes();
+          recetas = await api.getRecetas();
+          proveedores = await api.getProveedores();
+          pedidos = await api.getPedidos();
+        } catch (error) {
+          console.error('Error cargando datos:', error);
+          alert('Error conectando con la API');
+        }
       }
 
       window.cambiarTab = function(tab) {
@@ -985,7 +979,7 @@
       window.cerrarFormularioIngrediente = function() {
         document.getElementById('formulario-ingrediente').style.display = 'none';
         document.querySelector('#formulario-ingrediente form').reset();
-        editandoIngredienteIndex = null;
+        editandoIngredienteId = null;
         document.getElementById('form-title-ingrediente').textContent = 'Nuevo Ingrediente';
         document.getElementById('btn-text-ingrediente').textContent = 'Añadir';
       };
@@ -998,34 +992,37 @@
         });
       }
 
-      window.guardarIngrediente = function(event) {
+      window.guardarIngrediente = async function(event) {
         event.preventDefault();
-        
-        const proveedorId = document.getElementById('ing-proveedor-select').value;
         
         const ingrediente = {
           nombre: document.getElementById('ing-nombre').value,
-          proveedorId: proveedorId || null,
+          proveedorId: document.getElementById('ing-proveedor-select').value || null,
           precio: parseFloat(document.getElementById('ing-precio').value) || 0,
           unidad: document.getElementById('ing-unidad').value,
           stockActual: parseFloat(document.getElementById('ing-stockActual').value) || 0,
-          stockMinimo: parseFloat(document.getElementById('ing-stockMinimo').value) || 0,
-          id: editandoIngredienteIndex !== null ? ingredientes[editandoIngredienteIndex].id : Date.now()
+          stockMinimo: parseFloat(document.getElementById('ing-stockMinimo').value) || 0
         };
 
-        if (editandoIngredienteIndex !== null) {
-          ingredientes[editandoIngredienteIndex] = ingrediente;
-        } else {
-          ingredientes.push(ingrediente);
+        try {
+          if (editandoIngredienteId !== null) {
+            await api.updateIngrediente(editandoIngredienteId, ingrediente);
+          } else {
+            await api.createIngrediente(ingrediente);
+          }
+          await cargarDatos();
+          renderizarIngredientes();
+          window.cerrarFormularioIngrediente();
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error guardando ingrediente');
         }
-
-        guardarDatos();
-        renderizarIngredientes();
-        window.cerrarFormularioIngrediente();
       };
 
-      window.editarIngrediente = function(index) {
-        const ing = ingredientes[index];
+      window.editarIngrediente = function(id) {
+        const ing = ingredientes.find(i => i.id === id);
+        if (!ing) return;
+        
         actualizarSelectProveedores();
         document.getElementById('ing-nombre').value = ing.nombre;
         document.getElementById('ing-proveedor-select').value = ing.proveedorId || '';
@@ -1034,17 +1031,22 @@
         document.getElementById('ing-stockActual').value = ing.stockActual || '';
         document.getElementById('ing-stockMinimo').value = ing.stockMinimo || '';
         
-        editandoIngredienteIndex = index;
+        editandoIngredienteId = id;
         document.getElementById('form-title-ingrediente').textContent = 'Editar Ingrediente';
         document.getElementById('btn-text-ingrediente').textContent = 'Guardar';
         window.mostrarFormularioIngrediente();
       };
 
-      window.eliminarIngrediente = function(index) {
+      window.eliminarIngrediente = async function(id) {
         if (confirm('¿Eliminar?')) {
-          ingredientes.splice(index, 1);
-          guardarDatos();
-          renderizarIngredientes();
+          try {
+            await api.deleteIngrediente(id);
+            await cargarDatos();
+            renderizarIngredientes();
+          } catch (error) {
+            console.error('Error:', error);
+            alert('Error eliminando ingrediente');
+          }
         }
       };
 
@@ -1078,7 +1080,6 @@
           html += '</tr></thead><tbody>';
 
           filtrados.forEach(ing => {
-            const realIndex = ingredientes.indexOf(ing);
             const stockBajo = ing.stockActual <= ing.stockMinimo;
             
             html += '<tr>';
@@ -1094,8 +1095,8 @@
             }
             html += `</td>`;
             html += `<td><div class="actions">`;
-            html += `<button class="icon-btn edit" onclick="window.editarIngrediente(${realIndex})">✏️</button>`;
-            html += `<button class="icon-btn delete" onclick="window.eliminarIngrediente(${realIndex})">🗑️</button>`;
+            html += `<button class="icon-btn edit" onclick="window.editarIngrediente(${ing.id})">✏️</button>`;
+            html += `<button class="icon-btn delete" onclick="window.eliminarIngrediente(${ing.id})">🗑️</button>`;
             html += '</div></td>';
             html += '</tr>';
           });
@@ -1129,7 +1130,7 @@
         document.querySelector('#formulario-receta form').reset();
         document.getElementById('lista-ingredientes-receta').innerHTML = '';
         document.getElementById('coste-calculado-form').style.display = 'none';
-        editandoRecetaIndex = null;
+        editandoRecetaId = null;
         document.getElementById('form-title-receta').textContent = 'Nueva Receta';
         document.getElementById('btn-text-receta').textContent = 'Guardar';
       };
@@ -1140,8 +1141,8 @@
         div.className = 'ingrediente-item';
         
         let opciones = '<option value="">Seleccionar...</option>';
-        ingredientes.forEach((ing, idx) => {
-          opciones += `<option value="${idx}">${ing.nombre} (${ing.unidad})</option>`;
+        ingredientes.forEach(ing => {
+          opciones += `<option value="${ing.id}">${ing.nombre} (${ing.unidad})</option>`;
         });
         
         div.innerHTML = `
@@ -1166,7 +1167,7 @@
           
           if (select.value && input.value) {
             hayDatos = true;
-            const ing = ingredientes[parseInt(select.value)];
+            const ing = ingredientes.find(i => i.id == select.value);
             const cantidad = parseFloat(input.value);
             const coste = (ing.precio * cantidad).toFixed(2);
             costeTotal += parseFloat(coste);
@@ -1193,7 +1194,7 @@
         }
       };
 
-      window.guardarReceta = function(event) {
+      window.guardarReceta = async function(event) {
         event.preventDefault();
         
         const items = document.querySelectorAll('#lista-ingredientes-receta .ingrediente-item');
@@ -1204,7 +1205,7 @@
           const input = item.querySelector('input');
           if (select.value && input.value) {
             ingredientesReceta.push({
-              ingredienteId: ingredientes[parseInt(select.value)].id,
+              ingredienteId: parseInt(select.value),
               cantidad: parseFloat(input.value)
             });
           }
@@ -1220,23 +1221,28 @@
           categoria: document.getElementById('rec-categoria').value,
           precioVenta: parseFloat(document.getElementById('rec-precioVenta').value) || 0,
           porciones: parseInt(document.getElementById('rec-porciones').value) || 1,
-          ingredientes: ingredientesReceta,
-          id: editandoRecetaIndex !== null ? recetas[editandoRecetaIndex].id : Date.now()
+          ingredientes: ingredientesReceta
         };
 
-        if (editandoRecetaIndex !== null) {
-          recetas[editandoRecetaIndex] = receta;
-        } else {
-          recetas.push(receta);
+        try {
+          if (editandoRecetaId !== null) {
+            await api.updateReceta(editandoRecetaId, receta);
+          } else {
+            await api.createReceta(receta);
+          }
+          await cargarDatos();
+          renderizarRecetas();
+          window.cerrarFormularioReceta();
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error guardando receta');
         }
-
-        guardarDatos();
-        renderizarRecetas();
-        window.cerrarFormularioReceta();
       };
 
-      window.editarReceta = function(index) {
-        const rec = recetas[index];
+      window.editarReceta = function(id) {
+        const rec = recetas.find(r => r.id === id);
+        if (!rec) return;
+        
         document.getElementById('rec-nombre').value = rec.nombre;
         document.getElementById('rec-categoria').value = rec.categoria;
         document.getElementById('rec-precioVenta').value = rec.precioVenta;
@@ -1246,24 +1252,27 @@
         rec.ingredientes.forEach(item => {
           window.agregarIngredienteReceta();
           const lastItem = document.querySelector('#lista-ingredientes-receta .ingrediente-item:last-child');
-          const ing = ingredientes.find(i => i.id === item.ingredienteId);
-          const ingIndex = ingredientes.indexOf(ing);
-          lastItem.querySelector('select').value = ingIndex;
+          lastItem.querySelector('select').value = item.ingredienteId;
           lastItem.querySelector('input').value = item.cantidad;
         });
         
         window.calcularCosteReceta();
-        editandoRecetaIndex = index;
+        editandoRecetaId = id;
         document.getElementById('form-title-receta').textContent = 'Editar';
         document.getElementById('btn-text-receta').textContent = 'Guardar';
         window.mostrarFormularioReceta();
       };
 
-      window.eliminarReceta = function(index) {
+      window.eliminarReceta = async function(id) {
         if (confirm('¿Eliminar?')) {
-          recetas.splice(index, 1);
-          guardarDatos();
-          renderizarRecetas();
+          try {
+            await api.deleteReceta(id);
+            await cargarDatos();
+            renderizarRecetas();
+          } catch (error) {
+            console.error('Error:', error);
+            alert('Error eliminando receta');
+          }
         }
       };
 
@@ -1296,7 +1305,6 @@
           html += '</tr></thead><tbody>';
 
           filtradas.forEach(rec => {
-            const realIndex = recetas.indexOf(rec);
             const coste = calcularCosteRecetaCompleto(rec);
             const margen = rec.precioVenta - coste;
             const pct = rec.precioVenta > 0 ? ((margen/rec.precioVenta)*100).toFixed(0) : 0;
@@ -1308,9 +1316,9 @@
             html += `<td>${rec.precioVenta.toFixed(2)} €</td>`;
             html += `<td><span class="badge ${margen>0?'badge-success':'badge-warning'}">${margen.toFixed(2)} € (${pct}%)</span></td>`;
             html += `<td><div class="actions">`;
-            html += `<button class="icon-btn produce" onclick="window.abrirModalProducir(${realIndex})">⬇️</button>`;
-            html += `<button class="icon-btn edit" onclick="window.editarReceta(${realIndex})">✏️</button>`;
-            html += `<button class="icon-btn delete" onclick="window.eliminarReceta(${realIndex})">🗑️</button>`;
+            html += `<button class="icon-btn produce" onclick="window.abrirModalProducir(${rec.id})">⬇️</button>`;
+            html += `<button class="icon-btn edit" onclick="window.editarReceta(${rec.id})">✏️</button>`;
+            html += `<button class="icon-btn delete" onclick="window.eliminarReceta(${rec.id})">🗑️</button>`;
             html += '</div></td>';
             html += '</tr>';
           });
@@ -1327,9 +1335,9 @@
       };
 
       // ========== PRODUCCIÓN ==========
-      window.abrirModalProducir = function(index) {
-        recetaProduciendo = index;
-        const rec = recetas[index];
+      window.abrirModalProducir = function(id) {
+        recetaProduciendo = id;
+        const rec = recetas.find(r => r.id === id);
         document.getElementById('modal-plato-nombre').textContent = rec.nombre;
         document.getElementById('modal-cantidad').value = 1;
         window.actualizarDetalleDescuento();
@@ -1344,7 +1352,7 @@
       window.actualizarDetalleDescuento = function() {
         if (recetaProduciendo === null) return;
         const cant = parseInt(document.getElementById('modal-cantidad').value) || 1;
-        const rec = recetas[recetaProduciendo];
+        const rec = recetas.find(r => r.id === recetaProduciendo);
         let html = '<ul style="margin:0;padding-left:20px;">';
         rec.ingredientes.forEach(item => {
           const ing = ingredientes.find(i => i.id === item.ingredienteId);
@@ -1354,10 +1362,10 @@
         document.getElementById('modal-descuento-detalle').innerHTML = html;
       };
 
-      window.confirmarProduccion = function() {
+      window.confirmarProduccion = async function() {
         if (recetaProduciendo === null) return;
         const cant = parseInt(document.getElementById('modal-cantidad').value) || 1;
-        const rec = recetas[recetaProduciendo];
+        const rec = recetas.find(r => r.id === recetaProduciendo);
         
         let falta = false;
         let msg = 'Stock insuficiente:\n';
@@ -1377,18 +1385,26 @@
           return;
         }
         
-        rec.ingredientes.forEach(item => {
-          const ing = ingredientes.find(i => i.id === item.ingredienteId);
-          if (ing) {
-            ing.stockActual -= item.cantidad * cant;
-            ing.stockActual = Math.max(0, ing.stockActual);
+        try {
+          for (const item of rec.ingredientes) {
+            const ing = ingredientes.find(i => i.id === item.ingredienteId);
+            if (ing) {
+              const nuevoStock = Math.max(0, ing.stockActual - (item.cantidad * cant));
+              await api.updateIngrediente(ing.id, {
+                ...ing,
+                stockActual: nuevoStock
+              });
+            }
           }
-        });
-        
-        guardarDatos();
-        renderizarIngredientes();
-        window.cerrarModalProducir();
-        alert(`✅ Producidas ${cant} unidades de ${rec.nombre}`);
+          
+          await cargarDatos();
+          renderizarIngredientes();
+          window.cerrarModalProducir();
+          alert(`✅ Producidas ${cant} unidades de ${rec.nombre}`);
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error actualizando stock');
+        }
       };
 
       // ========== PROVEEDORES (resumido) ==========
@@ -1401,7 +1417,7 @@
       window.cerrarFormularioProveedor = function() {
         document.getElementById('formulario-proveedor').style.display = 'none';
         document.querySelector('#formulario-proveedor form').reset();
-        editandoProveedorIndex = null;
+        editandoProveedorId = null;
         document.getElementById('form-title-proveedor').textContent = 'Nuevo Proveedor';
         document.getElementById('btn-text-proveedor').textContent = 'Añadir';
       };
@@ -1436,7 +1452,7 @@
         cargarIngredientesProveedor(seleccionados);
       };
 
-      window.guardarProveedor = function(event) {
+      window.guardarProveedor = async function(event) {
         event.preventDefault();
 
         const checks = document.querySelectorAll('#lista-ingredientes-proveedor input[type="checkbox"]:checked');
@@ -1449,23 +1465,28 @@
           email: document.getElementById('prov-email').value,
           direccion: document.getElementById('prov-direccion').value,
           notas: document.getElementById('prov-notas').value,
-          ingredientes: ingredientesIds,
-          id: editandoProveedorIndex !== null ? proveedores[editandoProveedorIndex].id : Date.now()
+          ingredientes: ingredientesIds
         };
 
-        if (editandoProveedorIndex !== null) {
-          proveedores[editandoProveedorIndex] = proveedor;
-        } else {
-          proveedores.push(proveedor);
+        try {
+          if (editandoProveedorId !== null) {
+            await api.updateProveedor(editandoProveedorId, proveedor);
+          } else {
+            await api.createProveedor(proveedor);
+          }
+          await cargarDatos();
+          renderizarProveedores();
+          window.cerrarFormularioProveedor();
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error guardando proveedor');
         }
-
-        guardarDatos();
-        renderizarProveedores();
-        window.cerrarFormularioProveedor();
       };
 
-      window.editarProveedor = function(index) {
-        const prov = proveedores[index];
+      window.editarProveedor = function(id) {
+        const prov = proveedores.find(p => p.id === id);
+        if (!prov) return;
+        
         document.getElementById('prov-nombre').value = prov.nombre;
         document.getElementById('prov-contacto').value = prov.contacto || '';
         document.getElementById('prov-telefono').value = prov.telefono || '';
@@ -1475,23 +1496,30 @@
         
         cargarIngredientesProveedor(prov.ingredientes || []);
         
-        editandoProveedorIndex = index;
+        editandoProveedorId = id;
         document.getElementById('form-title-proveedor').textContent = 'Editar';
         document.getElementById('btn-text-proveedor').textContent = 'Guardar';
         window.mostrarFormularioProveedor();
       };
 
-      window.eliminarProveedor = function(index) {
+      window.eliminarProveedor = async function(id) {
         if (confirm('¿Eliminar?')) {
-          proveedores.splice(index, 1);
-          guardarDatos();
-          renderizarProveedores();
-          renderizarIngredientes();
+          try {
+            await api.deleteProveedor(id);
+            await cargarDatos();
+            renderizarProveedores();
+            renderizarIngredientes();
+          } catch (error) {
+            console.error('Error:', error);
+            alert('Error eliminando proveedor');
+          }
         }
       };
 
-      window.verProveedorDetalles = function(index) {
-        const prov = proveedores[index];
+      window.verProveedorDetalles = function(id) {
+        const prov = proveedores.find(p => p.id === id);
+        if (!prov) return;
+        
         document.getElementById('modal-proveedor-titulo').textContent = prov.nombre;
         
         let html = '<div style="margin-bottom:20px;">';
@@ -1542,7 +1570,6 @@
           html += '</tr></thead><tbody>';
 
           filtrados.forEach(prov => {
-            const realIndex = proveedores.indexOf(prov);
             const numIng = prov.ingredientes ? prov.ingredientes.length : 0;
             
             html += '<tr>';
@@ -1551,9 +1578,9 @@
             html += `<td>${prov.telefono || '-'}</td>`;
             html += `<td><span class="badge badge-info">${numIng}</span></td>`;
             html += `<td><div class="actions">`;
-            html += `<button class="icon-btn view" onclick="window.verProveedorDetalles(${realIndex})">👁️</button>`;
-            html += `<button class="icon-btn edit" onclick="window.editarProveedor(${realIndex})">✏️</button>`;
-            html += `<button class="icon-btn delete" onclick="window.eliminarProveedor(${realIndex})">🗑️</button>`;
+            html += `<button class="icon-btn view" onclick="window.verProveedorDetalles(${prov.id})">👁️</button>`;
+            html += `<button class="icon-btn edit" onclick="window.editarProveedor(${prov.id})">✏️</button>`;
+            html += `<button class="icon-btn delete" onclick="window.eliminarProveedor(${prov.id})">🗑️</button>`;
             html += '</div></td>';
             html += '</tr>';
           });
@@ -1673,7 +1700,7 @@
         }
       };
 
-      window.guardarPedido = function(event) {
+      window.guardarPedido = async function(event) {
         event.preventDefault();
 
         const proveedorId = parseInt(document.getElementById('ped-proveedor').value);
@@ -1707,27 +1734,30 @@
         }
 
         const pedido = {
-          id: Date.now(),
           proveedorId: proveedorId,
           fecha: fecha,
           ingredientes: ingredientesPedido,
           total: total,
-          estado: 'pendiente',
-          fechaCreacion: new Date().toISOString()
+          estado: 'pendiente'
         };
 
-        pedidos.push(pedido);
-        guardarDatos();
-        renderizarPedidos();
-        window.cerrarFormularioPedido();
-        alert('✅ Pedido creado');
+        try {
+          await api.createPedido(pedido);
+          await cargarDatos();
+          renderizarPedidos();
+          window.cerrarFormularioPedido();
+          alert('✅ Pedido creado');
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error creando pedido');
+        }
       };
 
-      let pedidoRecibiendoIndex = null;
+      let pedidoRecibiendoId = null;
 
-      window.marcarPedidoRecibido = function(index) {
-        pedidoRecibiendoIndex = index;
-        const pedido = pedidos[index];
+      window.marcarPedidoRecibido = function(id) {
+        pedidoRecibiendoId = id;
+        const pedido = pedidos.find(p => p.id === id);
         const prov = proveedores.find(p => p.id === pedido.proveedorId);
 
         // Llenar información del pedido
@@ -1750,7 +1780,7 @@
       };
 
       function renderItemsRecepcion() {
-        const pedido = pedidos[pedidoRecibiendoIndex];
+        const pedido = pedidos.find(p => p.id === pedidoRecibiendoId);
         const tbody = document.getElementById('modal-rec-items');
         
         let html = '';
@@ -1824,7 +1854,7 @@
       }
 
       window.actualizarItemRecepcion = function(idx, tipo, valor) {
-        const pedido = pedidos[pedidoRecibiendoIndex];
+        const pedido = pedidos.find(p => p.id === pedidoRecibiendoId);
         const item = pedido.itemsRecepcion[idx];
         
         if (tipo === 'cantidad') {
@@ -1847,60 +1877,76 @@
       };
 
       window.cambiarEstadoItem = function(idx, estado) {
-        const pedido = pedidos[pedidoRecibiendoIndex];
+        const pedido = pedidos.find(p => p.id === pedidoRecibiendoId);
         pedido.itemsRecepcion[idx].estado = estado;
         renderItemsRecepcion();
       };
 
       window.cerrarModalRecibirPedido = function() {
         document.getElementById('modal-recibir-pedido').classList.remove('active');
-        pedidoRecibiendoIndex = null;
+        pedidoRecibiendoId = null;
       };
 
-      window.confirmarRecepcionPedido = function() {
+      window.confirmarRecepcionPedido = async function() {
         if (!confirm('¿Confirmar recepción del pedido? Esto actualizará el stock con las cantidades recibidas.')) return;
 
-        const pedido = pedidos[pedidoRecibiendoIndex];
+        const pedido = pedidos.find(p => p.id === pedidoRecibiendoId);
         
         // Actualizar stock con cantidades reales recibidas
         let totalRecibido = 0;
-        pedido.itemsRecepcion.forEach(item => {
-          if (item.estado !== 'no-entregado') {
-            const ing = ingredientes.find(i => i.id === item.ingredienteId);
-            if (ing) {
-              ing.stockActual += item.cantidadRecibida;
-            }
-            totalRecibido += item.cantidadRecibida * item.precioReal;
-          }
-        });
-
-        // Actualizar pedido
-        pedido.estado = 'recibido';
-        pedido.fechaRecepcion = new Date().toISOString();
-        pedido.totalRecibido = totalRecibido;
-        pedido.ingredientes = pedido.itemsRecepcion; // Guardar datos finales
-
-        guardarDatos();
-        renderizarPedidos();
-        renderizarIngredientes();
-        window.cerrarModalRecibirPedido();
         
-        alert('✅ Pedido recibido y stock actualizado correctamente');
-      };
+        try {
+          for (const item of pedido.itemsRecepcion) {
+            if (item.estado !== 'no-entregado') {
+              const ing = ingredientes.find(i => i.id === item.ingredienteId);
+              if (ing) {
+                await api.updateIngrediente(ing.id, {
+                  ...ing,
+                  stockActual: ing.stockActual + item.cantidadRecibida
+                });
+              }
+              totalRecibido += item.cantidadRecibida * item.precioReal;
+            }
+          }
 
-      window.eliminarPedido = function(index) {
-        if (confirm('¿Eliminar este pedido?')) {
-          pedidos.splice(index, 1);
-          guardarDatos();
+          // Actualizar pedido
+          await api.updatePedido(pedidoRecibiendoId, {
+            ...pedido,
+            estado: 'recibido',
+            totalRecibido: totalRecibido,
+            ingredientes: pedido.itemsRecepcion
+          });
+
+          await cargarDatos();
           renderizarPedidos();
+          renderizarIngredientes();
+          window.cerrarModalRecibirPedido();
+          
+          alert('✅ Pedido recibido y stock actualizado correctamente');
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error confirmando recepción');
         }
       };
 
-      let pedidoViendoIndex = null;
+      window.eliminarPedido = async function(id) {
+        if (confirm('¿Eliminar este pedido?')) {
+          try {
+            await api.deletePedido(id);
+            await cargarDatos();
+            renderizarPedidos();
+          } catch (error) {
+            console.error('Error:', error);
+            alert('Error eliminando pedido');
+          }
+        }
+      };
 
-      window.verDetallesPedido = function(index) {
-        pedidoViendoIndex = index;
-        const pedido = pedidos[index];
+      let pedidoViendoId = null;
+
+      window.verDetallesPedido = function(id) {
+        pedidoViendoId = id;
+        const pedido = pedidos.find(p => p.id === id);
         const prov = proveedores.find(p => p.id === pedido.proveedorId);
 
         let html = '<div style="background: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">';
@@ -2004,13 +2050,13 @@
 
       window.cerrarModalVerPedido = function() {
         document.getElementById('modal-ver-pedido').classList.remove('active');
-        pedidoViendoIndex = null;
+        pedidoViendoId = null;
       };
 
       window.descargarPedidoPDF = function() {
-        if (pedidoViendoIndex === null) return;
+        if (pedidoViendoId === null) return;
         
-        const pedido = pedidos[pedidoViendoIndex];
+        const pedido = pedidos.find(p => p.id === pedidoViendoId);
         const prov = proveedores.find(p => p.id === pedido.proveedorId);
 
         // Crear HTML para imprimir
@@ -2204,7 +2250,6 @@
           html += '</tr></thead><tbody>';
 
           filtrados.forEach(ped => {
-            const realIndex = pedidos.indexOf(ped);
             const prov = proveedores.find(p => p.id === ped.proveedorId);
             const nombreProv = prov ? prov.nombre : 'Desconocido';
             
@@ -2215,11 +2260,11 @@
             html += `<td><strong>${ped.total.toFixed(2)} €</strong></td>`;
             html += `<td><span class="badge ${ped.estado === 'recibido' ? 'badge-received' : 'badge-pending'}">${ped.estado === 'recibido' ? 'Recibido' : 'Pendiente'}</span></td>`;
             html += `<td><div class="actions">`;
-            html += `<button class="icon-btn view" onclick="window.verDetallesPedido(${realIndex})" title="Ver detalles">👁️</button>`;
+            html += `<button class="icon-btn view" onclick="window.verDetallesPedido(${ped.id})" title="Ver detalles">👁️</button>`;
             if (ped.estado === 'pendiente') {
-              html += `<button class="icon-btn receive" onclick="window.marcarPedidoRecibido(${realIndex})" title="Recibir pedido">📥</button>`;
+              html += `<button class="icon-btn receive" onclick="window.marcarPedidoRecibido(${ped.id})" title="Recibir pedido">📥</button>`;
             }
-            html += `<button class="icon-btn delete" onclick="window.eliminarPedido(${realIndex})" title="Eliminar">🗑️</button>`;
+            html += `<button class="icon-btn delete" onclick="window.eliminarPedido(${ped.id})" title="Eliminar">🗑️</button>`;
             html += '</div></td>';
             html += '</tr>';
           });
@@ -2384,5 +2429,6 @@
       init();
     })();
   </script>
+  <script src="api.js"></script>
 </body>
 </html>
