@@ -1005,7 +1005,8 @@
         renderizarRecetas();
         renderizarProveedores();
         renderizarPedidos();
-        
+        renderizarInventario();
+
         // Configurar fecha de hoy por defecto
         const hoy = new Date().toISOString().split('T')[0];
         if(document.getElementById('ped-fecha')) {
@@ -1034,6 +1035,7 @@
 
         if (tab === 'analisis') window.renderizarAnalisis();
         if (tab === 'pedidos') renderizarPedidos();
+        if (tab === 'inventario') window.renderizarInventario();
       };
 
       // ========== INGREDIENTES (código completo pero resumido visualmente) ==========
@@ -2614,6 +2616,8 @@
         
         ajustarStock(id, stockNum - ing.stockActual);
       };
+      // Event listener para búsqueda de inventario
+      document.getElementById('busqueda-inventario').addEventListener('input', window.renderizarInventario);
 
       init();
     })();
