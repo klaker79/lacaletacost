@@ -988,10 +988,10 @@
     // El código completo está disponible en el archivo descargable
     
     (function() {
-      let ingredientes = [];
-      let recetas = [];
-      let proveedores = [];
-      let pedidos = [];
+      window.ingredientes = [];
+      window.recetas = [];
+      window.proveedores = [];
+      window.pedidos = [];
       let editandoIngredienteId = null;
       let editandoRecetaId = null;
       let editandoProveedorId = null;
@@ -1016,10 +1016,10 @@
 
       async function cargarDatos() {
         try {
-          ingredientes = await api.getIngredientes();
-          recetas = await api.getRecetas();
-          proveedores = await api.getProveedores();
-          pedidos = await api.getPedidos();
+          window.ingredientes = await api.getIngredientes();
+          window.recetas = await api.getRecetas();
+          window.proveedores = await api.getProveedores();
+          window.pedidos = await api.getPedidos();
         } catch (error) {
           console.error('Error cargando datos:', error);
           alert('Error conectando con la API');
@@ -2584,7 +2584,7 @@
       };
 
       window.ajustarStock = async function(id, cambio) {
-        const ing = ingredientes.find(i => i.id === id);
+        const ing = window.ingredientes.find(i => i.id === id);
         if (!ing) return;
         
         const nuevoStock = Math.max(0, ing.stockActual + cambio);
@@ -2606,7 +2606,7 @@
       };
 
       window.ajustarStockManual = function(id) {
-        const ing = ingredientes.find(i => i.id === id);
+        const ing = window.ingredientes.find(i => i.id === id);
         if (!ing) return;
         
         const nuevoStock = prompt(`Stock actual de ${ing.nombre}:`, ing.stockActual);
