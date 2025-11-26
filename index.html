@@ -2590,11 +2590,15 @@
         const nuevoStock = Math.max(0, ing.stockActual + cambio);
         
         try {
-          await api.updateIngrediente(id, {
-            ...ing,
-            stock_actual: nuevoStock
-          });
-          await cargarDatos();
+        await api.updateIngrediente(id, {
+          nombre: ing.nombre,
+          unidad: ing.unidad,
+          precio: ing.precio,
+          proveedor_id: ing.proveedorId,
+          stock_actual: nuevoStock,
+          stock_minimo: ing.stockMinimo
+        });
+        await cargarDatos();
           renderizarInventario();
         } catch (error) {
           alert('Error actualizando stock: ' + error.message);
