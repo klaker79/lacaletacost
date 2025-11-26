@@ -1039,7 +1039,7 @@ window.renderizarVentas = async function() {
   let totalDia = 0;
   ventas.forEach(v => {
     const hora = new Date(v.fecha).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
-    html += `<tr><td>${hora}</td><td>${v.receta_nombre}</td><td>${v.cantidad}</td><td>${v.total.toFixed(2)}€</td></tr>`;
+    html += `<tr><td>${hora}</td><td>${v.receta_nombre}</td><td>${v.cantidad}</td><td>${parseFloat(v.total).toFixed(2)}€</td></tr>`;
     totalDia += parseFloat(v.total);
   });
   html += `</tbody></table><p><strong>Total del día: ${totalDia.toFixed(2)}€</strong></p>`;
