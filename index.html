@@ -2482,7 +2482,7 @@ const api = {
             html += `<td>${new Date(ped.fecha).toLocaleDateString('es-ES')}</td>`;
             html += `<td><strong>${nombreProv}</strong></td>`;
             html += `<td>${ped.ingredientes.length} ingredientes</td>`;
-            html += `<td><strong>${ped.total.toFixed(2)} €</strong></td>`;
+            html += `<td><strong>${parseFloat(ped.total).toFixed(2)} €</strong></td>`;
             html += `<td><span class="badge ${ped.estado === 'recibido' ? 'badge-received' : 'badge-pending'}">${ped.estado === 'recibido' ? 'Recibido' : 'Pendiente'}</span></td>`;
             html += `<td><div class="actions">`;
             html += `<button class="icon-btn view" onclick="window.verDetallesPedido(${ped.id})" title="Ver detalles">👁️</button>`;
