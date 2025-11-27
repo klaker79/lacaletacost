@@ -2667,10 +2667,10 @@ window.renderizarBalance = async function() {
           html += '<tr>';
           html += `<td><strong>#${idx + 1}</strong></td>`;
           html += `<td>${rec.nombre}</td>`;
-          html += `<td>${rec.coste.toFixed(2)} €</td>`;
-          html += `<td>${rec.precioVenta.toFixed(2)} €</td>`;
-          html += `<td>${rec.margen.toFixed(2)} €</td>`;
-          html += `<td><span class="badge ${rec.margenPct > 50 ? 'badge-success' : rec.margenPct > 30 ? 'badge-warning' : 'badge-warning'}">${rec.margenPct.toFixed(1)}%</span></td>`;
+          html += `<td>${parseFloat(rec.coste || 0).toFixed(2)} €</td>`;
+          html += `<td>${parseFloat(rec.precioVenta || 0).toFixed(2)} €</td>`;
+          html += `<td>${parseFloat(rec.margen || 0).toFixed(2)} €</td>`;
+          html += `<td><span class="badge ${rec.margenPct > 50 ? 'badge-success' : rec.margenPct > 30 ? 'badge-warning' : 'badge-warning'}">${parseFloat(rec.margenPct || 0).toFixed(1)}%</span></td>`;
           html += '</tr>';
         });
 
