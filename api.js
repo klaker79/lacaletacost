@@ -220,21 +220,4 @@ const api = {
   }
   ,
 
-  // Balance
-  async getBalanceMes(mes, ano) {
-    const params = new URLSearchParams();
-    if (mes) params.append('mes', mes);
-    if (ano) params.append('ano', ano);
-    const url = `${API_URL}/balance/mes${params.toString() ? '?' + params.toString() : ''}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Error cargando balance');
-    return await res.json();
-  },
-
-  async getComparativa() {
-    const res = await fetch(`${API_URL}/balance/comparativa`);
-    if (!res.ok) throw new Error('Error cargando comparativa');
-    return await res.json();
-  }
-};
-};
+  
