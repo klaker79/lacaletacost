@@ -1153,66 +1153,162 @@ window.renderizarBalance = async function() {
           const res = await fetch('https://lacaleta-api.mindloop.cloud/api/ingredients');
           return await res.json();
         },
+        
+        async createIngrediente(ingrediente) {
+          const res = await fetch('https://lacaleta-api.mindloop.cloud/api/ingredients', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ingrediente)
+          });
+          if (!res.ok) throw new Error('Error creando ingrediente');
+          return await res.json();
+        },
+        
+        async updateIngrediente(id, ingrediente) {
+          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/ingredients/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(ingrediente)
+          });
+          if (!res.ok) throw new Error('Error actualizando ingrediente');
+          return await res.json();
+        },
+        
+        async deleteIngrediente(id) {
+          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/ingredients/${id}`, {
+            method: 'DELETE'
+          });
+          if (!res.ok) throw new Error('Error eliminando ingrediente');
+          return await res.json();
+        },
+        
         async getRecetas() {
           const res = await fetch('https://lacaleta-api.mindloop.cloud/api/recipes');
           return await res.json();
         },
+        
+        async createReceta(receta) {
+          const res = await fetch('https://lacaleta-api.mindloop.cloud/api/recipes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(receta)
+          });
+          if (!res.ok) throw new Error('Error creando receta');
+          return await res.json();
+        },
+        
+        async updateReceta(id, receta) {
+          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/recipes/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(receta)
+          });
+          if (!res.ok) throw new Error('Error actualizando receta');
+          return await res.json();
+        },
+        
+        async deleteReceta(id) {
+          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/recipes/${id}`, {
+            method: 'DELETE'
+          });
+          if (!res.ok) throw new Error('Error eliminando receta');
+          return await res.json();
+        },
+        
         async getProveedores() {
           const res = await fetch('https://lacaleta-api.mindloop.cloud/api/suppliers');
           return await res.json();
         },
+        
+        async createProveedor(proveedor) {
+          const res = await fetch('https://lacaleta-api.mindloop.cloud/api/suppliers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(proveedor)
+          });
+          if (!res.ok) throw new Error('Error creando proveedor');
+          return await res.json();
+        },
+        
+        async updateProveedor(id, proveedor) {
+          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/suppliers/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(proveedor)
+          });
+          if (!res.ok) throw new Error('Error actualizando proveedor');
+          return await res.json();
+        },
+        
+        async deleteProveedor(id) {
+          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/suppliers/${id}`, {
+            method: 'DELETE'
+          });
+          if (!res.ok) throw new Error('Error eliminando proveedor');
+          return await res.json();
+        },
+        
         async getPedidos() {
           const res = await fetch('https://lacaleta-api.mindloop.cloud/api/orders');
           return await res.json();
         },
+        
+        async createPedido(pedido) {
+          const res = await fetch('https://lacaleta-api.mindloop.cloud/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pedido)
+          });
+          if (!res.ok) throw new Error('Error creando pedido');
+          return await res.json();
+        },
+        
+        async updatePedido(id, pedido) {
+          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/orders/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pedido)
+          });
+          if (!res.ok) throw new Error('Error actualizando pedido');
+          return await res.json();
+        },
+        
+        async deletePedido(id) {
+          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/orders/${id}`, {
+            method: 'DELETE'
+          });
+          if (!res.ok) throw new Error('Error eliminando pedido');
+          return await res.json();
+        },
+        
+        async getSales(fecha = null) {
+          const url = fecha 
+            ? `https://lacaleta-api.mindloop.cloud/api/sales?fecha=${fecha}`
+            : 'https://lacaleta-api.mindloop.cloud/api/sales';
+          const res = await fetch(url);
+          if (!res.ok) throw new Error('Error al cargar ventas');
+          return await res.json();
+        },
+        
+        async createSale(saleData) {
+          const res = await fetch('https://lacaleta-api.mindloop.cloud/api/sales', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(saleData)
+          });
+          if (!res.ok) throw new Error('Error al registrar venta');
+          return await res.json();
+        },
+        
+        async deleteSale(id) {
+          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/sales/${id}`, {
+            method: 'DELETE'
+          });
+          if (!res.ok) throw new Error('Error al eliminar venta');
+          return await res.json();
+        }
+      };
 
-// ✅ FUNCIONES DE RECETAS
-async createReceta(receta) {
-  const res = await fetch('https://lacaleta-api.mindloop.cloud/api/recipes', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(receta)
-  });
-  if (!res.ok) throw new Error('Error creando receta');
-  return await res.json();
-},
-
-async updateReceta(id, receta) {
-  const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/recipes/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(receta)
-  });
-  if (!res.ok) throw new Error('Error actualizando receta');
-  return await res.json();
-},
-
-async deleteReceta(id) {
-  const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/recipes/${id}`, {
-    method: 'DELETE'
-  });
-  if (!res.ok) throw new Error('Error eliminando receta');
-  return await res.json();
-},
-
-async createSale(saleData) {
-  const res = await fetch('https://lacaleta-api.mindloop.cloud/api/sales', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(saleData)
-  });
-  if (!res.ok) throw new Error('Error al registrar venta');
-  return await res.json();
-},
-
-async deleteSale(id) {
-  const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/sales/${id}`, {
-    method: 'DELETE'
-  });
-  if (!res.ok) throw new Error('Error al eliminar venta');
-  return await res.json();
-}
-};
       async function cargarDatos() {
         try {
           window.ingredientes = await api.getIngredientes();
