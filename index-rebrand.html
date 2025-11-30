@@ -570,16 +570,21 @@
 
 .header h1 {
   margin: 0;
-  color: white;
-  font-size: 32px;
-  font-weight: 700;
+  background: linear-gradient(135deg, #FF6B35 0%, #F59E0B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 48px;
+  font-weight: 800;
+  letter-spacing: -1px;
 }
 
 .header p {
-  margin: 0;
-  color: rgba(255,255,255,0.95);
-  font-size: 15px;
+  margin: 8px 0 0 0;
+  color: rgba(255,255,255,0.9);
+  font-size: 18px;
   font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 .logo-mindloop { display: none; }
@@ -661,12 +666,11 @@ table tbody tr:hover {
 <body>
   <div class="container">
     <div class="header">
-     <img src="https://i.imgur.com/mccb7OB.jpeg" alt="MindLoop">
-      <div>
-        <h1>MindLoop CostOS</h1>
-        <p>Restaurant Intelligence Platform</p>
-      </div>
-    </div>
+  <div style="text-align: center;">
+    <h1>MindLoop CostOS</h1>
+    <p>Restaurant Intelligence Platform</p>
+  </div>
+</div>
 
     <div class="tabs">
       <button id="tab-btn-ingredientes" class="tab active" onclick="window.cambiarTab('ingredientes')">📦 Ingredientes</button>
