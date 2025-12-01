@@ -1557,9 +1557,24 @@ table tbody td:first-child {
       <button type="submit" class="btn btn-success">Registrar Venta</button>
     </form>
   </div>
+  <div class="card" style="margin-bottom: 20px;">
+    <h3>📅 Filtrar por Fecha</h3>
+    <div style="display: flex; gap: 15px; align-items: end;">
+      <div class="form-group" style="flex: 1;">
+        <label>Desde:</label>
+        <input type="date" id="ventas-fecha-desde" class="form-control">
+      </div>
+      <div class="form-group" style="flex: 1;">
+        <label>Hasta:</label>
+        <input type="date" id="ventas-fecha-hasta" class="form-control">
+      </div>
+      <button class="btn btn-primary" onclick="window.renderizarVentas()">🔍 Filtrar</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('ventas-fecha-desde').value=''; document.getElementById('ventas-fecha-hasta').value=''; window.renderizarVentas();">🔄 Limpiar</button>
+    </div>
+  </div>
   
   <div class="card">
-    <h3>Ventas de Hoy</h3>
+   <h3>📊 Histórico de Ventas</h3>
     <div id="tabla-ventas"></div>
   </div>
 </div>
@@ -1841,18 +1856,52 @@ window.renderizarVentas = async function() {
     select.innerHTML += `<option value="${r.id}">${r.nombre} - ${r.precio_venta}€</option>`;
   });
   
-  const hoy = new Date().toISOString().split('T')[0];
-  const ventas = await api.getSales(hoy);
+  // Obtener rango de fechas
+  const fechaDesde = document.getElementById('ventas-fecha-desde')?.value;
+  const fechaHasta = document.getElementById('ventas-fecha-hasta')?.value;
   
-  let html = '<table><thead><tr><th>Hora</th><th>Plato</th><th>Cantidad</th><th>Total</th></tr></thead><tbody>';
-  let totalDia = 0;
-  ventas.forEach(v => {
-    const hora = new Date(v.fecha).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
-    html += `<tr><td>${hora}</td><td>${v.receta_nombre}</td><td>${v.cantidad}</td><td>${parseFloat(v.total).toFixed(2)}€</td></tr>`;
-    totalDia += parseFloat(v.total);
-  });
-  html += `</tbody></table><p><strong>Total del día: ${totalDia.toFixed(2)}€</strong></p>`;
-  document.getElementById('tabla-ventas').innerHTML = html;
+  try {
+    const ventas = await api.getSales();
+    
+    // Filtrar por fechas si hay filtros
+    let ventasFiltradas = ventas;
+    if (fechaDesde) {
+      ventasFiltradas = ventasFiltradas.filter(v => v.fecha >= fechaDesde);
+    }
+    if (fechaHasta) {
+      ventasFiltradas = ventasFiltradas.filter(v => v.fecha <= fechaHasta + 'T23:59:59');
+    }
+    
+    // Agrupar por día
+    const ventasPorDia = {};
+    ventasFiltradas.forEach(v => {
+      const dia = v.fecha.split('T')[0];
+      if (!ventasPorDia[dia]) ventasPorDia[dia] = [];
+      ventasPorDia[dia].push(v);
+    });
+    
+    let html = '<table><thead><tr><th>Fecha</th><th>Hora</th><th>Plato</th><th>Cantidad</th><th>Total</th></tr></thead><tbody>';
+    let totalGeneral = 0;
+    
+    Object.keys(ventasPorDia).sort().reverse().forEach(dia => {
+      let totalDia = 0;
+      ventasPorDia[dia].forEach(v => {
+        const hora = new Date(v.fecha).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+        const fecha = new Date(v.fecha).toLocaleDateString('es-ES');
+        html += `<tr><td>${fecha}</td><td>${hora}</td><td>${v.receta_nombre}</td><td>${v.cantidad}</td><td><strong>${parseFloat(v.total).toFixed(2)}€</strong></td></tr>`;
+        totalDia += parseFloat(v.total);
+        totalGeneral += parseFloat(v.total);
+      });
+      html += `<tr style="background:#f0fdf4;font-weight:600;"><td colspan="4">Subtotal ${new Date(dia).toLocaleDateString('es-ES')}</td><td>${totalDia.toFixed(2)}€</td></tr>`;
+    });
+    
+    html += `<tr style="background:#10b981;color:white;font-weight:700;font-size:16px;"><td colspan="4">TOTAL</td><td>${totalGeneral.toFixed(2)}€</td></tr>`;
+    html += '</tbody></table>';
+    
+    document.getElementById('tabla-ventas').innerHTML = html;
+  } catch (error) {
+    document.getElementById('tabla-ventas').innerHTML = '<p style="color:#ef4444;">Error cargando ventas</p>';
+  }
 };
 // === BALANCE ===
 window.renderizarBalance = async function() {
