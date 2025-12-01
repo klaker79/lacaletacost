@@ -6,6 +6,7 @@
   <title>MindLoop CostOS - Restaurant Intelligence</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -1228,7 +1229,10 @@ table tbody td:first-child {
             <h2>Ingredientes</h2>
             <p>Gestiona todos los ingredientes de tu restaurante</p>
           </div>
-          <button class="btn btn-primary" onclick="window.mostrarFormularioIngrediente()">+ Añadir Ingrediente</button>
+         <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary" onclick="window.mostrarFormularioIngrediente()">➕ Añadir Ingrediente</button>
+        <button class="btn btn-secondary" onclick="exportarIngredientes()">📥 Exportar Excel</button>
+      </div>
         </div>
         <div class="search-box">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1291,7 +1295,10 @@ table tbody td:first-child {
             <h2>Recetas</h2>
             <p>Crea recetas y calcula costes</p>
           </div>
-          <button class="btn btn-primary" onclick="window.mostrarFormularioReceta()">+ Nueva Receta</button>
+         <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary" onclick="window.mostrarFormularioReceta()">➕ Nueva Receta</button>
+        <button class="btn btn-secondary" onclick="exportarRecetas()">📥 Exportar Excel</button>
+      </div>
         </div>
         <div class="search-box">
           <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -1574,7 +1581,10 @@ table tbody td:first-child {
   </div>
   
   <div class="card">
-   <h3>📊 Histórico de Ventas</h3>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3 style="margin: 0;">📊 Histórico de Ventas</h3>
+      <button class="btn btn-secondary" onclick="exportarVentas()">📥 Exportar Excel</button>
+    </div>
     <div id="tabla-ventas"></div>
   </div>
 </div>
@@ -1760,6 +1770,84 @@ table tbody td:first-child {
       
       function hideLoading() {
         document.getElementById('loading-overlay').classList.remove('active');
+      }
+      // === EXPORT A EXCEL ===
+      function exportarAExcel(datos, nombreArchivo, columnas) {
+        // Preparar datos para Excel
+        const datosExcel = datos.map(item => {
+          const fila = {};
+          columnas.forEach(col => {
+            fila[col.header] = col.key ? item[col.key] : col.value(item);
+          });
+          return fila;
+        });
+        
+        // Crear libro y hoja
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(datosExcel);
+        
+        // Ajustar ancho de columnas
+        ws['!cols'] = columnas.map(() => ({ wch: 20 }));
+        
+        XLSX.utils.book_append_sheet(wb, ws, "Datos");
+        
+        // Descargar
+        XLSX.writeFile(wb, `${nombreArchivo}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        
+        showToast('Excel descargado correctamente', 'success');
+      }
+      function exportarIngredientes() {
+        const columnas = [
+          { header: 'Nombre', key: 'nombre' },
+          { header: 'Categoría', key: 'categoria' },
+          { header: 'Proveedor', value: (ing) => {
+            const prov = window.proveedores.find(p => p.id === ing.proveedor_id);
+            return prov ? prov.nombre : 'Sin proveedor';
+          }},
+          { header: 'Precio (€)', value: (ing) => ing.precio.toFixed(2) },
+          { header: 'Unidad', key: 'unidad' },
+          { header: 'Stock Actual', value: (ing) => ing.stockActual.toFixed(2) },
+          { header: 'Stock Mínimo', value: (ing) => ing.stockMinimo.toFixed(2) }
+        ];
+        
+        exportarAExcel(window.ingredientes, 'Ingredientes_CostOS', columnas);
+      }
+      function exportarRecetas() {
+        const columnas = [
+          { header: 'Nombre', key: 'nombre' },
+          { header: 'Categoría', key: 'categoria' },
+          { header: 'Precio Venta (€)', value: (rec) => rec.precio_venta.toFixed(2) },
+          { header: 'Coste (€)', value: (rec) => {
+            return rec.ingredientes.reduce((sum, item) => {
+              const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
+              return sum + (ing ? ing.precio * item.cantidad : 0);
+            }, 0).toFixed(2);
+          }},
+          { header: 'Margen (%)', value: (rec) => {
+            const coste = rec.ingredientes.reduce((sum, item) => {
+              const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
+              return sum + (ing ? ing.precio * item.cantidad : 0);
+            }, 0);
+            const margen = rec.precio_venta > 0 ? ((rec.precio_venta - coste) / rec.precio_venta * 100) : 0;
+            return margen.toFixed(1) + '%';
+          }},
+          { header: 'Ingredientes', value: (rec) => rec.ingredientes.length }
+        ];
+        
+        exportarAExcel(window.recetas, 'Recetas_CostOS', columnas);
+      }
+      function exportarVentas() {
+        const columnas = [
+          { header: 'Fecha', key: 'fecha' },
+          { header: 'Receta', value: (venta) => {
+            const rec = window.recetas.find(r => r.id === venta.receta_id);
+            return rec ? rec.nombre : 'Desconocida';
+          }},
+          { header: 'Cantidad', key: 'cantidad' },
+          { header: 'Total (€)', value: (venta) => parseFloat(venta.total).toFixed(2) }
+        ];
+        
+        exportarAExcel(window.ventas, 'Ventas_CostOS', columnas);
       }
       // === ACTUALIZAR KPIs ===
       function actualizarKPIs() {
