@@ -1849,6 +1849,10 @@ table tbody td:first-child {
         
         exportarAExcel(window.ventas, 'Ventas_CostOS', columnas);
       }
+      // Exponer funciones globalmente
+      window.exportarIngredientes = exportarIngredientes;
+      window.exportarRecetas = exportarRecetas;
+      window.exportarVentas = exportarVentas;
       // === ACTUALIZAR KPIs ===
       function actualizarKPIs() {
         // 1. INGRESOS TOTALES (suma de ventas)
