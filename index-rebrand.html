@@ -2943,7 +2943,7 @@ window.renderizarBalance = async function() {
         
         let opciones = '<option value="">Seleccionar...</option>';
         ingredientesProveedor.forEach(ing => {
-          opciones += `<option value="${ing.id}">${ing.nombre} (${ing.precio.toFixed(2)}€/${ing.unidad})</option>`;
+          opciones += `<option value="${ing.id}">${ing.nombre} (${parseFloat(ing.precio || 0).toFixed(2)}€/${ing.unidad})</option>`;
         });
         
         div.innerHTML = `
