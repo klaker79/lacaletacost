@@ -3321,7 +3321,7 @@ window.renderizarBalance = async function() {
           html += `<div><strong style="color:#666;">Varianza</strong><br><span style="font-size:20px;font-weight:bold;color:${varianza >= 0 ? '#ef4444' : '#10b981'};">${varianza >= 0 ? '+' : ''}${varianza.toFixed(2)} €</span></div>`;
           html += '</div>';
         } else {
-          html += `<div style="text-align: right;"><strong style="color:#666;">Total del Pedido:</strong><br><span style="font-size:24px;font-weight:bold;color:#059669;">${total.toFixed(2)} €</span></div>`;
+         html += `<div style="text-align: right;"><strong style="color:#666;">Total del Pedido:</strong><br><span style="font-size:24px;font-weight:bold;color:#059669;">${parseFloat(total).toFixed(2)} €</span></div>`;
         }
         
         html += '</div>';
