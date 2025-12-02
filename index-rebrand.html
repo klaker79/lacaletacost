@@ -3230,108 +3230,100 @@ window.renderizarBalance = async function() {
 
       let pedidoViendoId = null;
 
-      window.verDetallesPedido = function(id) {
-        pedidoViendoId = id;
-        const pedido = pedidos.find(p => p.id === id);
+     window.verDetallesPedido = function(pedidoId) {
+        const pedido = pedidos.find(p => p.id === pedidoId);
+        if (!pedido) {
+          showToast('Pedido no encontrado', 'error');
+          return;
+        }
+
         const prov = proveedores.find(p => p.id === pedido.proveedorId);
-
-        let html = '<div style="background: #f8f8f8; padding: 20px; border-radius: 8px; margin-bottom: 20px;">';
-        html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">';
-        html += `<div><strong>Proveedor:</strong><br>${prov ? prov.nombre : 'Desconocido'}</div>`;
-        html += `<div><strong>Fecha:</strong><br>${new Date(pedido.fecha).toLocaleDateString('es-ES')}</div>`;
-        html += `<div><strong>Estado:</strong><br><span class="badge ${pedido.estado === 'recibido' ? 'badge-received' : 'badge-pending'}">${pedido.estado === 'recibido' ? 'Recibido' : 'Pendiente'}</span></div>`;
-        if (pedido.estado === 'recibido' && pedido.fechaRecepcion) {
-          html += `<div><strong>Recibido:</strong><br>${new Date(pedido.fechaRecepcion).toLocaleDateString('es-ES')}</div>`;
-        }
-        html += '</div></div>';
-
-        html += '<h4 style="margin-bottom: 15px;">Ingredientes del pedido:</h4>';
-        html += '<table style="font-size: 14px;"><thead><tr>';
-        html += '<th>Ingrediente</th><th>Cantidad</th><th>Precio Unit.</th><th>Subtotal</th>';
         
-        if (pedido.estado === 'recibido' && pedido.itemsRecepcion) {
-          html += '<th>Estado</th>';
-        }
+        let html = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+            <div>
+              <strong style="color:#666;">Proveedor:</strong><br>
+              ${prov ? prov.nombre : 'Desconocido'}
+            </div>
+            <div>
+              <strong style="color:#666;">Fecha:</strong><br>
+              ${new Date(pedido.fecha).toLocaleDateString('es-ES')}
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 30px;">
+            <strong style="color:#666;">Estado:</strong><br>
+            <span class="badge ${pedido.estado === 'recibido' ? 'badge-received' : 'badge-pending'}">
+              ${pedido.estado === 'recibido' ? 'Recibido' : 'Pendiente'}
+            </span>
+          </div>
+          
+          <h4 style="margin: 30px 0 15px 0; color: #1E293B;">Ingredientes del pedido:</h4>
+          
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+              <tr style="background: #F8FAFC; border-bottom: 2px solid #E2E8F0;">
+                <th style="padding: 12px; text-align: left; font-weight: 600; color: #64748B;">Ingrediente</th>
+                <th style="padding: 12px; text-align: center; font-weight: 600; color: #64748B;">Cantidad</th>
+                <th style="padding: 12px; text-align: right; font-weight: 600; color: #64748B;">Precio Unit.</th>
+                <th style="padding: 12px; text-align: right; font-weight: 600; color: #64748B;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
         
-        html += '</tr></thead><tbody>';
-
-        const items = pedido.estado === 'recibido' && pedido.ingredientes[0].cantidadRecibida !== undefined 
-          ? pedido.ingredientes 
-          : pedido.ingredientes;
-
-        let totalPedido = 0;
-        let totalRecibido = 0;
-
-        items.forEach(item => {
-          const ing = ingredientes.find(i => i.id === item.ingredienteId);
-          if (!ing) return;
-
-          const esRecibido = pedido.estado === 'recibido' && item.cantidadRecibida !== undefined;
-          const cantidad = esRecibido ? item.cantidadRecibida : item.cantidad;
-          const precio = esRecibido && item.precioReal ? item.precioReal : item.precioUnitario;
-          const subtotal = cantidad * precio;
-
-          if (esRecibido && item.estado !== 'no-entregado') {
-            totalRecibido += subtotal;
-          } else if (!esRecibido) {
-            totalPedido += subtotal;
-          }
-
-          html += '<tr>';
-          html += `<td><strong>${ing.nombre}</strong></td>`;
-          html += `<td>${cantidad} ${ing.unidad}`;
-          
-          // Mostrar varianza si es recibido y hay diferencia
-          if (esRecibido && item.cantidad && Math.abs(cantidad - item.cantidad) > 0.01) {
-            const diff = cantidad - item.cantidad;
-            html += `<br><small style="color:${diff > 0 ? '#10b981' : '#ef4444'};">(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</small>`;
-          }
-          
-          html += `</td>`;
-          html += `<td>${precio.toFixed(2)} €/${ing.unidad}`;
-          
-          // Mostrar varianza de precio
-          if (esRecibido && item.precioUnitario && Math.abs(precio - item.precioUnitario) > 0.01) {
-            const diff = precio - item.precioUnitario;
-            html += `<br><small style="color:${diff > 0 ? '#ef4444' : '#10b981'};">(${diff > 0 ? '+' : ''}${diff.toFixed(2)} €)</small>`;
-          }
-          
-          html += `</td>`;
-          html += `<td><strong>${item.estado === 'no-entregado' ? '0.00' : subtotal.toFixed(2)} €</strong></td>`;
-          
-          if (esRecibido) {
-            let estadoText = '';
-            if (item.estado === 'consolidado') estadoText = '✅ OK';
-            else if (item.estado === 'varianza') estadoText = '⚠️ Varianza';
-            else if (item.estado === 'no-entregado') estadoText = '❌ No entregado';
-            html += `<td>${estadoText}</td>`;
-          }
-          
-          html += '</tr>';
-        });
-
-        html += '</tbody></table>';
-
-        // Resumen de totales
-        const total = pedido.estado === 'recibido' && pedido.totalRecibido ? pedido.totalRecibido : pedido.total;
+        let total = 0;
         
-        html += '<div style="margin-top: 20px; padding: 20px; background: #f0fdf4; border: 2px solid #10b981; border-radius: 8px;">';
-        
-        if (pedido.estado === 'recibido' && pedido.totalRecibido !== undefined) {
-          const varianza = pedido.totalRecibido - pedido.total;
-          html += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; text-align: center;">';
-          html += `<div><strong style="color:#666;">Total Original</strong><br><span style="font-size:20px;font-weight:bold;">${pedido.total.toFixed(2)} €</span></div>`;
-          html += `<div><strong style="color:#666;">Total Recibido</strong><br><span style="font-size:20px;font-weight:bold;color:#059669;">${pedido.totalRecibido.toFixed(2)} €</span></div>`;
-          html += `<div><strong style="color:#666;">Varianza</strong><br><span style="font-size:20px;font-weight:bold;color:${varianza >= 0 ? '#ef4444' : '#10b981'};">${varianza >= 0 ? '+' : ''}${varianza.toFixed(2)} €</span></div>`;
-          html += '</div>';
+        if (pedido.ingredientes && pedido.ingredientes.length > 0) {
+          pedido.ingredientes.forEach(item => {
+            const ing = ingredientes.find(i => i.id === item.ingredienteId);
+            if (!ing) return;
+            
+            const cantidad = item.cantidad || 0;
+            const precio = item.precioUnitario || ing.precio || 0;
+            const subtotal = cantidad * precio;
+            total += subtotal;
+            
+            html += `
+              <tr style="border-bottom: 1px solid #F1F5F9;">
+                <td style="padding: 12px;">
+                  <strong style="color: #1E293B;">${ing.nombre}</strong>
+                </td>
+                <td style="padding: 12px; text-align: center; color: #64748B;">
+                  ${cantidad.toFixed(2)} ${ing.unidad}
+                </td>
+                <td style="padding: 12px; text-align: right; color: #64748B;">
+                  ${precio.toFixed(2)} €
+                </td>
+                <td style="padding: 12px; text-align: right;">
+                  <strong style="color: #1E293B;">${subtotal.toFixed(2)} €</strong>
+                </td>
+              </tr>
+            `;
+          });
         } else {
-         html += `<div style="text-align: right;"><strong style="color:#666;">Total del Pedido:</strong><br><span style="font-size:24px;font-weight:bold;color:#059669;">${parseFloat(total).toFixed(2)} €</span></div>`;
+          html += `
+            <tr>
+              <td colspan="4" style="padding: 40px; text-align: center; color: #94A3B8;">
+                No hay ingredientes en este pedido
+              </td>
+            </tr>
+          `;
         }
         
-        html += '</div>';
-
+        html += `
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 30px; padding: 20px; background: #F0FDF4; border: 2px solid #10B981; border-radius: 12px; text-align: right;">
+            <strong style="color: #666; font-size: 16px;">Total del Pedido:</strong><br>
+            <span style="font-size: 32px; font-weight: bold; color: #059669;">${total.toFixed(2)} €</span>
+          </div>
+        `;
+        
         document.getElementById('modal-ver-pedido-contenido').innerHTML = html;
         document.getElementById('modal-ver-pedido').classList.add('active');
+        pedidoViendoId = pedidoId;
       };
 
       window.cerrarModalVerPedido = function() {
