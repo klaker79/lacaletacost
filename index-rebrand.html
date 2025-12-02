@@ -3277,7 +3277,8 @@ window.renderizarBalance = async function() {
         if (pedido.ingredientes && pedido.ingredientes.length > 0) {
           pedido.ingredientes.forEach(item => {
             const ing = ingredientes.find(i => i.id === item.ingredienteId);
-            if (!ing) return;
+            const nombreIng = ing ? ing.nombre : 'Ingrediente eliminado (ID: ' + item.ingredienteId + ')';
+            const unidadIng = ing ? ing.unidad : 'ud';
             
             const cantidad = item.cantidad || 0;
             const precio = item.precioReal || item.precioUnitario || ing.precio || 0;
@@ -3287,10 +3288,10 @@ window.renderizarBalance = async function() {
             html += `
               <tr style="border-bottom: 1px solid #F1F5F9;">
                 <td style="padding: 12px;">
-                  <strong style="color: #1E293B;">${ing.nombre}</strong>
+                 <strong style="color: ${ing ? '#1E293B' : '#EF4444'}">${nombreIng}</strong>
                 </td>
                 <td style="padding: 12px; text-align: center; color: #64748B;">
-                  ${cantidad.toFixed(2)} ${ing.unidad}
+                  ${cantidad.toFixed(2)} ${unidadIng}
                 </td>
                 <td style="padding: 12px; text-align: right; color: #64748B;">
                   ${precio.toFixed(2)} €
