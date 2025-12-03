@@ -2478,7 +2478,10 @@ window.renderizarBalance = async function() {
           }
           await cargarDatos();
           renderizarIngredientes();
-          window.cerrarFormularioIngrediente();
+      renderizarInventario();
+      window.actualizarKPIs();
+      window.actualizarDashboardExpandido();
+      window.cerrarFormularioIngrediente();
         } catch (error) {
           console.error('Error:', error);
           alert('Error guardando ingrediente');
