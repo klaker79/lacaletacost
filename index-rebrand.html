@@ -2196,6 +2196,7 @@ window.renderizarBalance = async function() {
         renderizarVentas();
         renderizarBalance();
         actualizarKPIs();
+      window.actualizarDashboardExpandido();
         document.getElementById('form-venta').addEventListener('submit', async (e) => {
       e.preventDefault();
       const recetaId = document.getElementById('venta-receta').value;
