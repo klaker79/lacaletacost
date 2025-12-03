@@ -2512,6 +2512,9 @@ window.renderizarBalance = async function() {
             await api.deleteIngrediente(id);
             await cargarDatos();
             renderizarIngredientes();
+        renderizarInventario();
+        window.actualizarKPIs();
+        window.actualizarDashboardExpandido();
           } catch (error) {
             console.error('Error:', error);
             showToast('Error eliminando ingrediente', 'error');
