@@ -3395,7 +3395,10 @@ html += `<td><div class="actions">`;
           await cargarDatos();
           renderizarPedidos();
           renderizarIngredientes();
-          window.cerrarModalRecibirPedido();
+      renderizarInventario();
+      window.actualizarKPIs();
+      window.actualizarDashboardExpandido();
+      window.cerrarModalRecibirPedido();
           
           showToast('Pedido recibido y stock actualizado correctamente', 'success');
         } catch (error) {
