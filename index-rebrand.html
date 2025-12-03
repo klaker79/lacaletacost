@@ -1940,25 +1940,69 @@ table tbody td:first-child {
       };
       
       // === GRÁFICO INGRESOS VS GASTOS ===
-      function renderRevenueChart() {
+      async function renderRevenueChart() {
         const ctx = document.getElementById('revenueChart');
         if (!ctx || typeof Chart === 'undefined') return;
 
-        new Chart(ctx, {
+        // Obtener datos reales de los últimos 7 días
+        const labels = [];
+        const ingresos = [];
+        const costos = [];
+        
+        for (let i = 6; i >= 0; i--) {
+          const fecha = new Date();
+          fecha.setDate(fecha.getDate() - i);
+          const fechaStr = fecha.toISOString().split('T')[0];
+          const diaSemana = fecha.toLocaleDateString('es-ES', { weekday: 'short' });
+          labels.push(diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1));
+          
+          // Filtrar ventas de ese día
+          try {
+            const ventas = await api.getSales();
+            const ventasDia = ventas.filter(v => v.fecha.split('T')[0] === fechaStr);
+            const ingresoDia = ventasDia.reduce((sum, v) => sum + parseFloat(v.total), 0);
+            ingresos.push(ingresoDia);
+            
+            // Calcular costos de ese día (basado en ingredientes de recetas vendidas)
+            let costoDia = 0;
+            for (const venta of ventasDia) {
+              const receta = window.recetas.find(r => r.id === venta.receta_id);
+              if (receta && receta.ingredientes) {
+                for (const item of receta.ingredientes) {
+                  const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
+                  if (ing) {
+                    costoDia += parseFloat(ing.precio) * item.cantidad * venta.cantidad;
+                  }
+                }
+              }
+            }
+            costos.push(costoDia);
+          } catch (e) {
+            ingresos.push(0);
+            costos.push(0);
+          }
+        }
+
+        // Destruir gráfico anterior si existe
+        if (window.revenueChartInstance) {
+          window.revenueChartInstance.destroy();
+        }
+
+        window.revenueChartInstance = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+            labels: labels,
             datasets: [{
               label: 'Ingresos',
-              data: [450, 520, 380, 690, 580, 720, 650],
+              data: ingresos,
               borderColor: '#10B981',
               backgroundColor: 'rgba(16, 185, 129, 0.1)',
               fill: true,
               tension: 0.4,
               borderWidth: 3
             }, {
-              label: 'Gastos',
-              data: [280, 350, 240, 420, 380, 450, 410],
+              label: 'Costos',
+              data: costos,
               borderColor: '#EF4444',
               backgroundColor: 'rgba(239, 68, 68, 0.1)',
               fill: true,
