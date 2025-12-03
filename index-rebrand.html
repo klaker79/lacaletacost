@@ -2371,7 +2371,10 @@ window.renderizarBalance = async function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(saleData)
           });
-          if (!res.ok) throw new Error('Error al registrar venta');
+          if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || 'Error al registrar venta');
+        }
           return await res.json();
         },
         
