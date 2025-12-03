@@ -3972,11 +3972,16 @@ html += `<td><div class="actions">`;
         let stockBajo = 0;
         let stockCritico = 0;
         
-        ingredientes.forEach(ing => {
-          if (ing.stock_actual <= 0) {
-            stockCritico++;
-          } else if (ing.stock_actual <= ing.stock_minimo) {
-            stockBajo++;
+        window.ingredientes.forEach(ing => {
+          const stockActual = parseFloat(ing.stock_actual) || 0;
+          const stockMinimo = parseFloat(ing.stock_minimo) || 0;
+          // Solo contar si tiene mínimo configurado
+          if (stockMinimo > 0 && stockActual <= stockMinimo) {
+            if (stockActual <= 0) {
+              stockCritico++;
+            } else {
+              stockBajo++;
+            }
           }
         });
         
