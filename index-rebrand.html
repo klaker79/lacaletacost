@@ -1896,7 +1896,7 @@ table tbody td:first-child {
       window.exportarRecetas = exportarRecetas;
       window.exportarVentas = exportarVentas;
       // === ACTUALIZAR KPIs ===
-      function actualizarKPIs() {
+      window.actualizarKPIs = function() {
         // 1. INGRESOS TOTALES (suma de ventas)
         api.getSales().then(ventas => {
           const ingresos = ventas.reduce((sum, v) => sum + parseFloat(v.total), 0);
@@ -1906,34 +1906,37 @@ table tbody td:first-child {
         });
 
         // 2. PEDIDOS ACTIVOS
-        const pedidosActivos = pedidos.filter(p => p.estado === 'pendiente').length;
+        const pedidosActivos = window.pedidos.filter(p => p.estado === 'pendiente').length;
         document.getElementById('kpi-pedidos').textContent = pedidosActivos;
 
         // 3. STOCK BAJO
-        const stockBajo = ingredientes.filter(ing => 
-          ing.stock_actual <= ing.stock_minimo
-        ).length;
+        const stockBajo = window.ingredientes.filter(ing => {
+          const stockActual = parseFloat(ing.stock_actual) || 0;
+          const stockMinimo = parseFloat(ing.stock_minimo) || 0;
+          return stockMinimo > 0 && stockActual <= stockMinimo;
+        }).length;
         document.getElementById('kpi-stock').textContent = stockBajo;
-        document.getElementById('kpi-stock-msg').textContent = 
+        document.getElementById('kpi-stock-msg').textContent =
           stockBajo > 0 ? 'Requieren atención' : 'Todo OK';
 
         // 4. MARGEN PROMEDIO
-        if (recetas.length > 0) {
+        if (window.recetas.length > 0) {
           let totalMargen = 0;
-          recetas.forEach(rec => {
+          window.recetas.forEach(rec => {
             const coste = rec.ingredientes.reduce((sum, item) => {
-              const ing = ingredientes.find(i => i.id === item.ingredienteId);
-              return sum + (ing ? ing.precio * item.cantidad : 0);
+              const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
+              return sum + (ing ? parseFloat(ing.precio) * item.cantidad : 0);
             }, 0);
-            const margen = rec.precio_venta > 0 ? ((rec.precio_venta - coste) / rec.precio_venta) * 100 : 0;
+            const precioVenta = parseFloat(rec.precio_venta) || 0;
+            const margen = precioVenta > 0 ? ((precioVenta - coste) / precioVenta) * 100 : 0;
             totalMargen += margen;
           });
-          const margenPromedio = (totalMargen / recetas.length).toFixed(0);
+          const margenPromedio = (totalMargen / window.recetas.length).toFixed(0);
           document.getElementById('kpi-margen').textContent = margenPromedio + '%';
         } else {
           document.getElementById('kpi-margen').textContent = '0%';
         }
-      }
+      };
       
       // === GRÁFICO INGRESOS VS GASTOS ===
       function renderRevenueChart() {
