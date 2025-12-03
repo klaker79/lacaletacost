@@ -3232,7 +3232,7 @@ html += `<td><div class="actions">`;
               if (ing) {
                 await api.updateIngrediente(ing.id, {
                   ...ing,
-                  stockActual: ing.stockActual + item.cantidadRecibida
+                  stock_actual: ing.stock_actual + item.cantidadRecibida
                 });
               }
               totalRecibido += item.cantidadRecibida * item.precioReal;
