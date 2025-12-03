@@ -3970,9 +3970,9 @@ html += `<td><div class="actions">`;
         let stockCritico = 0;
         
         ingredientes.forEach(ing => {
-          if (ing.stockActual <= 0) {
+          if (ing.stock_actual <= 0) {
             stockCritico++;
-          } else if (ing.stockActual <= ing.stockMinimo) {
+          } else if (ing.stock_actual <= ing.stock_minimo) {
             stockBajo++;
           }
         });
