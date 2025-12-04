@@ -2545,36 +2545,39 @@ window.renderizarBalance = async function() {
         },
         
         async deleteProveedor(id) {
-          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/suppliers/${id}`, {
-            method: 'DELETE'
-          });
-          if (!res.ok) throw new Error('Error eliminando proveedor');
-          return await res.json();
+            const res = await fetch(API_BASE + `/suppliers/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            if (!res.ok) throw new Error('Error eliminando proveedor');
+            return await res.json();
         },
         
-        async getPedidos() {
-          const res = await fetch('https://lacaleta-api.mindloop.cloud/api/orders');
-          return await res.json();
+       async getPedidos() {
+            const res = await fetch(API_BASE + '/orders', {
+                headers: getAuthHeaders()
+            });
+            return await res.json();
         },
         
         async createPedido(pedido) {
-          const res = await fetch('https://lacaleta-api.mindloop.cloud/api/orders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(pedido)
-          });
-          if (!res.ok) throw new Error('Error creando pedido');
-          return await res.json();
+            const res = await fetch(API_BASE + '/orders', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(pedido)
+            });
+            if (!res.ok) throw new Error('Error creando pedido');
+            return await res.json();
         },
         
         async updatePedido(id, pedido) {
-          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/orders/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(pedido)
-          });
-          if (!res.ok) throw new Error('Error actualizando pedido');
-          return await res.json();
+            const res = await fetch(API_BASE + `/orders/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(pedido)
+            });
+            if (!res.ok) throw new Error('Error actualizando pedido');
+            return await res.json();
         },
         
         async deletePedido(id) {
