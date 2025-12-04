@@ -2509,11 +2509,12 @@ window.renderizarBalance = async function() {
         },
         
         async deleteReceta(id) {
-          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/recipes/${id}`, {
-            method: 'DELETE'
-          });
-          if (!res.ok) throw new Error('Error eliminando receta');
-          return await res.json();
+            const res = await fetch(API_BASE + `/recipes/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            if (!res.ok) throw new Error('Error eliminando receta');
+            return await res.json();
         },
         
         async getProveedores() {
