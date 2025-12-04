@@ -2518,28 +2518,30 @@ window.renderizarBalance = async function() {
         },
         
         async getProveedores() {
-          const res = await fetch('https://lacaleta-api.mindloop.cloud/api/suppliers');
-          return await res.json();
+            const res = await fetch(API_BASE + '/suppliers', {
+                headers: getAuthHeaders()
+            });
+            return await res.json();
         },
         
         async createProveedor(proveedor) {
-          const res = await fetch('https://lacaleta-api.mindloop.cloud/api/suppliers', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(proveedor)
-          });
-          if (!res.ok) throw new Error('Error creando proveedor');
-          return await res.json();
+            const res = await fetch(API_BASE + '/suppliers', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(proveedor)
+            });
+            if (!res.ok) throw new Error('Error creando proveedor');
+            return await res.json();
         },
         
         async updateProveedor(id, proveedor) {
-          const res = await fetch(`https://lacaleta-api.mindloop.cloud/api/suppliers/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(proveedor)
-          });
-          if (!res.ok) throw new Error('Error actualizando proveedor');
-          return await res.json();
+            const res = await fetch(API_BASE + `/suppliers/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(proveedor)
+            });
+            if (!res.ok) throw new Error('Error actualizando proveedor');
+            return await res.json();
         },
         
         async deleteProveedor(id) {
