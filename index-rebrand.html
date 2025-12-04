@@ -4457,7 +4457,10 @@ html += `<td><div class="actions">`;
       }
     };
 
-    init();
+    // Verificar autenticación al cargar
+    if (checkAuth()) {
+      init();
+    }
     })();
     
   </script>
