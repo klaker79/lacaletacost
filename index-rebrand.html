@@ -3508,6 +3508,7 @@ html += `<td><div class="actions">`;
 
         try {
           await api.createPedido(pedido);
+          await cargarDatos();
           renderizarPedidos();
           window.cerrarFormularioPedido();
           hideLoading();
