@@ -4202,7 +4202,7 @@ html += `<td><div class="actions">`;
         }, 250);
       };
 
-      function renderizarPedidos() {
+      window.renderizarPedidos = function() {
         const busqueda = document.getElementById('busqueda-pedidos').value.toLowerCase();
         const filtrados = pedidos.filter(ped => {
           const prov = proveedores.find(p => p.id === ped.proveedorId);
