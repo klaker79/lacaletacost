@@ -2881,21 +2881,6 @@ window.renderizarBalance = async function() {
         document.getElementById('resumen-ingredientes').style.display = 'flex';
       }
     };
-```
-
----
-
-**Commit message:**
-```
-fix: corregir template literals en renderizarIngredientes
-
-        document.getElementById('resumen-ingredientes').innerHTML = `
-          <div>Total: <strong>${ingredientes.length}</strong></div>
-          <div>Mostrando: <strong>${filtrados.length}</strong></div>
-        `;
-        document.getElementById('resumen-ingredientes').style.display = 'flex';
-      }
-    };
 
       // ========== RECETAS (resumido) ==========
       window.mostrarFormularioReceta = function() {
