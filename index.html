@@ -4956,12 +4956,10 @@
               const stockActual = parseFloat(ing.stock_actual) || 0;
               const stockMinimo = parseFloat(ing.stock_minimo) || 0;
               // Solo contar si tiene mínimo configurado
-              if (stockMinimo > 0 && stockActual <= stockMinimo) {
-                if (stockActual <= 0) {
-                  stockCritico++;
-                } else {
-                  stockBajo++;
-                }
+              if (stockActual <= 0) {
+                stockCritico++;
+              } else if (stockMinimo > 0 && stockActual <= stockMinimo) {
+                stockBajo++;
               }
             });
 
@@ -5006,10 +5004,10 @@
               let estadoClass = 'stock-ok';
               let estadoIcon = '🟢';
 
-              const stockActual = parseFloat(ing.stock_actual) || 0;
+              const stockActual = parseFloat(ing.stock_virtual) || 0;
               const stockMinimo = parseFloat(ing.stock_minimo) || 0;
 
-              if (stockMinimo > 0 && stockActual <= 0) {
+              if (stockActual <= 0) {
                 estadoClass = 'stock-critico';
                 estadoIcon = '🔴';
               } else if (stockMinimo > 0 && stockActual <= stockMinimo) {
