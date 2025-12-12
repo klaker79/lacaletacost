@@ -3713,7 +3713,10 @@ html += `<td><div class="actions">`;
             ...pedido,
             estado: 'recibido',
             totalRecibido: totalRecibido,
-            ingredientes: pedido.itemsRecepcion
+            ingredientes: pedido.itemsRecepcion.map(item => ({
+    ...item,
+    precioReal: item.precioReal || item.precioUnitario
+}))
           });
 
           await cargarDatos();
