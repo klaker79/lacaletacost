@@ -2482,11 +2482,12 @@
     </div>
 
     <!-- MODAL: Confirmación de Pérdidas -->
+    <!-- MODAL: Confirmación de Ajustes (Unificado) -->
     <div id="modal-perdidas-stock" class="modal">
       <div class="modal-content" style="max-width: 800px;">
-        <h3>⚠️ Diferencias Negativas Detectadas</h3>
+        <h3>⚠️ Confirmar Ajustes de Stock</h3>
         <p style="margin-bottom: 20px; color: #666;">
-          El stock real es menor que el ficticio. Selecciona qué diferencias deben registrarse como pérdidas:
+          Revisa los cambios detectados. Confirma para actualizar el inventario.
         </p>
 
         <div style="max-height: 400px; overflow-y: auto;">
@@ -2495,14 +2496,13 @@
 
         <div style="background: #FEF3C7; padding: 15px; border-radius: 8px; margin-top: 20px;">
           <p style="margin: 0; font-size: 14px; color: #92400E;">
-            <strong>💡 Nota:</strong> Las diferencias marcadas como pérdidas se registrarán en el sistema.
-            El stock ficticio se actualizará automáticamente al stock real.
+            <strong>💡 Nota:</strong> Al confirmar, se actualizará el stock ficticio al valor real introducido.
           </p>
         </div>
 
         <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
           <button class="btn btn-secondary" onclick="cerrarModalPerdidas()">Cancelar</button>
-          <button class="btn btn-success" onclick="confirmarPerdidas()">Confirmar Ajustes</button>
+          <button class="btn btn-success" onclick="confirmarAjustes()">Confirmar TODO</button>
         </div>
       </div>
     </div>
@@ -6067,67 +6067,100 @@
         return;
       }
 
+      // Mostrar TODO en el modal unificado
       const negativas = diferencias.filter(d => d.diferencia < 0);
       const positivas = diferencias.filter(d => d.diferencia > 0);
 
-      if (negativas.length > 0) {
-        mostrarModalPerdidasStockReal(negativas, positivas);
-      } else {
-        await ajustarStockPositivo(positivas);
-        cerrarModalStockReal();
-
-        if (window.showToast) window.showToast('Stock actualizado correctamente', 'success');
-        else alert('Stock actualizado correctamente');
-
-        if (window.renderizarInventario) window.renderizarInventario();
-      }
+      mostrarModalConfirmacionAjustes(negativas, positivas);
     };
 
-    function mostrarModalPerdidasStockReal(negativas, positivas) {
+    function mostrarModalConfirmacionAjustes(negativas, positivas) {
       const modal = document.getElementById('modal-perdidas-stock');
       const lista = document.getElementById('lista-perdidas-stock');
 
       lista.innerHTML = '';
-      negativas.forEach(dif => {
-        const div = document.createElement('div');
-        div.className = 'perdida-item';
-        div.innerHTML = `
-          <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-              <div>
-                <strong style="font-size: 16px; color: #7F1D1D;">${dif.ingrediente.nombre}</strong><br>
-                <div style="color: #666; font-size: 14px; margin-top: 5px;">
-                  Stock Ficticio: <strong>${dif.stockActual.toFixed(2)} ${dif.ingrediente.unidad}</strong><br>
-                  Stock Real: <strong>${dif.stockReal.toFixed(2)} ${dif.ingrediente.unidad}</strong>
+
+      // SECCIÓN 1: Negativos (Pérdidas potenciales)
+      if (negativas.length > 0) {
+        const headerNeg = document.createElement('h4');
+        headerNeg.innerText = '📉 Diferencias Negativas (Faltantes)';
+        headerNeg.style.color = '#DC2626';
+        headerNeg.style.borderBottom = '1px solid #FECACA';
+        headerNeg.style.paddingBottom = '5px';
+        headerNeg.style.marginTop = '0';
+        lista.appendChild(headerNeg);
+
+        negativas.forEach(dif => {
+          const div = document.createElement('div');
+          div.className = 'perdida-item';
+          div.innerHTML = `
+              <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 8px; padding: 15px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                  <div>
+                    <strong style="font-size: 16px; color: #7F1D1D;">${dif.ingrediente.nombre}</strong><br>
+                    <div style="color: #666; font-size: 14px; margin-top: 5px;">
+                      Ficticio: <strong>${dif.stockActual.toFixed(2)}</strong> → Real: <strong>${dif.stockReal.toFixed(2)}</strong> ${dif.ingrediente.unidad}
+                    </div>
+                  </div>
+                  <div style="text-align: right;">
+                    <span style="color: #DC2626; font-weight: 800; font-size: 16px;">
+                      ${dif.diferencia.toFixed(2)} ${dif.ingrediente.unidad}
+                    </span>
+                  </div>
+                </div>
+                
+                <div style="background: white; padding: 8px; border-radius: 6px; border: 1px solid #FCA5A5; display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" 
+                         class="check-perdida" 
+                         id="chk-perdida-${dif.ingrediente.id}"
+                         data-ing-id="${dif.ingrediente.id}"
+                         data-diferencia="${dif.diferencia}"
+                         style="width: 18px; height: 18px; cursor: pointer;">
+                  <label for="chk-perdida-${dif.ingrediente.id}" style="cursor: pointer; font-weight: 500; color: #7F1D1D; font-size: 14px;">
+                    ¿Registrar falta como PÉRDIDA?
+                  </label>
                 </div>
               </div>
-              <div style="text-align: right;">
-                <span style="color: #DC2626; font-weight: 800; font-size: 18px;">
-                  ${dif.diferencia.toFixed(2)} ${dif.ingrediente.unidad}
-                </span>
-                <div style="font-size: 12px; color: #EF4444; font-weight: 600;">Diferencia</div>
+            `;
+          lista.appendChild(div);
+        });
+      }
+
+      // SECCIÓN 2: Positivos (Sobrantes/Ajustes)
+      if (positivas.length > 0) {
+        const headerPos = document.createElement('h4');
+        headerPos.innerText = '📈 Diferencias Positivas (Sobrantes)';
+        headerPos.style.color = '#059669';
+        headerPos.style.borderBottom = '1px solid #A7F3D0';
+        headerPos.style.paddingBottom = '5px';
+        headerPos.style.marginTop = '20px';
+        lista.appendChild(headerPos);
+
+        positivas.forEach(dif => {
+          const div = document.createElement('div');
+          div.style.marginBottom = '10px';
+          div.innerHTML = `
+              <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <strong style="font-size: 16px; color: #065F46;">${dif.ingrediente.nombre}</strong><br>
+                  <div style="color: #666; font-size: 14px; margin-top: 5px;">
+                      Ficticio: <strong>${dif.stockActual.toFixed(2)}</strong> → Real: <strong>${dif.stockReal.toFixed(2)}</strong> ${dif.ingrediente.unidad}
+                  </div>
+                </div>
+                <div style="text-align: right;">
+                  <span style="color: #059669; font-weight: 800; font-size: 16px;">
+                    +${dif.diferencia.toFixed(2)} ${dif.ingrediente.unidad}
+                  </span>
+                  <div style="font-size: 12px; color: #059669; font-weight: 600;">Se ajustará</div>
+                </div>
               </div>
-            </div>
-            
-            <div style="background: white; padding: 10px; border-radius: 6px; border: 1px solid #FCA5A5; display: flex; align-items: center; gap: 10px;">
-              <input type="checkbox" 
-                     class="check-perdida" 
-                     id="chk-perdida-${dif.ingrediente.id}"
-                     data-ing-id="${dif.ingrediente.id}"
-                     data-diferencia="${dif.diferencia}"
-                     style="width: 18px; height: 18px; cursor: pointer;">
-              <label for="chk-perdida-${dif.ingrediente.id}" style="cursor: pointer; font-weight: 500; color: #7F1D1D;">
-                ¿Registrar como PÉRDIDA económica?
-              </label>
-            </div>
-          </div>
-        `;
-        lista.appendChild(div);
-      });
+            `;
+          lista.appendChild(div);
+        });
+      }
 
       modal.dataset.positivas = JSON.stringify(positivas);
       modal.dataset.negativas = JSON.stringify(negativas);
-
       modal.classList.add('active');
     }
 
@@ -6135,18 +6168,21 @@
       document.getElementById('modal-perdidas-stock').classList.remove('active');
     };
 
-    window.confirmarPerdidas = async function () {
+    window.confirmarAjustes = async function () { // Renombramos para reflejar que es general
       const modal = document.getElementById('modal-perdidas-stock');
       const checkboxes = document.querySelectorAll('.check-perdida');
+
       const positivas = JSON.parse(modal.dataset.positivas || '[]');
       const negativas = JSON.parse(modal.dataset.negativas || '[]');
-      let perdidasRegistradas = 0;
 
+      let perdidasRegistradas = 0;
+      let totalActualizados = 0;
+
+      // 1. Procesar Negativos
       for (const dif of negativas) {
         const checkbox = Array.from(checkboxes).find(ch => parseInt(ch.dataset.ingId) === dif.ingrediente.id);
         const esPerdida = checkbox && checkbox.checked;
 
-        // 1. Siempre actualizamos el inventario para que cuadre con la realidad
         if (window.api && window.api.updateIngredient) {
           const ingActualizado = {
             ...dif.ingrediente,
@@ -6156,40 +6192,22 @@
           };
           await window.api.updateIngredient(ingActualizado);
 
-          // Actualizar local
+          // Update local memory
           const localIng = window.ingredientes.find(i => i.id === dif.ingrediente.id);
           if (localIng) {
             localIng.stock_actual = dif.stockReal;
             localIng.stock_real = dif.stockReal;
           }
+          totalActualizados++;
         }
 
-        // 2. Si es pérdida, registramos (Log o futura API)
         if (esPerdida) {
           console.log(`Pérdida registrada: ${dif.ingrediente.nombre}`);
           perdidasRegistradas++;
         }
       }
 
-      await ajustarStockPositivo(positivas);
-
-      cerrarModalPerdidas();
-      cerrarModalStockReal();
-
-      const msg = perdidasRegistradas > 0
-        ? `Stock actualizado. Se registraron ${perdidasRegistradas} pérdidas.`
-        : 'Stock actualizado correctamente.';
-
-      if (window.showToast) {
-        window.showToast(msg, perdidasRegistradas > 0 ? 'warning' : 'success');
-      } else {
-        alert(msg);
-      }
-
-      if (window.renderizarInventario) window.renderizarInventario();
-    };
-
-    async function ajustarStockPositivo(positivas) {
+      // 2. Procesar Positivos (Aquí estaba el fallo antes, ahora se procesan explícitamente al confirmar)
       for (const dif of positivas) {
         if (window.api && window.api.updateIngredient) {
           const ingActualizado = {
@@ -6200,15 +6218,26 @@
           };
           await window.api.updateIngredient(ingActualizado);
 
-          // Actualizar el array local
+          // Update local memory
           const localIng = window.ingredientes.find(i => i.id === dif.ingrediente.id);
           if (localIng) {
             localIng.stock_actual = dif.stockReal;
             localIng.stock_real = dif.stockReal;
           }
+          totalActualizados++;
         }
       }
-    }
+
+      cerrarModalPerdidas();
+      cerrarModalStockReal();
+
+      const msg = `Se actualizaron ${totalActualizados} ingredientes. (${perdidasRegistradas} marcados como pérdida)`;
+
+      if (window.showToast) window.showToast(msg, 'success');
+      else alert(msg);
+
+      if (window.renderizarInventario) window.renderizarInventario();
+    };
 
   </script>
 </body>
