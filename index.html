@@ -1409,6 +1409,7 @@ table tbody td:first-child {
          <div style="display: flex; gap: 10px;">
         <button class="btn btn-primary" onclick="window.mostrarFormularioIngrediente()">➕ Añadir Ingrediente</button>
         <button class="btn btn-secondary" onclick="exportarIngredientes()">📥 Exportar Excel</button>
+           <button class="btn btn-secondary" onclick="window.mostrarModalInventarioMasivo()">📊 Actualizar Inventario Masivo</button>
       </div>
         </div>
         <div class="search-box">
@@ -4609,5 +4610,230 @@ html += '</tr>';
   <div class="loading-overlay" id="loading-overlay">
     <div class="spinner"></div>
   </div>
+    <!-- Modal: Actualizar Inventario Masivo -->
+    <div id="modal-inventario-masivo" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <span class="close" onclick="document.getElementById('modal-inventario-masivo').classList.remove('active')">&times;</span>
+            <h2>📊 Actualizar Inventario Masivo</h2>
+            
+            <div style="margin: 20px 0;">
+                <p style="color: #64748b; margin-bottom: 15px;">
+                    Sube un archivo Excel (.xlsx) o CSV con las columnas: <strong>Ingrediente</strong> y <strong>Stock Real</strong>
+                </p>
+                
+                <div style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 30px; text-align: center; background: #f8fafc;">
+                    <input type="file" id="file-inventario-masivo" accept=".xlsx,.csv" style="display: none;" onchange="window.procesarArchivoInventario(this)">
+                    <label for="file-inventario-masivo" style="cursor: pointer;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">📁</div>
+                        <div style="font-size: 16px; color: #475569; font-weight: 500;">Haz clic para seleccionar archivo</div>
+                        <div style="font-size: 14px; color: #94a3b8; margin-top: 5px;">Excel (.xlsx) o CSV</div>
+                    </label>
+                </div>
+            </div>
+
+            <div id="preview-inventario-masivo" style="display: none; margin-top: 20px;">
+                <h3>Vista Previa de Cambios</h3>
+                <div id="preview-table-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;"></div>
+                
+                <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="window.cancelarInventarioMasivo()">Cancelar</button>
+                    <button class="btn btn-primary" onclick="window.confirmarInventarioMasivo()" id="btn-confirmar-masivo">✓ Confirmar Actualización</button>
+                </div>
+            </div>
+        </div>
+      <script>
+        
+        // ========== INVENTARIO MASIVO ==========
+        
+        let datosInventarioMasivo = [];
+        
+        window.mostrarModalInventarioMasivo = function() {
+            document.getElementById('modal-inventario-masivo').classList.add('active');
+            document.getElementById('preview-inventario-masivo').style.display = 'none';
+            document.getElementById('file-inventario-masivo').value = '';
+        };
+        
+        window.procesarArchivoInventario = async function(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            showLoading();
+            
+            try {
+                const data = await leerArchivoInventario(file);
+                datosInventarioMasivo = await validarDatosInventario(data);
+                mostrarPreviewInventario(datosInventarioMasivo);
+            } catch (error) {
+                hideLoading();
+                showToast('Error procesando archivo: ' + error.message, 'error');
+            }
+        };
+        
+        async function leerArchivoInventario(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                        
+                        // Validar que tenga al menos 2 columnas
+                        if (rows.length < 2) {
+                            reject(new Error('El archivo debe tener al menos 2 filas (encabezado + datos)'));
+                            return;
+                        }
+                        
+                        // Parsear datos
+                        const result = [];
+                        for (let i = 1; i < rows.length; i++) {
+                            const row = rows[i];
+                            if (row[0] && row[1] !== undefined && row[1] !== null && row[1] !== '') {
+                                result.push({
+                                    ingrediente: String(row[0]).trim(),
+                                    stockReal: parseFloat(row[1])
+                                });
+                            }
+                        }
+                        
+                        if (result.length === 0) {
+                            reject(new Error('No se encontraron datos válidos en el archivo'));
+                            return;
+                        }
+                        
+                        resolve(result);
+                    } catch (error) {
+                        reject(new Error('Error leyendo el archivo: ' + error.message));
+                    }
+                };
+                
+                reader.onerror = () => reject(new Error('Error leyendo el archivo'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        async function validarDatosInventario(data) {
+            const ingredientesActuales = window.ingredientes || await api.getIngredientes();
+            
+            return data.map(item => {
+                const ing = ingredientesActuales.find(i => 
+                    i.nombre.toLowerCase() === item.ingrediente.toLowerCase()
+                );
+                
+                return {
+                    ...item,
+                    ingredienteId: ing ? ing.id : null,
+                    stockActual: ing ? ing.stock_real : null,
+                    valido: !!ing && !isNaN(item.stockReal) && item.stockReal >= 0,
+                    error: !ing ? 'Ingrediente no encontrado' : 
+                           isNaN(item.stockReal) ? 'Stock inválido' :
+                           item.stockReal < 0 ? 'Stock no puede ser negativo' : null
+                };
+            });
+        }
+        
+        function mostrarPreviewInventario(datos) {
+            hideLoading();
+            
+            const validos = datos.filter(d => d.valido).length;
+            const invalidos = datos.filter(d => !d.valido).length;
+            
+            let html = `
+                <div style="margin-bottom: 15px; padding: 10px; background: #f8fafc; border-radius: 6px;">
+                    <strong>Resumen:</strong> 
+                    <span style="color: #10b981; margin-left: 10px;">✓ ${validos} válidos</span>
+                    ${invalidos > 0 ? `<span style="color: #ef4444; margin-left: 10px;">✗ ${invalidos} con errores</span>` : ''}
+                </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f1f5f9;">
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;">Estado</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;">Ingrediente</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #e2e8f0;">Stock Actual</th>
+                            <th style="padding: 10px; text-align: right; border-bottom: 2px solid #e2e8f0;">Stock Nuevo</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e2e8f0;">Observación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            datos.forEach(item => {
+                const bgColor = item.valido ? '#f0fdf4' : '#fef2f2';
+                const icon = item.valido ? '✓' : '✗';
+                const iconColor = item.valido ? '#10b981' : '#ef4444';
+                
+                html += `
+                    <tr style="background: ${bgColor};">
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">
+                            <span style="color: ${iconColor}; font-size: 18px;">${icon}</span>
+                        </td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${item.ingrediente}</td>
+                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">
+                            ${item.stockActual !== null ? item.stockActual : '-'}
+                        </td>
+                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #e2e8f0; font-weight: 600;">
+                            ${item.stockReal}
+                        </td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: ${item.valido ? '#10b981' : '#ef4444'};">
+                            ${item.error || 'OK'}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('preview-table-container').innerHTML = html;
+            document.getElementById('preview-inventario-masivo').style.display = 'block';
+            
+            // Deshabilitar botón si hay errores
+            document.getElementById('btn-confirmar-masivo').disabled = invalidos > 0;
+        }
+        
+        window.confirmarInventarioMasivo = async function() {
+            const datosValidos = datosInventarioMasivo.filter(d => d.valido);
+            
+            if (datosValidos.length === 0) {
+                showToast('No hay datos válidos para actualizar', 'error');
+                return;
+            }
+            
+            if (!confirm(`¿Confirmar actualización de ${datosValidos.length} ingredientes?`)) {
+                return;
+            }
+            
+            showLoading();
+            
+            try {
+                const updates = datosValidos.map(d => ({
+                    id: d.ingredienteId,
+                    stock_real: d.stockReal
+                }));
+                
+                await api.bulkUpdateStockReal(updates);
+                
+                hideLoading();
+                showToast(`✓ ${datosValidos.length} ingredientes actualizados correctamente`, 'success');
+                
+                document.getElementById('modal-inventario-masivo').classList.remove('active');
+                await window.renderizarInventario();
+                
+            } catch (error) {
+                hideLoading();
+                showToast('Error actualizando inventario: ' + error.message, 'error');
+            }
+        };
+        
+        window.cancelarInventarioMasivo = function() {
+            document.getElementById('modal-inventario-masivo').classList.remove('active');
+            datosInventarioMasivo = [];
+        };
+    </script>
+    </div>
 </body>
 </html>
