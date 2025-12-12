@@ -4715,8 +4715,11 @@
 
           htmlPrint += `
   <div style="text-align: right; margin-top: 20px; margin-bottom: 20px;">
+    <button onclick="window.descargarPedidoExcel(${JSON.stringify(pedido).replace(/"/g, '&quot;')})" style="background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; margin-right: 10px;">
+      📊 Descargar Excel
+    </button>
     <button onclick="window.enviarAn8n(${JSON.stringify(pedido).replace(/"/g, '&quot;')})" style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px;">
-      📤 Enviar a n8n (Drive)
+      ☁️ Enviar a n8n
     </button>
   </div>
 
@@ -5797,6 +5800,33 @@
     window.cancelarImportarRecetas = function () {
       document.getElementById('modal-importar-recetas').classList.remove('active');
       datosImportarRecetas = [];
+    };
+
+
+    window.descargarPedidoExcel = function (pedido) {
+      // BOM para que Excel reconozca caracteres latinos
+      let csv = '\uFEFFIngrediente;Cantidad;Precio Unitario;Subtotal\n';
+
+      pedido.ingredientes.forEach(ing => {
+        // Asegurar que usamos coma decimal si el usuario tiene Excel en español, 
+        // o punto si es inglés. Por estándar CSV en español usamos ; como separador y , o . en nros.
+        // Aquí forzamos punto para compatibilidad universal básica, pero el BOM ayuda.
+        csv += `${ing.nombre};${ing.cantidad};${parseFloat(ing.precio).toFixed(2)};${parseFloat(ing.coste).toFixed(2)}\n`;
+      });
+
+      const totalNum = parseFloat(pedido.total);
+      csv += `\n;;Total Original;${totalNum.toFixed(2)}`;
+
+      // Crear blob y descargar
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Pedido_${pedido.id}_${pedido.fecha.split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     };
 
   </script>
