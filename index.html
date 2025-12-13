@@ -6158,15 +6158,27 @@
               </div>
             </div>
             
-            <div style="background: white; padding: 10px; border-radius: 6px; border: 1px solid #FCA5A5; display: flex; align-items: center; gap: 10px;">
-              <input type="checkbox" 
-                     class="check-perdida" 
-                     id="chk-perdida-${dif.ingrediente.id}"
-                     data-ing-id="${dif.ingrediente.id}"
-                     style="width: 18px; height: 18px; cursor: pointer;">
-              <label for="chk-perdida-${dif.ingrediente.id}" style="cursor: pointer; font-weight: 500; color: #7F1D1D; font-size: 14px;">
-                ¿Es PÉRDIDA? (Merma/Caducidad/Rotura)
-              </label>
+            <div style="background: white; padding: 10px; border-radius: 6px; border: 1px solid #FCA5A5; display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" 
+                       class="check-perdida" 
+                       id="chk-perdida-${dif.ingrediente.id}"
+                       data-ing-id="${dif.ingrediente.id}"
+                       style="width: 18px; height: 18px; cursor: pointer;"
+                       onchange="document.getElementById('motivo-perdida-${dif.ingrediente.id}').disabled = !this.checked">
+                <label for="chk-perdida-${dif.ingrediente.id}" style="cursor: pointer; font-weight: 500; color: #7F1D1D; font-size: 14px;">
+                  Registrar como PÉRDIDA
+                </label>
+              </div>
+              
+              <select id="motivo-perdida-${dif.ingrediente.id}" class="select-motivo-perdida" disabled
+                      style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                <option value="">Selecciona el motivo...</option>
+                <option value="merma">Merma (Producción/Cocina)</option>
+                <option value="caducidad">Caducidad</option>
+                <option value="rotura">Rotura / Accidente</option>
+                <option value="robo">Robo / Desconocido</option>
+              </select>
             </div>
           </div>
         `;
@@ -6191,6 +6203,8 @@
       for (const dif of negativas) {
         const checkbox = Array.from(checkboxes).find(ch => parseInt(ch.dataset.ingId) === dif.ingrediente.id);
         const esPerdida = checkbox && checkbox.checked;
+        const motivoSelect = document.getElementById(`motivo-perdida-${dif.ingrediente.id}`);
+        const motivo = motivoSelect ? motivoSelect.value : '';
 
         // Siempre actualizamos stock al real
         if (window.api && window.api.updateIngredient) {
@@ -6211,8 +6225,13 @@
         }
 
         if (esPerdida) {
-          console.log(`Pérdida registrada: ${dif.ingrediente.nombre}`);
-          // Aquí iría la llamada a api.createLoss(...)
+          // Validar que haya motivo
+          const motivoTexto = motivo || 'Sin especificar';
+          console.log(`Pérdida registrada: ${dif.ingrediente.nombre}. Motivo: ${motivoTexto}`);
+          // Aquí iría la llamada a api.createLoss(...) pasando el motivo
+
+          if (window.showToast) window.showToast(`Pérdida de ${dif.ingrediente.nombre} (${motivoTexto})`, 'warning');
+
           perdidasRegistradas++;
         }
       }
