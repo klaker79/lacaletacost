@@ -2863,6 +2863,7 @@
             const res = await fetch(API_BASE + '/ingredients', {
               headers: getAuthHeaders()
             });
+            if (!res.ok) throw new Error('Error cargando ingredientes');
             return await res.json();
           },
 
@@ -2899,6 +2900,7 @@
             const res = await fetch(API_BASE + '/recipes', {
               headers: getAuthHeaders()
             });
+            if (!res.ok) throw new Error('Error cargando recetas');
             return await res.json();
           },
 
@@ -2935,6 +2937,7 @@
             const res = await fetch(API_BASE + '/suppliers', {
               headers: getAuthHeaders()
             });
+            if (!res.ok) throw new Error('Error cargando proveedores');
             return await res.json();
           },
 
@@ -2971,6 +2974,7 @@
             const res = await fetch(API_BASE + '/orders', {
               headers: getAuthHeaders()
             });
+            if (!res.ok) throw new Error('Error cargando pedidos');
             return await res.json();
           },
 
@@ -3090,6 +3094,15 @@
           } catch (error) {
             console.error('Error cargando datos:', error);
             showToast('Error conectando con la API', 'error');
+
+            // Inicializar vacíos para evitar crash en renderizado
+            window.ingredientes = [];
+            window.recetas = [];
+            window.proveedores = [];
+            window.pedidos = [];
+
+            // Si el error es 401, forzar logout (opcional, buena práctica)
+            // if (error.message.includes('401')) window.logout();
           }
         }
         window.cambiarTab = function (tab) {
