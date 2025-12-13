@@ -5195,7 +5195,92 @@
     <div class="loading-overlay" id="loading-overlay">
       <div class="spinner"></div>
     </div>
-    <script src="loss_logic.js"></script>
+    <script>
+      // ========== LÓGICA DE MERMAS Y STOCK REAL ==========
+      window.mostrarHistorialPerdidas = async function () {
+        // Si no existe el modal, crearlo dinámicamente (por si acaso)
+        let modal = document.getElementById('modal-historial-perdidas');
+        if (!modal) {
+          alert("Error: No se encuentra el modal de historial.");
+          return;
+        }
+
+        const tbody = document.getElementById('tabla-historial-perdidas-body');
+        const kpiTirado = document.getElementById('kpi-dinero-tirado');
+        const kpiConsumo = document.getElementById('kpi-consumo-interno');
+
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Cargando...</td></tr>';
+        modal.classList.add('active');
+
+        try {
+          const perdidas = await api.getLosses();
+
+          let totalTirado = 0;
+          let totalConsumo = 0;
+
+          if (perdidas.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#666;">No hay historial de mermas</td></tr>';
+          } else {
+            tbody.innerHTML = '';
+            perdidas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            perdidas.forEach(p => {
+              const fecha = new Date(p.fecha).toLocaleString();
+              const coste = parseFloat(p.coste_estimado || 0);
+
+              // Clasificar KPIs
+              const esConsumo = ['invitacion', 'comida_personal'].includes(p.motivo);
+              if (esConsumo) totalConsumo += coste;
+              else totalTirado += coste;
+
+              const row = `
+                          <tr style="border-bottom: 1px solid #e2e8f0;">
+                             <td style="padding:12px; font-size:13px; color:#64748b;">${fecha}</td>
+                             <td style="padding:12px; font-weight:600;">${p.ingrediente_nombre}</td>
+                             <td style="padding:12px;">
+                                <span class="badge ${esConsumo ? 'badge-primary' : 'badge-warning'}" 
+                                      style="padding: 4px 8px; border-radius: 4px; font-size: 11px; background: ${esConsumo ? '#DBEAFE' : '#FEF3C7'}; color: ${esConsumo ? '#1E40AF' : '#92400E'};">
+                                   ${(p.motivo || '').replace('_', ' ').toUpperCase()}
+                                </span>
+                             </td>
+                             <td style="padding:12px; text-align:right;">${parseFloat(p.cantidad).toFixed(2)} ${p.unidad}</td>
+                             <td style="padding:12px; text-align:right; font-weight:600;">${coste.toFixed(2)} €</td>
+                             <td style="padding:12px; font-size:13px; color:#666; font-style:italic;">${p.nota || '-'}</td>
+                          </tr>
+                       `;
+              tbody.insertAdjacentHTML('beforeend', row);
+            });
+          }
+
+          if (kpiTirado) kpiTirado.textContent = totalTirado.toFixed(2) + ' €';
+          if (kpiConsumo) kpiConsumo.textContent = totalConsumo.toFixed(2) + ' €';
+
+        } catch (e) {
+          console.error(e);
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Error cargando historial</td></tr>';
+        }
+      };
+
+      // Nota: cerrarModalPerdidas ya estaba definido en index.html o lo redefinimos aquí para asegurar
+      // En index.html ya existe window.cerrarModalPerdidas (usado en modal de confirmación), 
+      // pero el de historial podría ser distinto.
+      // El modal de historial tiene id 'modal-historial-perdidas'.
+      // El modal de mermas tiene id 'modal-perdidas-stock'.
+      // Vamos a asegurar la función de cierre correcta para el historial.
+
+      // En el HTML original: <span ... onclick="document.getElementById('modal-historial-perdidas').classList.remove('active')">
+      // No parece haber una función global explícita para cerrar el historial salvo inline JS.
+      // Pero loss_logic.js tenía window.cerrarModalPerdidas refiriéndose a 'modal-historial-perdidas'.
+      // CUIDADO: En index.html YA definí window.cerrarModalPerdidas para el modal de stock ('modal-perdidas-stock').
+      // Si loss_logic.js redefine window.cerrarModalPerdidas para 'modal-historial-perdidas', va a romper mi modal de confirmación!
+
+      // SOLUCIÓN: Renombrar la función de cierre del historial para evitar colisión.
+
+      window.cerrarModalHistorial = function () {
+        const m = document.getElementById('modal-historial-perdidas');
+        if (m) m.classList.remove('active');
+      };
+    </script>
 </body>
 
 </html>
