@@ -2126,6 +2126,43 @@
             <h3>Ranking de Rentabilidad</h3>
             <div id="tabla-rentabilidad"></div>
           </div>
+
+          <!-- Matriz BCG -->
+          <div class="chart-card" id="bcg-matrix-container" style="margin-top: 20px;">
+            <h3>🏆 Ingeniería de Menú (Matriz BCG)</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+              <!-- Estrellas -->
+              <div style="background: #ecfdf5; padding: 15px; border-radius: 8px; border: 1px solid #10b981;">
+                <h4 style="color: #047857; margin: 0 0 10px 0;">⭐ Estrellas (Alta Rentabilidad, Alta Popularidad)</h4>
+                <div id="lista-estrella" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+              </div>
+              <!-- Puzzles -->
+              <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border: 1px solid #3b82f6;">
+                <h4 style="color: #1d4ed8; margin: 0 0 10px 0;">❓ Puzzles (Alta Rentabilidad, Baja Popularidad)</h4>
+                <div id="lista-puzzle" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+              </div>
+              <!-- Caballos -->
+              <div style="background: #fff7ed; padding: 15px; border-radius: 8px; border: 1px solid #f97316;">
+                <h4 style="color: #c2410c; margin: 0 0 10px 0;">🐎 Caballos (Baja Rentabilidad, Alta Popularidad)</h4>
+                <div id="lista-caballo" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+              </div>
+              <!-- Perros -->
+              <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #ef4444;">
+                <h4 style="color: #b91c1c; margin: 0 0 10px 0;">🐶 Perros (Baja Rentabilidad, Baja Popularidad)</h4>
+                <div id="lista-perro" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+              </div>
+            </div>
+            <style>
+              .bcg-item {
+                background: white;
+                padding: 6px 10px;
+                border-radius: 20px;
+                font-size: 12px;
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                border: 1px solid rgba(0, 0, 0, 0.05);
+              }
+            </style>
+          </div>
         </div>
       </div>
 
@@ -2139,7 +2176,8 @@
         </div>
 
         <div style="margin-bottom: 15px;">
-          <button class="btn btn-secondary" onclick="window.mostrarModalInventarioMasivo()">📊 Importar Excel</button>
+          <button class="btn btn-secondary" onclick="window.mostrarModalInventarioMasivo()">📊 ACTUALIZAR INVENTARIO
+            MASIVO</button>
           <button class="btn btn-primary" onclick="window.guardarCambiosStock()">💾 Guardar Stock</button>
         </div>
 
@@ -3136,13 +3174,21 @@
             return await res.json();
           },
 
-          async consolidateStock(adjustments) {
+          async consolidateStock(adjustments, mermas = []) {
             const res = await fetch(API_BASE + '/inventory/consolidate', {
               method: 'POST',
               headers: getAuthHeaders(),
-              body: JSON.stringify({ adjustments })
+              body: JSON.stringify({ adjustments, mermas })
             });
             if (!res.ok) throw new Error('Error en consolidación de stock');
+            return await res.json();
+          },
+
+          async getMenuEngineering() {
+            const res = await fetch(API_BASE + '/analysis/menu-engineering', {
+              headers: getAuthHeaders()
+            });
+            if (!res.ok) throw new Error('Error al obtener ingeniería de menú');
             return await res.json();
           }
         };
@@ -3165,7 +3211,11 @@
           document.getElementById('tab-btn-' + tab).classList.add('active');
           document.getElementById('tab-' + tab).classList.add('active');
 
-          if (tab === 'analisis') window.renderizarAnalisis();
+          if (tab === 'analisis') {
+            window.renderizarAnalisis();
+            // Llama al análisis avanzado si está disponible
+            api.getMenuEngineering().then(data => window.renderMenuEngineeringUI(data)).catch(e => console.log('Error bcg', e));
+          }
           if (tab === 'pedidos') renderizarPedidos();
           if (tab === 'inventario') window.renderizarInventario();
           if (tab === 'ventas') window.renderizarVentas();
@@ -4801,7 +4851,7 @@
         }
 
         // ========== ANÁLISIS (resumido) ==========
-        window.renderizarAnalisis = function () {
+        window.renderizarAnalisis = async function () {
           if (recetas.length === 0 || ingredientes.length === 0) {
             document.getElementById('analisis-vacio').style.display = 'block';
             document.getElementById('analisis-contenido').style.display = 'none';
@@ -4822,19 +4872,63 @@
             return { ...rec, coste, margen, margenPct };
           });
 
-          const margenPromedio = (totalMargen / recetas.length).toFixed(1);
-          const costePromedio = (totalCoste / recetas.length).toFixed(2);
+          try {
+            const menuAnalysis = await api.getMenuEngineering(); // Nueva llamada a la API
 
-          document.getElementById('stat-total-recetas').textContent = recetas.length;
-          document.getElementById('stat-margen-promedio').textContent = margenPromedio + '%';
-          document.getElementById('stat-coste-promedio').textContent = costePromedio + ' €';
-          document.getElementById('stat-total-ingredientes').textContent = ingredientes.length;
+            let totalMargen = 0;
+            let totalCoste = 0;
+            const datosRecetas = recetas.map(rec => {
+              const coste = calcularCosteRecetaCompleto(rec);
+              const margen = rec.precio_venta - coste;
+              const margenPct = rec.precio_venta > 0 ? (margen / rec.precio_venta) * 100 : 0;
+              totalMargen += margenPct;
+              totalCoste += coste;
+              return { ...rec, coste, margen, margenPct };
+            });
 
-          renderRevenueChart();
-          renderChartRentabilidad(datosRecetas);
-          renderChartIngredientes();
-          renderTablaRentabilidad(datosRecetas);
+            const margenPromedio = (totalMargen / recetas.length).toFixed(1);
+            const costePromedio = (totalCoste / recetas.length).toFixed(2);
+
+            document.getElementById('stat-total-recetas').textContent = menuAnalysis.length;
+            document.getElementById('stat-margen-promedio').textContent = margenPromedio + '%';
+            document.getElementById('stat-coste-promedio').textContent = costePromedio + ' €';
+            document.getElementById('stat-total-ingredientes').textContent = ingredientes.length;
+
+            // Renderizar Gráficos existentes
+            renderRevenueChart();
+            renderChartRentabilidad(datosRecetas);
+            renderChartIngredientes();
+            renderTablaRentabilidad(datosRecetas);
+
+            // RENDERIZAR INGENIERÍA DE MENÚ (Matriz BCG)
+            renderMenuEngineeringUI(menuAnalysis);
+
+          } catch (error) {
+            console.error('Error renderizando análisis:', error);
+          }
         };
+
+        function renderMenuEngineeringUI(data) {
+          const container = document.getElementById('bcg-matrix-container');
+          if (!container) return; // Si no existe el contenedor (lo añadiremos en el HTML en breve)
+
+          // Limpiar
+          document.getElementById('lista-estrella').innerHTML = '';
+          document.getElementById('lista-caballo').innerHTML = '';
+          document.getElementById('lista-puzzle').innerHTML = '';
+          document.getElementById('lista-perro').innerHTML = '';
+
+          data.forEach(item => {
+            const el = document.createElement('div');
+            el.className = 'bcg-item';
+            el.innerHTML = `<strong>${item.nombre}</strong><br><span style="font-size:11px">Mg: ${item.margen.toFixed(2)}€ | Ventas: ${item.popularidad}</span>`;
+
+            if (item.clasificacion === 'estrella') document.getElementById('lista-estrella').appendChild(el);
+            else if (item.clasificacion === 'caballo') document.getElementById('lista-caballo').appendChild(el);
+            else if (item.clasificacion === 'puzzle') document.getElementById('lista-puzzle').appendChild(el);
+            else document.getElementById('lista-perro').appendChild(el);
+          });
+        }
 
         function renderChartRentabilidad(datos) {
           const ctx = document.getElementById('chart-rentabilidad');
@@ -5077,7 +5171,7 @@
               // Nota: Javascript floats pueden ser tricky, usamos una pequeña tolerancia o simple comparación
               if (nuevoReal < stockVirtual) {
                 const nombreIng = window.ingredientes.find(i => i.id === dataId)?.nombre || 'Ingrediente ' + dataId;
-                mermas.push({ nombre: nombreIng, diferencia: (stockVirtual - nuevoReal).toFixed(2) });
+                mermas.push({ id: dataId, nombre: nombreIng, diferencia: (stockVirtual - nuevoReal).toFixed(2) });
               }
             }
           });
@@ -5088,17 +5182,14 @@
           }
 
           // Lógica de confirmación
-          let mensajeConfirmacion = `¿Actualizar stock de ${adjustments.length} ingredientes?`;
-
           if (mermas.length > 0) {
-            mensajeConfirmacion += `\n\n⚠️ SE DETECTARON MERMAS EN ${mermas.length} INGREDIENTES:\n`;
-            mermas.forEach(m => {
-              mensajeConfirmacion += `- ${m.nombre}: Falta ${m.diferencia}\n`;
-            });
-            mensajeConfirmacion += `\n¿Registrar estas diferencias como PÉRDIDAS y ajustar el inventario?`;
-          } else {
-            mensajeConfirmacion += `\n\nEl stock ficticio se ajustará automáticamente al stock real ingresado.`;
+            // Abrir modal de gestión de mermas
+            window.mostrarModalConfirmarMermas(adjustments, mermas);
+            return;
           }
+
+          let mensajeConfirmacion = `¿Actualizar stock de ${adjustments.length} ingredientes?`;
+          mensajeConfirmacion += `\n\nEl stock ficticio se ajustará automáticamente al stock real ingresado.`;
 
           if (!confirm(mensajeConfirmacion)) return;
 
@@ -5109,6 +5200,65 @@
             await window.renderizarInventario();
             hideLoading();
             showToast('Inventario consolidado correctamente', 'success');
+          } catch (error) {
+            hideLoading();
+            showToast('Error: ' + error.message, 'error');
+          }
+        };
+
+        // Variables para el modal de mermas
+        let mermasPendientes = [];
+        let adjustmentsPendientes = [];
+
+        window.mostrarModalConfirmarMermas = function (adjustments, mermas) {
+          adjustmentsPendientes = adjustments;
+          mermasPendientes = mermas;
+
+          const tbody = document.getElementById('tabla-mermas-body');
+          tbody.innerHTML = '';
+
+          mermas.forEach((m, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                    <td style="padding: 10px;">${m.nombre}</td>
+                    <td style="padding: 10px; color: #ef4444; font-weight: bold;">-${m.diferencia}</td>
+                    <td style="padding: 10px;">
+                        <select class="motivo-merma-select" data-index="${index}" style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option value="Caduco">Caduco</option>
+                            <option value="Invitacion">Invitación</option>
+                            <option value="Accidente">Accidente</option>
+                            <option value="Error">Error de mesa/cliente</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </td>
+                    <td style="padding: 10px;">
+                        <input type="text" class="notas-merma-input" data-index="${index}" placeholder="Detalles opcionales..." style="width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                    </td>
+                `;
+            tbody.appendChild(tr);
+          });
+
+          document.getElementById('modal-confirmar-mermas').classList.add('active');
+        };
+
+        window.confirmarMermasFinal = async function () {
+          // Recopilar motivos y notas
+          const selects = document.querySelectorAll('.motivo-merma-select');
+          const inputs = document.querySelectorAll('.notas-merma-input');
+
+          mermasPendientes.forEach((m, i) => {
+            m.motivo = selects[i].value;
+            m.notas = inputs[i].value;
+          });
+
+          try {
+            document.getElementById('modal-confirmar-mermas').classList.remove('active');
+            showLoading();
+            // Enviar adjustments + mermas detalladas
+            await api.consolidateStock(adjustmentsPendientes, mermasPendientes);
+            await window.renderizarInventario();
+            hideLoading();
+            showToast('Inventario actualizado y mermas registradas', 'success');
           } catch (error) {
             hideLoading();
             showToast('Error: ' + error.message, 'error');
