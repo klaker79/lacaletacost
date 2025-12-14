@@ -3348,12 +3348,109 @@
         document.getElementById('balance-neto').textContent = neto.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
 
         if (neto >= 0) {
-          document.getElementById('balance-mensaje-neto').textContent = 'Ganancia Real';
-          document.getElementById('balance-mensaje-neto').style.color = 'rgba(255,255,255,0.9)';
-        } else {
           document.getElementById('balance-mensaje-neto').textContent = 'Pérdida Real';
           document.getElementById('balance-mensaje-neto').style.color = '#ffccc7';
         }
+      };
+
+      // ========== MANUAL DOBLE (Printable) ==========
+      window.abrirManualFormulas = function () {
+        const ventana = window.open('', '_blank');
+        const html = `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+              <meta charset="UTF-8">
+              <base href="${window.location.href}">
+              <title>Dossier Técnico - MindLoop CostOS</title>
+              <style>
+                body { font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.6; max-width: 800px; margin: 40px auto; color: #333; }
+                h1 { border-bottom: 2px solid #6366f1; padding-bottom: 10px; color: #1e293b; margin-top: 10px; }
+                .logo-header { text-align: center; margin-bottom: 20px; }
+                .logo-header img { max-height: 80px; }
+                h2 { margin-top: 30px; color: #334155; border-left: 4px solid #6366f1; padding-left: 10px; }
+                h3 { color: #64748b; margin-top: 20px; }
+                .formula { background: #f1f5f9; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 1.1em; border: 1px solid #e2e8f0; margin: 10px 0; }
+                .example { background: #ecfdf5; padding: 15px; border-radius: 8px; font-size: 0.9em; border: 1px solid #a7f3d0; margin-top: 10px; color: #065f46; }
+                @media print { body { max-width: 100%; margin: 20px; } .no-print { display: none; } }
+              </style>
+            </head>
+            <body>
+              <div class="no-print" style="margin-bottom: 30px; padding: 20px; background: #EEF2FF; border-radius: 8px; border: 1px solid #C7D2FE;">
+                 <p style="margin-top:0;"><strong>💡 Para guardar como PDF:</strong></p>
+                 <ol style="margin-bottom:15px;">
+                   <li>Haz clic en el botón <strong>"Imprimir"</strong> de abajo.</li>
+                   <li>En "Destino" o "Impresora", selecciona <strong>"Guardar como PDF"</strong>.</li>
+                   <li>Haz clic en "Guardar".</li>
+                 </ol>
+                 <button onclick="window.print()" style="padding:10px 20px; background:#6366f1; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🖨️ Imprimir / Guardar PDF</button>
+              </div>
+
+              <div class="logo-header">
+                <img src="logo.png" onerror="this.style.display='none'">
+              </div>
+
+              <h1>📘 Dossier Técnico: Fórmulas y Cálculos</h1>
+              <p>Documento generado automáticamente por <strong>MindLoop CostOS</strong> para transparencia del cliente.</p>
+
+              <h2>1. 🥘 Gestión de Recetas (Costing)</h2>
+              <h3>Coste de Receta (Food Cost)</h3>
+              <p>Suma del coste individual de cada ingrediente según su porción.</p>
+              <div class="formula">Coste Receta = Σ (Cantidad Ingrediente × Precio Unitario)</div>
+
+              <h3>Margen de Beneficio (€) y (%)</h3>
+              <p>Ganancia bruta tras descontar el coste de la materia prima.</p>
+              <div class="formula">
+                Margen (€) = PVP - Coste Receta<br>
+                Margen (%) = (Margen € / PVP) × 100
+              </div>
+
+              <h2>2. 📦 Inventario y Stock</h2>
+              <h3>Stock Virtual (Teórico)</h3>
+              <div class="formula">Stock Virtual = Stock Anterior + Compras - Ventas (Recetas)</div>
+
+              <h3>Diferencia (Mermas)</h3>
+              <div class="formula">Diferencia = Stock Real (Conteo Físico) - Stock Virtual</div>
+
+              <h2>3. ⚖️ Simulador Financiero</h2>
+              <h3>Resultado Neto Estimado</h3>
+              <div class="formula">Resultado Neto = Margen Bruto Real - Costos Fijos (Alquiler + Personal + Suministros)</div>
+
+              <h3>Punto de Equilibrio (Break-Even) 🌟</h3>
+              <p>Facturación necesaria para cubrir todos los gastos (Beneficio 0€).</p>
+              <div class="formula">Punto Equilibrio (€) = Costos Fijos / % Margen Bruto Real</div>
+              <div class="example">
+                <strong>Ejemplo:</strong> Costos Fijos 6.000€ / Margen 0.70 (70%) = <strong>8.571€</strong> de facturación necesaria.
+              </div>
+
+              <h2>5. ❓ Preguntas Frecuentes (FAQ)</h2>
+              
+              <h3>¿Cómo "adivina" el futuro el Simulador?</h3>
+              <p>El sistema no adivina, utiliza tus datos actuales para proyectar:</p>
+              <ul>
+                <li><strong>1. Analiza tu "Mix":</strong> Revisa qué estás vendiendo hoy (si vendes más platos de alto margen o de bajo margen).</li>
+                <li><strong>2. Proyecta:</strong> Asume que seguirás vendiendo con esa misma rentabilidad el resto del mes.</li>
+                <li><strong>3. Calcula:</strong> Cruza tus gastos fijos con ese margen promedio real.</li>
+              </ul>
+              <p><em>Si tu margen cambia mañana (porque vendes platos más rentables), el Punto de Equilibrio bajará automáticamente.</em></p>
+
+              <h2>6. 📊 Ingeniería de Menú (Matriz BCG)</h2>
+              <p>Clasificación automática de platos:</p>
+              <ul>
+                <li><strong>⭐ Estrellas:</strong> Alta Rentabilidad + Alta Popularidad</li>
+                <li><strong>🐎 Caballos:</strong> Baja Rentabilidad + Alta Popularidad</li>
+                <li><strong>❓ Puzzles:</strong> Alta Rentabilidad + Baja Popularidad</li>
+                <li><strong>🐶 Perros:</strong> Baja Rentabilidad + Baja Popularidad</li>
+              </ul>
+              
+              <footer style="margin-top: 50px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 20px;">
+                Generado por MindLoop CostOS - ${new Date().toLocaleDateString('es-ES')}
+              </footer>
+            </body>
+            </html>
+          `;
+        ventana.document.write(html);
+        ventana.document.close();
       };
 
       async function init() {
@@ -5136,7 +5233,8 @@
 </head>
 <body>
   <div class="header">
-    <h1>La Caleta 102</h1>
+    <img src="logo.png" onerror="this.style.display='none'">
+    <h1>${currentUser.restaurante || 'Mi Restaurante'}</h1>
     <p>Pedido a Proveedor</p>
   </div>
 
@@ -5253,7 +5351,7 @@
 
         htmlPrint += `
   <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 11px; color: #999; text-align: center;">
-    Generado el ${new Date().toLocaleDateString('es-ES')} - La Caleta 102 Dashboard
+    Generado el ${new Date().toLocaleDateString('es-ES')} - ${currentUser.restaurante || 'MindLoop Dashboard'}
   </div>
 </body>
 </html>`;
