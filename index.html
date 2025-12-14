@@ -5015,8 +5015,6 @@ async function convertImageToBase64(url) {
 window.descargarPedidoPDF = async function() {
   if (pedidoViendoId === null) return;
 
-  const pedido = pedidos.find(p => p.id === pedidoViendoId);
-  const prov = proveedores.find(p => p.id === pedido.proveedor_id);
   
   showLoading();
   
