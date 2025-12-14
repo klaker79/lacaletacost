@@ -3401,17 +3401,34 @@
           }
         };
 
-        async function cargarDatos() {
+        window.cargarDatos = async function () {
+          console.log('Cargando datos del sistema...');
           try {
-            window.ingredientes = await api.getIngredientes();
-            window.recetas = await api.getRecetas();
-            window.proveedores = await api.getProveedores();
-            window.pedidos = await api.getPedidos();
+            // Inicializar arrays para evitar crash si falla la carga
+            window.ingredientes = [];
+            window.recetas = [];
+            window.proveedores = [];
+            window.pedidos = [];
+
+            // Cargar datos en paralelo
+            const [ing, rec, prov, ped] = await Promise.all([
+              window.api.getIngredientes().catch(e => { console.warn('Falló ingredientes', e); return []; }),
+              window.api.getRecetas().catch(e => { console.warn('Falló recetas', e); return []; }),
+              window.api.getProveedores().catch(e => { console.warn('Falló proveedores', e); return []; }),
+              window.api.getPedidos().catch(e => { console.warn('Falló pedidos', e); return []; })
+            ]);
+
+            window.ingredientes = Array.isArray(ing) ? ing : [];
+            window.recetas = Array.isArray(rec) ? rec : [];
+            window.proveedores = Array.isArray(prov) ? prov : [];
+            window.pedidos = Array.isArray(ped) ? ped : [];
+
+            console.log(`Datos cargados: ${window.ingredientes.length} ing, ${window.recetas.length} rec`);
           } catch (error) {
-            console.error('Error cargando datos:', error);
-            showToast('Error conectando con la API', 'error');
+            console.error('Error crítico cargando datos:', error);
+            window.showToast('Error de conexión. Revisa tu sesión.', 'error');
           }
-        }
+        };
         window.cambiarTab = function (tab) {
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
