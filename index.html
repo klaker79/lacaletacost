@@ -39,6 +39,8 @@
   <!-- Scripts externos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
   <style>
     * {
@@ -4988,384 +4990,287 @@
         pedidoViendoId = null;
       };
 
-      window.descargarPedidoPDF = function () {
-        if (pedidoViendoId === null) return;
+     // ========== FUNCIÓN AUXILIAR: Convertir imagen a Base64 ==========
+async function convertImageToBase64(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width = this.width;
+      canvas.height = this.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(this, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => {
+      console.log('Logo no disponible');
+      resolve(null);
+    };
+    img.src = url;
+  });
+}
 
-        const pedido = pedidos.find(p => p.id === pedidoViendoId);
-        const prov = proveedores.find(p => p.id === pedido.proveedorId);
+// ========== PDF PROFESIONAL PARA PEDIDOS ==========
+window.descargarPedidoPDF = async function() {
+  if (pedidoViendoId === null) return;
 
-        // Crear HTML para imprimir
-        let htmlPrint = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Pedido - La Caleta 102</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 40px; }
-    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #c35a3f; padding-bottom: 20px; }
-    .header h1 { color: #c35a3f; margin: 0; }
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; background: #f8f8f8; padding: 20px; border-radius: 5px; }
-    .info-item { margin-bottom: 10px; }
-    .info-item strong { display: block; color: #666; font-size: 12px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-    th { background: #f8f8f8; padding: 12px; text-align: left; border-bottom: 2px solid #ddd; font-size: 12px; color: #666; }
-    td { padding: 12px; border-bottom: 1px solid #eee; }
-    .total-box { background: #f0fdf4; border: 2px solid #10b981; padding: 20px; border-radius: 5px; text-align: right; }
-    .total-box strong { font-size: 24px; color: #059669; }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; }
-    .badge-received { background: #d1fae5; color: #059669; }
-    .badge-pending { background: #fef3c7; color: #d97706; }
-    .varianza { font-size: 11px; }
-    .varianza.pos { color: #10b981; }
-    .varianza.neg { color: #ef4444; }
-    @media print {
-      body { padding: 20px; }
-      button { display: none; }
+  const pedido = pedidos.find(p => p.id === pedidoViendoId);
+  const prov = proveedores.find(p => p.id === pedido.proveedor_id);
+  
+  showLoading();
+  
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const restaurante = user.restaurante || 'Mi Restaurante';
+    
+    const pageWidth = doc.internal.pageSize.width;
+    const pageHeight = doc.internal.pageSize.height;
+    const margin = 20;
+    
+    // ===== LOGO Y HEADER =====
+    try {
+      const logoData = await convertImageToBase64('logosincirculo-removebg-preview.png');
+      if(logoData) {
+        doc.addImage(logoData, 'PNG', margin, 12, 25, 25);
+      }
+    } catch(e) {
+      console.log('Logo no disponible');
     }
-    /* === RESPONSIVE MOBILE === */
-@media (max-width: 768px) {
-  /* Container */
-  .container { padding: 12px; }
-  
-  /* Header */
-  .header {
-    padding: 8px 32px;
-    flex-direction: column;
-    text-align: center;
-    gap: 12px;
+    
+    // Nombre del restaurante
+    doc.setFontSize(20);
+    doc.setTextColor(195, 90, 63);
+    doc.setFont('helvetica', 'bold');
+    doc.text(restaurante, margin + 30, 22);
+    
+    // Subtítulo
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Restaurant Intelligence Platform', margin + 30, 28);
+    
+    // Línea divisoria
+    doc.setDrawColor(195, 90, 63);
+    doc.setLineWidth(0.8);
+    doc.line(margin, 40, pageWidth - margin, 40);
+    
+    // ===== TÍTULO DEL DOCUMENTO =====
+    let yPos = 50;
+    doc.setFontSize(18);
+    doc.setTextColor(30, 30, 30);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ORDEN DE COMPRA', margin, yPos);
+    
+    // Número de pedido
+    doc.setFontSize(11);
+    doc.setTextColor(195, 90, 63);
+    doc.setFont('helvetica', 'bold');
+    const numPedido = `Nº ${String(pedido.id).padStart(5, '0')}`;
+    doc.text(numPedido, pageWidth - margin - doc.getTextWidth(numPedido), yPos);
+    
+    yPos += 12;
+    
+    // ===== INFO DEL PEDIDO (DOS COLUMNAS) =====
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    
+    // Columna izquierda - Info Proveedor
+    doc.setFont('helvetica', 'bold');
+    doc.text('PROVEEDOR:', margin, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.text(prov ? prov.nombre : 'No especificado', margin, yPos + 5);
+    
+    if(prov && prov.telefono) {
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Tel: ' + prov.telefono, margin, yPos + 10);
+    }
+    
+    // Columna derecha - Info Pedido
+    const colDerecha = pageWidth - margin - 60;
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FECHA PEDIDO:', colDerecha, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.text(new Date(pedido.fecha).toLocaleDateString('es-ES', {
+      day: '2-digit', month: '2-digit', year: 'numeric'
+    }), colDerecha, yPos + 5);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('ESTADO:', colDerecha, yPos + 10);
+    doc.setFont('helvetica', 'normal');
+    const estadoTexto = pedido.estado === 'recibido' ? '✓ Recibido' : '⏳ Pendiente';
+    const estadoColor = pedido.estado === 'recibido' ? [16, 185, 129] : [245, 158, 11];
+    doc.setTextColor(...estadoColor);
+    doc.text(estadoTexto, colDerecha, yPos + 15);
+    
+    yPos += 25;
+    
+    // Línea separadora
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.3);
+    doc.line(margin, yPos, pageWidth - margin, yPos);
+    yPos += 8;
+    
+    // ===== TABLA DE PRODUCTOS =====
+    const headers = pedido.estado === 'recibido' 
+      ? ['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal', 'Estado']
+      : ['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal'];
+    
+    const rows = [];
+    let totalFinal = 0;
+    
+    pedido.ingredientes.forEach(item => {
+      const ing = ingredientes.find(i => i.id === item.ingredienteId);
+      if (!ing) return;
+      
+      const esRecibido = pedido.estado === 'recibido' && item.cantidadRecibida !== undefined;
+      const cantidad = esRecibido ? item.cantidadRecibida : item.cantidad;
+      const precio = esRecibido && item.precioReal ? item.precioReal : item.precioUnitario;
+      const subtotal = cantidad * precio;
+      
+      if(item.estado !== 'no-entregado') {
+        totalFinal += subtotal;
+      }
+      
+      const row = [
+        ing.nombre,
+        `${cantidad.toFixed(2)} ${ing.unidad}`,
+        `${parseFloat(precio || 0).toFixed(2)} €`,
+        item.estado === 'no-entregado' ? '0.00 €' : `${subtotal.toFixed(2)} €`
+      ];
+      
+      if(pedido.estado === 'recibido') {
+        let estadoStr = '';
+        if(item.estado === 'consolidado') estadoStr = '✓ OK';
+        else if(item.estado === 'varianza') estadoStr = '⚠ Varianza';
+        else if(item.estado === 'no-entregado') estadoStr = '✗ No entregado';
+        row.push(estadoStr);
+      }
+      
+      rows.push(row);
+    });
+    
+    doc.autoTable({
+      startY: yPos,
+      head: [headers],
+      body: rows,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [195, 90, 63],
+        textColor: 255,
+        fontSize: 10,
+        fontStyle: 'bold',
+        halign: 'left'
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 4,
+        lineColor: [230, 230, 230],
+        lineWidth: 0.1
+      },
+      alternateRowStyles: {
+        fillColor: [252, 252, 252]
+      },
+      columnStyles: pedido.estado === 'recibido' ? {
+        0: { cellWidth: 65 },
+        1: { cellWidth: 30, halign: 'center' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 30, halign: 'right' },
+        4: { cellWidth: 25, halign: 'center' }
+      } : {
+        0: { cellWidth: 80 },
+        1: { cellWidth: 35, halign: 'center' },
+        2: { cellWidth: 35, halign: 'right' },
+        3: { cellWidth: 30, halign: 'right' }
+      },
+      margin: { left: margin, right: margin }
+    });
+    
+    yPos = doc.lastAutoTable.finalY + 10;
+    
+    // ===== TOTALES =====
+    const boxWidth = 70;
+    const boxX = pageWidth - margin - boxWidth;
+    
+    // Caja de totales
+    doc.setFillColor(240, 253, 244);
+    doc.setDrawColor(16, 185, 129);
+    doc.setLineWidth(0.8);
+    doc.roundedRect(boxX, yPos, boxWidth, pedido.estado === 'recibido' ? 40 : 25, 3, 3, 'FD');
+    
+    yPos += 10;
+    doc.setFontSize(10);
+    
+    if(pedido.estado === 'recibido' && pedido.totalRecibido !== undefined) {
+      // Mostrar varianza si fue recibido
+      doc.setTextColor(80, 80, 80);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Total Original:', boxX + 5, yPos);
+      doc.text(`${parseFloat(pedido.total).toFixed(2)} €`, boxX + boxWidth - 5, yPos, { align: 'right' });
+      
+      yPos += 7;
+      doc.text('Total Recibido:', boxX + 5, yPos);
+      doc.text(`${parseFloat(pedido.totalRecibido).toFixed(2)} €`, boxX + boxWidth - 5, yPos, { align: 'right' });
+      
+      yPos += 7;
+      const varianza = pedido.totalRecibido - pedido.total;
+      const varianzaColor = varianza >= 0 ? [239, 68, 68] : [16, 185, 129];
+      doc.text('Varianza:', boxX + 5, yPos);
+      doc.setTextColor(...varianzaColor);
+      doc.text(`${(varianza >= 0 ? '+' : '')}${varianza.toFixed(2)} €`, boxX + boxWidth - 5, yPos, { align: 'right' });
+      
+      yPos += 10;
+    } else {
+      yPos += 7;
+    }
+    
+    // Total final
+    doc.setFontSize(14);
+    doc.setTextColor(5, 150, 105);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL:', boxX + 5, yPos);
+    doc.text(`${totalFinal.toFixed(2)} €`, boxX + boxWidth - 5, yPos, { align: 'right' });
+    
+    // ===== NOTAS =====
+    yPos += 15;
+    if(pedido.estado === 'pendiente') {
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Por favor, confirme recepción de este pedido.', margin, yPos);
+    }
+    
+    // ===== FOOTER =====
+    const footerY = pageHeight - 12;
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      `Generado por MindLoop CostOS el ${new Date().toLocaleString('es-ES')}`,
+      pageWidth / 2,
+      footerY,
+      { align: 'center' }
+    );
+    
+    // ===== GUARDAR =====
+    const nombreArchivo = `Pedido_${prov ? prov.nombre.replace(/\s+/g, '_') : 'Proveedor'}_${String(pedido.id).padStart(5, '0')}.pdf`;
+    doc.save(nombreArchivo);
+    
+    hideLoading();
+    showToast('PDF generado correctamente', 'success');
+    
+  } catch(error) {
+    hideLoading();
+    console.error('Error generando PDF:', error);
+    showToast('Error generando PDF: ' + error.message, 'error');
   }
-  
-  .header h1 { font-size: 32px; }
-  .header p { font-size: 14px; }
-  
-  /* KPI Dashboard */
-  .kpi-dashboard {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    padding: 0 12px;
-    margin: 16px 0;
-  }
-  
-  .kpi-card {
-    padding: 16px;
-  }
-  
-  .kpi-icon { font-size: 24px; margin-bottom: 8px; }
-  .kpi-label { font-size: 11px; }
-  .kpi-value { font-size: 28px; }
-  .kpi-trend { font-size: 12px; }
-  
-  /* Tabs */
-  .tabs {
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    padding: 12px 12px 0;
-    gap: 8px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  
-  .tabs::-webkit-scrollbar { display: none; }
-  
-  .tab {
-    padding: 10px 16px;
-    font-size: 13px;
-    display: inline-block;
-  }
-  
-  /* Main Card */
-  .main-card {
-    padding: 16px;
-    border-radius: 16px 16px 0 0;
-  }
-  
-  /* Top Bar */
-  .top-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  
-  .top-bar h2 { font-size: 22px; }
-  .top-bar p { font-size: 13px; }
-  
-  /* Buttons */
-  .btn {
-    width: 100%;
-    justify-content: center;
-    padding: 14px 20px;
-    font-size: 14px;
-  }
-  
-  .btn-small {
-    width: auto;
-    padding: 10px 16px;
-  }
-  
-  /* Search Box */
-  .search-box {
-    max-width: 100%;
-    margin: 16px 0;
-  }
-  
-  /* Form Grid */
-  .form-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .form-card {
-    padding: 16px;
-  }
-  
-  /* Tables */
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  table thead th {
-    padding: 12px 16px;
-    font-size: 10px;
-  }
-  
-  table tbody td {
-    padding: 12px 16px;
-    font-size: 13px;
-  }
-  
-  /* Actions */
-  .actions {
-    gap: 6px;
-  }
-  
-  .icon-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-  }
-  
-  /* Stats Grid */
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  /* Charts Grid */
-  .charts-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  /* Balance Cards */
-  [id^="tab-balance"] > div[style*="grid"] {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-  }
-  
-  /* Balance Cards Gradient */
-  [id="tab-balance"] > div:nth-child(2) > div {
-    padding: 24px !important;
-  }
-  
-  [id="tab-balance"] > div:nth-child(2) > div > div:first-child {
-    font-size: 100px !important;
-  }
-  
-  [id="tab-balance"] > div:nth-child(2) > div [id^="balance-"] {
-    font-size: 36px !important;
-  }
-  
-  /* Modals */
-  .modal-content {
-    width: 95%;
-    padding: 20px;
-    max-height: 90vh;
-  }
-  
-  /* Ingrediente Item */
-  .ingrediente-item {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  
-  .ingrediente-item select,
-  .ingrediente-item input {
-    width: 100%;
-  }
-  
-  /* Toast Container */
-  .toast-container {
-    top: 60px;
-    right: 12px;
-    left: 12px;
-    max-width: none;
-  }
-  
-  .toast {
-    padding: 12px 16px;
-  }
-  
-  /* Summary */
-  .summary {
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
-  }
-}
-
-@media (max-width: 480px) {
-  /* Extra pequeño */
-  .kpi-dashboard {
-    grid-template-columns: 1fr;
-  }
-  
-  .header h1 { font-size: 28px; }
-  
-  .kpi-value { font-size: 32px; }
-}
-  </style>
-</head>
-<body>
-  <div class="header">
-    <img src="logo.png" onerror="this.style.display='none'">
-    <h1>${currentUser.restaurante || 'Mi Restaurante'}</h1>
-    <p>Pedido a Proveedor</p>
-  </div>
-
-  <div class="info-grid">
-    <div class="info-item">
-      <strong>Proveedor</strong>
-      ${prov ? prov.nombre : 'Desconocido'}
-    </div>
-    <div class="info-item">
-      <strong>Fecha del Pedido</strong>
-      ${new Date(pedido.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-    </div>
-    <div class="info-item">
-      <strong>Estado</strong>
-      <span class="badge ${pedido.estado === 'recibido' ? 'badge-received' : 'badge-pending'}">
-        ${pedido.estado === 'recibido' ? 'Recibido' : 'Pendiente'}
-      </span>
-    </div>
-    ${pedido.estado === 'recibido' && pedido.fechaRecepcion ? `
-    <div class="info-item">
-      <strong>Fecha de Recepción</strong>
-      ${new Date(pedido.fechaRecepcion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-    </div>
-    ` : ''}
-  </div>
-
-  <h3>Detalle del Pedido</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Ingrediente</th>
-        <th>Cantidad</th>
-        <th>Precio Unitario</th>
-        <th>Subtotal</th>
-        ${pedido.estado === 'recibido' ? '<th>Estado</th>' : ''}
-      </tr>
-    </thead>
-    <tbody>`;
-
-        const items = pedido.ingredientes;
-        let totalFinal = 0;
-
-        items.forEach(item => {
-          const ing = ingredientes.find(i => i.id === item.ingredienteId);
-          if (!ing) return;
-
-          const esRecibido = pedido.estado === 'recibido' && item.cantidadRecibida !== undefined;
-          const cantidad = esRecibido ? item.cantidadRecibida : item.cantidad;
-          const precio = esRecibido && item.precioReal ? item.precioReal : item.precioUnitario;
-          const subtotal = cantidad * precio;
-
-          if (item.estado !== 'no-entregado') {
-            totalFinal += subtotal;
-          }
-
-          htmlPrint += '<tr>';
-          htmlPrint += `<td>${ing.nombre}</td>`;
-          htmlPrint += `<td>${cantidad} ${ing.unidad}`;
-
-          if (esRecibido && item.cantidad && Math.abs(cantidad - item.cantidad) > 0.01) {
-            const diff = cantidad - item.cantidad;
-            htmlPrint += `<br><span class="varianza ${diff > 0 ? 'pos' : 'neg'}">(${diff > 0 ? '+' : ''}${diff.toFixed(2)})</span>`;
-          }
-
-          htmlPrint += `</td>`;
-          htmlPrint += `<td>${parseFloat(precio || 0).toFixed(2)} €/${ing.unidad}`;
-
-          if (esRecibido && item.precioUnitario && Math.abs(precio - item.precioUnitario) > 0.01) {
-            const diff = precio - item.precioUnitario;
-            htmlPrint += `<br><span class="varianza ${diff > 0 ? 'neg' : 'pos'}">(${diff > 0 ? '+' : ''}${diff.toFixed(2)} €)</span>`;
-          }
-
-          htmlPrint += `</td>`;
-          htmlPrint += `<td>${item.estado === 'no-entregado' ? '0.00' : subtotal.toFixed(2)} €</td>`;
-
-          if (esRecibido) {
-            let estadoText = '';
-            if (item.estado === 'consolidado') estadoText = '✅ OK';
-            else if (item.estado === 'varianza') estadoText = '⚠️ Varianza';
-            else if (item.estado === 'no-entregado') estadoText = '❌ No entregado';
-            htmlPrint += `<td>${estadoText}</td>`;
-          }
-
-          htmlPrint += '</tr>';
-        });
-
-        htmlPrint += '</tbody></table>';
-
-        if (pedido.estado === 'recibido' && pedido.totalRecibido !== undefined) {
-          const varianza = pedido.totalRecibido - pedido.total;
-          htmlPrint += `
-  <div class="total-box">
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center;">
-      <div>
-        <strong style="color:#666;font-size:14px;">Total Original</strong><br>
-        <span style="font-size:20px;">${pedido.total.toFixed(2)} €</span>
-      </div>
-      <div>
-        <strong style="color:#059669;font-size:14px;">Total Recibido</strong><br>
-        <strong>${pedido.totalRecibido.toFixed(2)} €</strong>
-      </div>
-      <div>
-        <strong style="color:#666;font-size:14px;">Varianza</strong><br>
-        <span style="font-size:20px;color:${varianza >= 0 ? '#ef4444' : '#10b981'};">${varianza >= 0 ? '+' : ''}${varianza.toFixed(2)} €</span>
-      </div>
-    </div>
-  </div>`;
-        } else {
-          htmlPrint += `
-  <div class="total-box">
-   <strong>Total del Pedido: ${parseFloat(pedido.total).toFixed(2)} €</strong>
-  </div>`;
-        }
-
-        htmlPrint += `
-  <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 11px; color: #999; text-align: center;">
-    Generado el ${new Date().toLocaleDateString('es-ES')} - ${currentUser.restaurante || 'MindLoop Dashboard'}
-  </div>
-</body>
-</html>`;
-
-        // Abrir en nueva ventana para imprimir/guardar PDF
-        const ventana = window.open('', '_blank');
-        ventana.document.write(htmlPrint);
-        ventana.document.close();
-
-        // Esperar a que se cargue y abrir diálogo de impresión
-        setTimeout(() => {
-          ventana.print();
-        }, 250);
-      };
+};
 
       window.renderizarPedidos = function () {
         const busqueda = document.getElementById('busqueda-pedidos').value.toLowerCase();
