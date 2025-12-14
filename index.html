@@ -4910,37 +4910,39 @@
 
         window.renderMenuEngineeringUI = function (data) {
           const container = document.getElementById('bcg-matrix-container');
-          if (!container) return; // Si no existe el contenedor (lo añadiremos en el HTML en breve)
+          if (!container) return;
 
-          // Limpiar
-          document.getElementById('lista-estrella').innerHTML = '';
-          document.getElementById('lista-caballo').innerHTML = '';
-          document.getElementById('lista-puzzle').innerHTML = '';
-          document.getElementById('lista-perro').innerHTML = '';
-
-          const consejos = {
-            'estrella': '⭐ <strong>Consejo:</strong> Son tus mejores platos. Mantén la calidad y la visibilidad. ¡No toques la receta!',
-            'caballo': '🐎 <strong>Consejo:</strong> Populares pero poco rentables. Intenta <strong>subir el precio</strong> ligeramente o reducir el coste (porción/ingredientes) sin bajar calidad.',
-            'puzzle': '❓ <strong>Consejo:</strong> Rentables pero poco populares. Necesitan marketing: <strong>mejora la foto</strong>, el nombre en carta, o sugerencia del camarero.',
-            'perro': '🐶 <strong>Consejo:</strong> Ni rentables ni populares. ¿Merece la pena mantenerlos? Considera <strong>retirarlos</strong> o reinventarlos completamente.'
+          // Limpiar contenedores
+          const containers = {
+            'estrella': document.getElementById('lista-estrella'),
+            'caballo': document.getElementById('lista-caballo'),
+            'puzzle': document.getElementById('lista-puzzle'),
+            'perro': document.getElementById('lista-perro')
           };
 
-          // Añadir consejos a los contenedores
-          document.getElementById('lista-estrella').parentNode.querySelector('h4').insertAdjacentHTML('afterend', `<div style="font-size: 11px; margin-bottom: 8px; color: #065f46;">${consejos['estrella']}</div>`);
-          document.getElementById('lista-caballo').parentNode.querySelector('h4').insertAdjacentHTML('afterend', `<div style="font-size: 11px; margin-bottom: 8px; color: #9a3412;">${consejos['caballo']}</div>`);
-          document.getElementById('lista-puzzle').parentNode.querySelector('h4').insertAdjacentHTML('afterend', `<div style="font-size: 11px; margin-bottom: 8px; color: #1e40af;">${consejos['puzzle']}</div>`);
-          document.getElementById('lista-perro').parentNode.querySelector('h4').insertAdjacentHTML('afterend', `<div style="font-size: 11px; margin-bottom: 8px; color: #991b1b;">${consejos['perro']}</div>`);
+          Object.values(containers).forEach(c => c.innerHTML = '');
 
+          const consejos = {
+            'estrella': '⭐ <strong>Consejo:</strong> Son tus mejores platos. Mantén la calidad y la visibilidad.',
+            'caballo': '🐎 <strong>Consejo:</strong> Intenta subir el precio o reducir coste.',
+            'puzzle': '❓ <strong>Consejo:</strong> Necesitan marketing: mejora la foto o visibilidad.',
+            'perro': '🐶 <strong>Consejo:</strong> Considera retirarlos o reinventarlos.'
+          };
+
+          // Añadir consejos DENTRO del contenedor limpio, al principio
+          containers['estrella'].innerHTML = `<div style="font-size: 11px; margin-bottom: 8px; color: #065f46; width:100%;">${consejos['estrella']}</div>`;
+          containers['caballo'].innerHTML = `<div style="font-size: 11px; margin-bottom: 8px; color: #9a3412; width:100%;">${consejos['caballo']}</div>`;
+          containers['puzzle'].innerHTML = `<div style="font-size: 11px; margin-bottom: 8px; color: #1e40af; width:100%;">${consejos['puzzle']}</div>`;
+          containers['perro'].innerHTML = `<div style="font-size: 11px; margin-bottom: 8px; color: #991b1b; width:100%;">${consejos['perro']}</div>`;
 
           data.forEach(item => {
             const el = document.createElement('div');
             el.className = 'bcg-item';
             el.innerHTML = `<strong>${item.nombre}</strong><br><span style="font-size:11px">Mg: ${item.margen.toFixed(2)}€ | Ventas: ${item.popularidad}</span>`;
 
-            if (item.clasificacion === 'estrella') document.getElementById('lista-estrella').appendChild(el);
-            else if (item.clasificacion === 'caballo') document.getElementById('lista-caballo').appendChild(el);
-            else if (item.clasificacion === 'puzzle') document.getElementById('lista-puzzle').appendChild(el);
-            else document.getElementById('lista-perro').appendChild(el);
+            if (containers[item.clasificacion]) {
+              containers[item.clasificacion].appendChild(el);
+            }
           });
         }
 
