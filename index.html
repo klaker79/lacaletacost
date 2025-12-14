@@ -22,7 +22,7 @@
 
   <!-- PWA / Mobile -->
   <meta name="theme-color" content="#667eea">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="MindLoop CostOS">
 
@@ -4908,7 +4908,7 @@
           }
         };
 
-        function renderMenuEngineeringUI(data) {
+        window.renderMenuEngineeringUI = function (data) {
           const container = document.getElementById('bcg-matrix-container');
           if (!container) return; // Si no existe el contenedor (lo añadiremos en el HTML en breve)
 
@@ -5429,14 +5429,7 @@
         };
 
         // MODIFICACION EN CLAVE: guardarCambiosStock (Nueva Lógica)
-        window.guardarCambiosStock = async function (id, nuevoStock) {
-          // Nota: Esta función solía manejar uno solo o el botón general.
-          // Ahora reutilizamos la lógica del botón "Actualizar Stock" principal.
-          // Si llamamos desde el botón global:
-        };
-
-        // ... pero necesitamos interceptar el click del botón "Actualizar Stock" del DOM
-        document.getElementById('btn-actualizar-stock').onclick = async function () {
+        window.guardarCambiosStock = async function () {
           const inputs = document.querySelectorAll('.stock-real-input');
           const changes = [];
 
