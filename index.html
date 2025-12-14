@@ -2139,8 +2139,8 @@
         </div>
 
         <div style="margin-bottom: 15px;">
-          <button class="btn btn-secondary" onclick="window.mostrarModalInventarioMasivo()">📊 Actualizar Inventario
-            Masivo</button>
+          <button class="btn btn-secondary" onclick="window.mostrarModalInventarioMasivo()">📊 Importar Excel</button>
+          <button class="btn btn-primary" onclick="window.guardarCambiosStock()">💾 Guardar Stock</button>
         </div>
 
         <div id="resumen-inventario" style="display: none; gap: 20px;"></div>
@@ -5020,7 +5020,7 @@
               html += `<td><span class="stock-indicator ${estadoClass}"></span>${estadoIcon}</td>`;
               html += `<td><strong>${ing.nombre}</strong></td>`;
               html += `<td><span class="stock-value">${parseFloat(ing.stock_virtual || 0).toFixed(2)}</span></td>`;
-              html += `<td><input type="number" step="0.01" value="${stockReal}" placeholder="Sin datos" style="width:80px;padding:5px;border:1px solid #ddd;border-radius:4px;" onchange="actualizarStockReal(${ing.id}, this.value)"></td>`;
+              html += `<td><input type="number" step="0.01" value="${stockReal}" placeholder="Sin datos" class="input-stock-real" data-id="${ing.id}" style="width:80px;padding:5px;border:1px solid #ddd;border-radius:4px;"></td>`;
               html += `<td style="color:${diferencia > 0 ? '#10b981' : diferencia < 0 ? '#ef4444' : '#666'};">${diferencia !== 0 ? diferencia.toFixed(2) : '-'}</td>`;
               html += `<td>${precioMedio.toFixed(2)}€/${ing.unidad}</td>`;
               const valorStockReal = (parseFloat(stockReal) || 0) * precioMedio;
@@ -5037,15 +5037,44 @@
         };
 
         // Función global para actualizar stock real
-        window.actualizarStockReal = async function (id, valor) {
-          if (!valor || valor === '') return;
-          try {
-            await api.updateStockReal(id, parseFloat(valor));
-            await window.renderizarInventario();
-            showToast('Stock real actualizado', 'success');
-          } catch (error) {
-            showToast('Error actualizando stock', 'error');
+        // Función para guardar stock masivo
+        window.guardarCambiosStock = async function () {
+          const inputs = document.querySelectorAll('.input-stock-real');
+          const updates = [];
+          
+          inputs.forEach(input => {
+            const val = input.value;
+            if (val !== '' && val !== null) {
+              updates.push({
+                id: parseInt(input.dataset.id),
+                stock_real: parseFloat(val)
+              });
+            }
+          });
+
+          if (updates.length === 0) {
+            showToast('No hay datos para guardar', 'info');
+            return;
           }
+
+          if (!confirm(`¿Guardar stock de ${updates.length} ingredientes?`)) return;
+
+          try {
+            showLoading();
+            await api.bulkUpdateStockReal(updates);
+            await window.renderizarInventario();
+            hideLoading();
+            showToast('Stock actualizado correctamente', 'success');
+          } catch (error) {
+            hideLoading();
+            showToast('Error actualizando stock: ' + error.message, 'error');
+          }
+        };
+
+        // Función individual (deprecada para uso directo, pero mantenida por compatibilidad si se necesitara)
+        window.actualizarStockReal = async function (id, valor) {
+           // Mantenemos vacía o redirigimos a lógica de guardado si fuera necesario, 
+           // pero ahora la UI usa el botón de guardar.
         };
 
 
