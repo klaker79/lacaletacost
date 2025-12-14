@@ -5176,17 +5176,17 @@ window.descargarPedidoPDF = async function() {
         fillColor: [250, 250, 250]
       },
       columnStyles: pedido.estado === 'recibido' ? {
-        0: { cellWidth: 65 },
-        1: { cellWidth: 30, halign: 'center' },
-        2: { cellWidth: 30, halign: 'right' },
-        3: { cellWidth: 30, halign: 'right' },
-        4: { cellWidth: 25, halign: 'center' }
-      } : {
-        0: { cellWidth: 80 },
-        1: { cellWidth: 35, halign: 'center' },
-        2: { cellWidth: 35, halign: 'right' },
-        3: { cellWidth: 30, halign: 'right' }
-      },
+  0: { cellWidth: 60 },
+  1: { cellWidth: 25, halign: 'center' },
+  2: { cellWidth: 28, halign: 'right' },
+  3: { cellWidth: 28, halign: 'right' },
+  4: { cellWidth: 22, halign: 'center' }
+} : {
+  0: { cellWidth: 70 },
+  1: { cellWidth: 30, halign: 'center' },
+  2: { cellWidth: 32, halign: 'right' },
+  3: { cellWidth: 28, halign: 'right' }
+}
       margin: { left: margin, right: margin }
     });
     
