@@ -5020,12 +5020,14 @@ window.descargarPedidoPDF = async function() {
   
   showLoading();
   
+  const pedido = pedidos.find(p => p.id === pedidoViendoId);
+  const prov = proveedores.find(p => p.id === pedido.proveedor_id);
+  
+  showLoading();
+  
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
-    
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const restaurante = user.restaurante || 'Mi Restaurante';
     
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
@@ -5035,50 +5037,49 @@ window.descargarPedidoPDF = async function() {
     try {
       const logoData = await convertImageToBase64('logosincirculo-removebg-preview.png');
       if(logoData) {
-        doc.addImage(logoData, 'PNG', margin, 12, 25, 25);
+        doc.addImage(logoData, 'PNG', margin, 12, 30, 30);
       }
     } catch(e) {
       console.log('Logo no disponible');
     }
     
     // Nombre del restaurante
-    doc.setFontSize(20);
-    doc.setTextColor(195, 90, 63);
+    doc.setFontSize(22);
+    doc.setTextColor(0, 0, 0); // NEGRO
     doc.setFont('helvetica', 'bold');
-    doc.text(restaurante, margin + 30, 22);
+    doc.text('NAVE 5 ABASTOS', margin + 35, 22);
     
     // Subtítulo
     doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
+    doc.setTextColor(80, 80, 80);
     doc.setFont('helvetica', 'normal');
-    doc.text('Restaurant Intelligence Platform', margin + 30, 28);
+    doc.text('Restaurant Intelligence Platform', margin + 35, 28);
     
     // Línea divisoria
-    doc.setDrawColor(195, 90, 63);
+    doc.setDrawColor(0, 0, 0); // NEGRO
     doc.setLineWidth(0.8);
     doc.line(margin, 40, pageWidth - margin, 40);
     
     // ===== TÍTULO DEL DOCUMENTO =====
     let yPos = 50;
     doc.setFontSize(18);
-    doc.setTextColor(30, 30, 30);
+    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.text('ORDEN DE COMPRA', margin, yPos);
     
     // Número de pedido
     doc.setFontSize(11);
-    doc.setTextColor(195, 90, 63);
+    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     const numPedido = `Nº ${String(pedido.id).padStart(5, '0')}`;
     doc.text(numPedido, pageWidth - margin - doc.getTextWidth(numPedido), yPos);
     
     yPos += 12;
     
-    // ===== INFO DEL PEDIDO (DOS COLUMNAS) =====
+    // ===== INFO DEL PEDIDO =====
     doc.setFontSize(10);
     doc.setTextColor(60, 60, 60);
     
-    // Columna izquierda - Info Proveedor
     doc.setFont('helvetica', 'bold');
     doc.text('PROVEEDOR:', margin, yPos);
     doc.setFont('helvetica', 'normal');
@@ -5090,7 +5091,6 @@ window.descargarPedidoPDF = async function() {
       doc.text('Tel: ' + prov.telefono, margin, yPos + 10);
     }
     
-    // Columna derecha - Info Pedido
     const colDerecha = pageWidth - margin - 60;
     doc.setFontSize(10);
     doc.setTextColor(60, 60, 60);
@@ -5111,13 +5111,12 @@ window.descargarPedidoPDF = async function() {
     
     yPos += 25;
     
-    // Línea separadora
-    doc.setDrawColor(230, 230, 230);
+    doc.setDrawColor(200, 200, 200);
     doc.setLineWidth(0.3);
     doc.line(margin, yPos, pageWidth - margin, yPos);
     yPos += 8;
     
-    // ===== TABLA DE PRODUCTOS =====
+    // ===== TABLA =====
     const headers = pedido.estado === 'recibido' 
       ? ['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal', 'Estado']
       : ['Producto', 'Cantidad', 'Precio Unit.', 'Subtotal'];
@@ -5162,7 +5161,7 @@ window.descargarPedidoPDF = async function() {
       body: rows,
       theme: 'striped',
       headStyles: {
-        fillColor: [195, 90, 63],
+        fillColor: [0, 0, 0], // NEGRO
         textColor: 255,
         fontSize: 10,
         fontStyle: 'bold',
@@ -5171,11 +5170,11 @@ window.descargarPedidoPDF = async function() {
       styles: {
         fontSize: 9,
         cellPadding: 4,
-        lineColor: [230, 230, 230],
+        lineColor: [220, 220, 220],
         lineWidth: 0.1
       },
       alternateRowStyles: {
-        fillColor: [252, 252, 252]
+        fillColor: [250, 250, 250]
       },
       columnStyles: pedido.estado === 'recibido' ? {
         0: { cellWidth: 65 },
@@ -5198,18 +5197,16 @@ window.descargarPedidoPDF = async function() {
     const boxWidth = 70;
     const boxX = pageWidth - margin - boxWidth;
     
-    // Caja de totales
-    doc.setFillColor(240, 253, 244);
-    doc.setDrawColor(16, 185, 129);
-    doc.setLineWidth(0.8);
+    doc.setFillColor(245, 245, 245);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(1.5);
     doc.roundedRect(boxX, yPos, boxWidth, pedido.estado === 'recibido' ? 40 : 25, 3, 3, 'FD');
     
     yPos += 10;
     doc.setFontSize(10);
     
     if(pedido.estado === 'recibido' && pedido.totalRecibido !== undefined) {
-      // Mostrar varianza si fue recibido
-      doc.setTextColor(80, 80, 80);
+      doc.setTextColor(60, 60, 60);
       doc.setFont('helvetica', 'normal');
       doc.text('Total Original:', boxX + 5, yPos);
       doc.text(`${parseFloat(pedido.total).toFixed(2)} €`, boxX + boxWidth - 5, yPos, { align: 'right' });
@@ -5220,9 +5217,8 @@ window.descargarPedidoPDF = async function() {
       
       yPos += 7;
       const varianza = pedido.totalRecibido - pedido.total;
-      const varianzaColor = varianza >= 0 ? [239, 68, 68] : [16, 185, 129];
       doc.text('Varianza:', boxX + 5, yPos);
-      doc.setTextColor(...varianzaColor);
+      doc.setTextColor(varianza >= 0 ? 200 : 50, varianza >= 0 ? 50 : 200, 50);
       doc.text(`${(varianza >= 0 ? '+' : '')}${varianza.toFixed(2)} €`, boxX + boxWidth - 5, yPos, { align: 'right' });
       
       yPos += 10;
@@ -5230,14 +5226,12 @@ window.descargarPedidoPDF = async function() {
       yPos += 7;
     }
     
-    // Total final
     doc.setFontSize(14);
-    doc.setTextColor(5, 150, 105);
+    doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.text('TOTAL:', boxX + 5, yPos);
     doc.text(`${totalFinal.toFixed(2)} €`, boxX + boxWidth - 5, yPos, { align: 'right' });
     
-    // ===== NOTAS =====
     yPos += 15;
     if(pedido.estado === 'pendiente') {
       doc.setFontSize(9);
@@ -5246,7 +5240,6 @@ window.descargarPedidoPDF = async function() {
       doc.text('Por favor, confirme recepción de este pedido.', margin, yPos);
     }
     
-    // ===== FOOTER =====
     const footerY = pageHeight - 12;
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
@@ -5258,7 +5251,6 @@ window.descargarPedidoPDF = async function() {
       { align: 'center' }
     );
     
-    // ===== GUARDAR =====
     const nombreArchivo = `Pedido_${prov ? prov.nombre.replace(/\s+/g, '_') : 'Proveedor'}_${String(pedido.id).padStart(5, '0')}.pdf`;
     doc.save(nombreArchivo);
     
