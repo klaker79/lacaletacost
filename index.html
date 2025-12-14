@@ -1801,6 +1801,8 @@
           id="badge-inventario" class="tab-badge" style="display:none;">0</span></button>
       <button id="tab-btn-ventas" class="tab" onclick="window.cambiarTab('ventas')">💰 Ventas</button>
       <button id="tab-btn-balance" class="tab" onclick="window.cambiarTab('balance')">💵 Balance</button>
+      <button id="tab-btn-configuracion" class="tab" onclick="window.cambiarTab('configuracion')">⚙️
+        Configuración</button>
     </div>
 
     <div class="main-card">
@@ -2238,7 +2240,91 @@
           <div id="tabla-ventas"></div>
         </div>
       </div>
-      <!-- TAB: BALANCE -->
+
+      <!-- TAB: CONFIGURACIÓN -->
+      <div id="tab-configuracion" class="tab-content">
+        <div class="top-bar">
+          <div>
+            <h2>⚙️ Configuración & Equipo</h2>
+            <p>Gestiona los accesos y datos de tu negocio</p>
+          </div>
+        </div>
+
+        <div class="dashboard-grid" style="grid-template-columns: 1fr; gap: 24px;">
+
+          <!-- Tarjeta: Gestión de Equipo -->
+          <div class="card"
+            style="background:white; padding:20px; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+            <div class="card-header"
+              style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h3>👥 Mi Equipo</h3>
+              <button class="btn btn-primary" onclick="window.mostrarModalInvitar()">+ Invitar Usuario</button>
+            </div>
+            <div class="table-container">
+              <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                  <tr style="border-bottom:2px solid #eee;">
+                    <th style="text-align:left; padding:10px;">Nombre</th>
+                    <th style="text-align:left; padding:10px;">Email</th>
+                    <th style="text-align:left; padding:10px;">Rol</th>
+                    <th style="text-align:left; padding:10px;">Fecha Alta</th>
+                    <th style="text-align:right; padding:10px;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="lista-equipo-body">
+                  <!-- Se llena con JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Placeholder Datos Restaurante -->
+          <div class="card"
+            style="background:white; padding:20px; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+            <h3>🏢 Datos del Restaurante</h3>
+            <div style="margin-top:10px; color:#666;">
+              <p><strong>Nombre:</strong> <span id="config-restaurante-nombre">Cargando...</span></p>
+              <p style="font-size:0.9em; margin-top:5px;">ID Restaurante: <span id="config-restaurante-id">...</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL INVITAR EQUIPO -->
+      <div id="modal-invitar-equipo" class="modal">
+        <div class="modal-content" style="max-width:500px">
+          <span class="close"
+            onclick="document.getElementById('modal-invitar-equipo').classList.remove('active')">&times;</span>
+          <h2>Invitar Nuevo Usuario</h2>
+          <div style="margin-top:20px;">
+            <div class="form-group" style="margin-bottom:15px;">
+              <label style="display:block; margin-bottom:5px; font-weight:bold;">Nombre Completo</label>
+              <input type="text" id="team-nombre" class="form-control" placeholder="Ej. Juan Cocinero"
+                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            </div>
+            <div class="form-group" style="margin-bottom:15px;">
+              <label style="display:block; margin-bottom:5px; font-weight:bold;">Email Corporativo</label>
+              <input type="email" id="team-email" class="form-control" placeholder="juan@lacaleta.com"
+                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            </div>
+            <div class="form-group" style="margin-bottom:15px;">
+              <label style="display:block; margin-bottom:5px; font-weight:bold;">Contraseña Inicial</label>
+              <input type="password" id="team-password" class="form-control" placeholder="******"
+                style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            </div>
+            <div class="form-group" style="margin-bottom:20px;">
+              <label style="display:block; margin-bottom:5px; font-weight:bold;">Rol</label>
+              <select id="team-rol" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+                <option value="usuario">Usuario (Estándar)</option>
+                <option value="admin">Administrador (Acceso Total)</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="window.invitarUsuarioEquipo()">Enviar
+              Invitación</button>
+          </div>
+        </div>
+      </div>
       <div id="tab-balance" class="tab-content">
         <div class="top-bar">
           <h2>💵 Balance Financiero</h2>
@@ -2904,6 +2990,105 @@
           location.reload();
         };
 
+
+        // ========== GESTIÓN DE EQUIPO (Team Management) ==========
+        window.renderizarEquipo = async function () {
+          const tbody = document.getElementById('lista-equipo-body');
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Cargando equipo...</td></tr>';
+
+          try {
+            const users = await api.getTeam();
+
+            // Update restaurant info
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+            document.getElementById('config-restaurante-nombre').textContent = currentUser.restaurante || 'Mi Restaurante';
+            document.getElementById('config-restaurante-id').textContent = currentUser.restauranteId || '...';
+
+            if (users.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">No hay usuarios en el equipo</td></tr>';
+              return;
+            }
+
+            let html = '';
+            users.forEach(user => {
+              const fechaAlta = new Date(user.fecha_registro).toLocaleDateString('es-ES');
+              const isMe = user.id === currentUser.id;
+              const roleBadge = user.rol === 'admin'
+                ? '<span style="background:#FEF3C7; color:#D97706; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:600;">Admin</span>'
+                : '<span style="background:#E0F2FE; color:#0284C7; padding:2px 8px; border-radius:12px; font-size:12px; font-weight:600;">Usuario</span>';
+
+              html += `
+            <tr style="border-bottom:1px solid #f0f0f0;">
+              <td style="padding:12px;"><strong>${user.nombre}</strong> ${isMe ? '(Tú)' : ''}</td>
+              <td style="padding:12px; color:#666;">${user.email}</td>
+              <td style="padding:12px;">${roleBadge}</td>
+              <td style="padding:12px; color:#999;">${fechaAlta}</td>
+              <td style="padding:12px; text-align:right;">
+                ${!isMe && currentUser.rol === 'admin' ?
+                  `<button onclick="window.eliminarUsuarioEquipo(${user.id})" class="icon-btn delete" title="Eliminar acceso">🗑️</button>`
+                  : ''}
+              </td>
+            </tr>
+          `;
+            });
+            tbody.innerHTML = html;
+
+          } catch (error) {
+            console.error('Error renderizando equipo:', error);
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red; padding:20px;">Error: ${error.message}</td></tr>`;
+          }
+        };
+
+        window.mostrarModalInvitar = function () {
+          document.getElementById('modal-invitar-equipo').classList.add('active');
+        };
+
+        window.invitarUsuarioEquipo = async function () {
+          const nombre = document.getElementById('team-nombre').value;
+          const email = document.getElementById('team-email').value;
+          const password = document.getElementById('team-password').value;
+          const rol = document.getElementById('team-rol').value;
+
+          if (!nombre || !email || !password) {
+            showToast('Completa todos los campos', 'warning');
+            return;
+          }
+
+          showLoading();
+          try {
+            await api.inviteUser(nombre, email, password, rol);
+            hideLoading();
+            showToast('Invitación enviada y usuario creado', 'success');
+            document.getElementById('modal-invitar-equipo').classList.remove('active');
+
+            // Limpiar form
+            document.getElementById('team-nombre').value = '';
+            document.getElementById('team-email').value = '';
+            document.getElementById('team-password').value = '';
+
+            // Recargar lista
+            renderizarEquipo();
+          } catch (error) {
+            hideLoading();
+            showToast(error.message, 'error');
+          }
+        };
+
+        window.eliminarUsuarioEquipo = async function (id) {
+          if (!confirm('¿Estás seguro de eliminar el acceso a este usuario?')) return;
+
+          showLoading();
+          try {
+            await api.deleteUser(id);
+            hideLoading();
+            showToast('Usuario eliminado del equipo', 'success');
+            renderizarEquipo();
+          } catch (error) {
+            hideLoading();
+            showToast(error.message, 'error');
+          }
+        };
+
         async function init() {
           // Mostrar nombre del restaurante
           const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -2968,6 +3153,31 @@
         }
 
         window.api = {
+          // --- Team Management ---
+          getTeam: async () => {
+            const res = await fetch(API_BASE + '/team', { headers: getAuthHeaders() });
+            if (!res.ok) throw new Error('Error cargando equipo');
+            return await res.json();
+          },
+          inviteUser: async (nombre, email, password, rol) => {
+            const res = await fetch(API_BASE + '/team/invite', {
+              method: 'POST',
+              headers: getAuthHeaders(),
+              body: JSON.stringify({ nombre, email, password, rol })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error invitando usuario');
+            return data;
+          },
+          deleteUser: async (id) => {
+            const res = await fetch(API_BASE + `/team/${id}`, {
+              method: 'DELETE',
+              headers: getAuthHeaders()
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error eliminando usuario');
+            return data;
+          },
           async getIngredientes() {
             const res = await fetch(API_BASE + '/ingredients', {
               headers: getAuthHeaders()
@@ -3220,6 +3430,7 @@
           if (tab === 'inventario') window.renderizarInventario();
           if (tab === 'ventas') window.renderizarVentas();
           if (tab === 'balance') window.renderizarBalance();
+          if (tab === 'configuracion') window.renderizarEquipo();
         };
 
         // ========== INGREDIENTES (código completo pero resumido visualmente) ==========
