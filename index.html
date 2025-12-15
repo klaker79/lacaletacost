@@ -2361,6 +2361,43 @@
             </div>
           </div>
         </div>
+        <!-- NUEVA SECCIÓN: CERRAR DÍA -->
+<div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  <h3 style="margin-bottom: 15px;">💾 Cerrar Día</h3>
+  <p style="color: #666; margin-bottom: 20px;">Guarda un snapshot de las ventas, compras y resultados del día seleccionado.</p>
+  
+  <div style="display: flex; gap: 15px; align-items: center;">
+    <div style="flex: 1;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 600;">📅 Fecha:</label>
+      <input type="date" id="fecha-cerrar-dia" class="form-control" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+    </div>
+    <button class="btn btn-primary" style="margin-top: 25px; padding: 12px 30px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;" onclick="window.cerrarDia()">
+      💾 Cerrar Día
+    </button>
+  </div>
+  
+  <div id="resultado-cerrar-dia" style="margin-top: 15px; padding: 15px; border-radius: 8px; display: none;"></div>
+</div>
+
+<!-- NUEVA SECCIÓN: HISTÓRICO DIARIO -->
+<div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h3 style="margin: 0;">📊 Histórico Diario (Últimos 30 días)</h3>
+    <button class="btn" style="padding: 8px 16px; background: #f3f4f6; border: 1px solid #ddd; border-radius: 8px; cursor: pointer;" onclick="window.cargarHistoricoSnapshots()">
+      🔄 Actualizar
+    </button>
+  </div>
+  
+  <div id="estadisticas-snapshots" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+    <!-- Estadísticas agregadas -->
+  </div>
+  
+  <canvas id="grafico-snapshots" style="max-height: 300px; margin-bottom: 20px;"></canvas>
+  
+  <div id="tabla-snapshots" style="overflow-x: auto;">
+    <!-- Tabla de snapshots -->
+  </div>
+</div>
 
         <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; align-items: start;">
 
@@ -2977,6 +3014,212 @@
             document.getElementById('tabla-ventas').innerHTML = '<p style="color:#ef4444;">Error cargando ventas</p>';
           }
         };
+        // ========== SNAPSHOTS DIARIOS ==========
+
+window.cerrarDia = async function() {
+  try {
+    const fechaInput = document.getElementById('fecha-cerrar-dia');
+    const fecha = fechaInput.value;
+    
+    if (!fecha) {
+      alert('⚠️ Por favor selecciona una fecha');
+      return;
+    }
+    
+    const resultado = document.getElementById('resultado-cerrar-dia');
+    resultado.style.display = 'block';
+    resultado.style.background = '#fef3c7';
+    resultado.style.border = '1px solid #fbbf24';
+    resultado.innerHTML = '⏳ Cerrando día...';
+    
+    const response = await fetch(`${API_URL}/snapshots/daily`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({ fecha })
+    });
+    
+    if (!response.ok) throw new Error('Error al cerrar día');
+    
+    const snapshot = await response.json();
+    
+    resultado.style.background = '#d1fae5';
+    resultado.style.border = '1px solid #10b981';
+    resultado.innerHTML = `
+      ✅ <strong>Día cerrado correctamente</strong><br>
+      📅 Fecha: ${new Date(snapshot.fecha).toLocaleDateString('es-ES')}<br>
+      💰 Ingresos: ${parseFloat(snapshot.ingresos_ventas).toFixed(2)} €<br>
+      📦 Compras: ${parseFloat(snapshot.compras_dia).toFixed(2)} €<br>
+      📊 Margen: ${parseFloat(snapshot.margen_bruto).toFixed(2)} € (${parseFloat(snapshot.margen_bruto_pct).toFixed(1)}%)<br>
+      🎯 Ventas: ${snapshot.num_ventas} | Pedidos: ${snapshot.num_pedidos}
+    `;
+    
+    // Actualizar histórico
+    await window.cargarHistoricoSnapshots();
+    
+  } catch (error) {
+    console.error('Error cerrando día:', error);
+    const resultado = document.getElementById('resultado-cerrar-dia');
+    resultado.style.display = 'block';
+    resultado.style.background = '#fee2e2';
+    resultado.style.border = '1px solid #ef4444';
+    resultado.innerHTML = '❌ Error al cerrar día. Verifica que haya datos para esa fecha.';
+  }
+};
+
+window.cargarHistoricoSnapshots = async function() {
+  try {
+    const [snapshotsRes, statsRes] = await Promise.all([
+      fetch(`${API_URL}/snapshots?limit=30`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      }),
+      fetch(`${API_URL}/snapshots/stats?dias=30`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      })
+    ]);
+    
+    if (!snapshotsRes.ok || !statsRes.ok) throw new Error('Error cargando datos');
+    
+    const snapshots = await snapshotsRes.json();
+    const stats = await statsRes.json();
+    
+    // Renderizar estadísticas
+    document.getElementById('estadisticas-snapshots').innerHTML = `
+      <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
+        <div style="color: #065f46; font-size: 12px; margin-bottom: 5px;">Promedio Ingresos/Día</div>
+        <div style="font-size: 24px; font-weight: 700; color: #047857;">${parseFloat(stats.avg_ingresos_dia).toFixed(2)} €</div>
+      </div>
+      <div style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+        <div style="color: #92400e; font-size: 12px; margin-bottom: 5px;">Promedio Margen/Día</div>
+        <div style="font-size: 24px; font-weight: 700; color: #d97706;">${parseFloat(stats.avg_margen_dia).toFixed(2)} €</div>
+      </div>
+      <div style="background: #ede9fe; padding: 15px; border-radius: 8px; border-left: 4px solid #8b5cf6;">
+        <div style="color: #5b21b6; font-size: 12px; margin-bottom: 5px;">Margen Promedio %</div>
+        <div style="font-size: 24px; font-weight: 700; color: #7c3aed;">${parseFloat(stats.avg_margen_pct).toFixed(1)}%</div>
+      </div>
+      <div style="background: #dbeafe; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+        <div style="color: #1e40af; font-size: 12px; margin-bottom: 5px;">Total ${stats.total_dias} días</div>
+        <div style="font-size: 24px; font-weight: 700; color: #2563eb;">${parseFloat(stats.total_ingresos).toFixed(2)} €</div>
+      </div>
+    `;
+    
+    // Renderizar gráfico
+    window.renderizarGraficoSnapshots(snapshots);
+    
+    // Renderizar tabla
+    if (snapshots.length === 0) {
+      document.getElementById('tabla-snapshots').innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #666;">
+          <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
+          <p>No hay días cerrados aún. Usa el botón "Cerrar Día" para empezar a registrar datos.</p>
+        </div>
+      `;
+    } else {
+      document.getElementById('tabla-snapshots').innerHTML = `
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+              <th style="padding: 12px; text-align: left;">📅 Fecha</th>
+              <th style="padding: 12px; text-align: right;">💰 Ingresos</th>
+              <th style="padding: 12px; text-align: right;">📦 Compras</th>
+              <th style="padding: 12px; text-align: right;">📊 Margen</th>
+              <th style="padding: 12px; text-align: right;">% Margen</th>
+              <th style="padding: 12px; text-align: center;">🎯 Ventas</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${snapshots.map(s => `
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px;">${new Date(s.fecha).toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })}</td>
+                <td style="padding: 12px; text-align: right; font-weight: 600; color: #10b981;">${parseFloat(s.ingresos_ventas).toFixed(2)} €</td>
+                <td style="padding: 12px; text-align: right; color: #ef4444;">${parseFloat(s.compras_dia).toFixed(2)} €</td>
+                <td style="padding: 12px; text-align: right; font-weight: 600;">${parseFloat(s.margen_bruto).toFixed(2)} €</td>
+                <td style="padding: 12px; text-align: right; color: ${s.margen_bruto_pct > 70 ? '#10b981' : s.margen_bruto_pct > 50 ? '#f59e0b' : '#ef4444'};">${parseFloat(s.margen_bruto_pct).toFixed(1)}%</td>
+                <td style="padding: 12px; text-align: center;">${s.num_ventas}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+    
+  } catch (error) {
+    console.error('Error cargando histórico:', error);
+    document.getElementById('estadisticas-snapshots').innerHTML = `
+      <div style="background: #fee2e2; padding: 15px; border-radius: 8px; color: #991b1b;">
+        ❌ Error cargando datos históricos
+      </div>
+    `;
+  }
+};
+
+window.renderizarGraficoSnapshots = function(snapshots) {
+  const canvas = document.getElementById('grafico-snapshots');
+  const ctx = canvas.getContext('2d');
+  
+  // Destruir gráfico anterior si existe
+  if (window.chartSnapshots) {
+    window.chartSnapshots.destroy();
+  }
+  
+  // Preparar datos (invertir para que más reciente esté a la derecha)
+  const datos = [...snapshots].reverse();
+  
+  window.chartSnapshots = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: datos.map(s => new Date(s.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })),
+      datasets: [
+        {
+          label: 'Ingresos',
+          data: datos.map(s => parseFloat(s.ingresos_ventas)),
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.1)',
+          tension: 0.3,
+          fill: true
+        },
+        {
+          label: 'Margen Bruto',
+          data: datos.map(s => parseFloat(s.margen_bruto)),
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.3,
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return value.toFixed(0) + ' €';
+            }
+          }
+        }
+      }
+    }
+  });
+};
+
+// Auto-inicializar fecha de hoy
+document.addEventListener('DOMContentLoaded', function() {
+  const fechaInput = document.getElementById('fecha-cerrar-dia');
+  if (fechaInput) {
+    fechaInput.value = new Date().toISOString().split('T')[0];
+  }
+});
         window.eliminarVenta = async function (id) {
           if (!confirm('¿Eliminar esta venta? El stock NO se restaurará automáticamente.')) return;
 
