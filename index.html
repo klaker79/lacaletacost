@@ -3791,6 +3791,16 @@ document.addEventListener('DOMContentLoaded', function() {
               renderizarInventario();
               renderizarIngredientes();
               window.actualizarKPIs();
+              // Actualizar snapshot del día automáticamente
+        try {
+          await fetch(`${API_BASE}/snapshots/daily`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ fecha: new Date().toISOString().split('T')[0] })
+          });
+        } catch (err) {
+          console.log('Snapshot actualizado en background');
+        }
               e.target.reset();
               showToast('Venta registrada correctamente', 'success');
             } catch (error) {
