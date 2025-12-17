@@ -206,6 +206,14 @@ async function getBalance(mes, ano) {
     return await fetchAPI(`/api/balance/mes${query}`);
 }
 
+async function getMonthlySummary(mes, ano) {
+    const params = new URLSearchParams();
+    if (mes) params.append('mes', mes);
+    if (ano) params.append('ano', ano);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return await fetchAPI(`/api/monthly/summary${query}`);
+}
+
 /**
  * Funciones de modificación
  */
@@ -386,6 +394,7 @@ window.API = {
     getInventoryComplete,
     getTeam,
     getBalance,
+    getMonthlySummary,
     createIngredient,
     updateIngredient,
     deleteIngredient,
@@ -403,4 +412,3 @@ window.API = {
 };
 
 console.log('🚀 API Client cargado. Usa window.API para acceder a las funciones.');
-
