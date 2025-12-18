@@ -5909,7 +5909,8 @@
                 // ========== INVENTARIO ==========
                 window.renderizarInventario = async function () {
                     try {
-                        const inventario = await api.getInventoryComplete();
+                        // Usar ingredientes cargados en memoria en lugar de llamar a la API
+                        const inventario = window.ingredientes || [];
                         const busqueda = document.getElementById('busqueda-inventario').value.toLowerCase();
                         const filtrados = inventario.filter(ing =>
                             ing.nombre.toLowerCase().includes(busqueda)
@@ -5973,7 +5974,7 @@
                             let estadoClass = 'stock-ok';
                             let estadoIcon = '🟢';
 
-                            const stockActual = parseFloat(ing.stock_virtual) || 0;
+                            const stockActual = parseFloat(ing.stock_actual) || 0;
                             const stockMinimo = parseFloat(ing.stock_minimo) || 0;
 
                             if (stockActual <= 0) {
@@ -5984,44 +5985,41 @@
                                 estadoIcon = '🟡';
                             }
 
-                            const precioMedio = parseFloat(ing.precio_medio || 0);
-                            const valorStock = parseFloat(ing.valor_stock || 0);
-                            const diferencia = parseFloat(ing.diferencia || 0);
+                            const precioMedio = parseFloat(ing.precio || 0);
+                            const valorStock = stockActual * precioMedio;
                             const stockReal = ing.stock_real !== null ? parseFloat(ing.stock_real).toFixed(2) : '';
 
                             html += '<tr>';
                             html += `<td><span class="stock-indicator ${estadoClass}"></span>${estadoIcon}</td>`;
                             html += `<td><strong>${ing.nombre}</strong></td>`;
-                            html += `<td><span class="stock-value">${parseFloat(ing.stock_virtual || 0).toFixed(2)}</span></td>`;
+                            html += `<td><span class="stock-value">${stockActual.toFixed(2)}</span></td>`;
 
-                            // Input con evento ONINPUT para cálculo dinámico
-                            // Input con evento ONINPUT para cálculo dinámico
+                            // Input para stock real
                             html += `<td><input type="number" step="0.01" value="${stockReal}" placeholder="Sin datos" 
                         class="input-stock-real" 
                         data-id="${ing.id}" 
-                        data-stock-virtual="${ing.stock_virtual || 0}" 
+                        data-stock-virtual="${stockActual}" 
                         data-precio="${precioMedio}"
                         oninput="window.updateDifferenceCell(this)"
                         style="width:80px;padding:5px;border:1px solid #ddd;border-radius:4px;"></td>`;
 
-                            // Celda de Diferencia con ID único para actualizar
+                            // Celda de Diferencia
                             let diffDisplay = '-';
                             let diffColor = '#666';
 
-                            // Si viene calculado de backend (porque había stock_real guardado)
-                            if (ing.diferencia !== null && ing.diferencia !== undefined) {
-                                const d = parseFloat(ing.diferencia);
+                            if (stockReal !== '' && stockReal !== null) {
+                                const d = parseFloat(stockReal) - stockActual;
                                 diffDisplay = d.toFixed(2);
-                                if (d < 0) diffColor = '#ef4444'; // Negativo (Falta) -> Rojo
-                                else if (d > 0) diffColor = '#10b981'; // Positivo (Sobra) -> Verde
+                                if (d < 0) diffColor = '#ef4444';
+                                else if (d > 0) diffColor = '#10b981';
                             }
 
                             html += `<td id="diff-cell-${ing.id}" style="color:${diffColor}; font-weight:bold;">${diffDisplay}</td>`;
 
                             html += `<td>${precioMedio.toFixed(2)}€/${ing.unidad}</td>`;
 
-                            // Valor Stock: Por defecto usa Virtual. Si hay Real guardado, usa Real.
-                            const cantidadParaValor = (stockReal !== '' && stockReal !== null) ? parseFloat(stockReal) : parseFloat(ing.stock_virtual || 0);
+                            // Valor Stock
+                            const cantidadParaValor = (stockReal !== '' && stockReal !== null) ? parseFloat(stockReal) : stockActual;
                             const valorStockDisplay = (cantidadParaValor * precioMedio).toFixed(2);
 
                             html += `<td id="val-cell-${ing.id}"><strong>${valorStockDisplay}€</strong></td>`;
