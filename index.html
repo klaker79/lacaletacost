@@ -2028,7 +2028,7 @@
                             </div>
                             <div class="form-group">
                                 <label>Email</label>
-                                <input type="email" id="prov-email">
+                                <input type="text" id="prov-email" placeholder="opcional">
                             </div>
                             <div class="form-group" style="grid-column: 1 / -1;">
                                 <label>Dirección</label>
@@ -4634,6 +4634,8 @@
                         }
                         await cargarDatos();
                         renderizarProveedores();
+                        renderizarIngredientes(); // Sincronizar con pestaña ingredientes
+                        if (typeof renderizarRecetas === 'function') renderizarRecetas(); // Sincronizar con pestaña recetas
                         hideLoading();
                         showToast(editandoProveedorId ? 'Proveedor actualizado' : 'Proveedor creado', 'success');
                         window.cerrarFormularioProveedor();
