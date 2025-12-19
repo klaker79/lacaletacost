@@ -1850,7 +1850,8 @@
 
       <!-- 💰 Beneficio Neto Diario -->
       <div class="dashboard-card"
-        style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);"><h3 style="margin: 0 0 16px 0; font-size: 16px; color: #1E293B; display: flex; align-items: center; gap: 8px;">
+        style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
+        <h3 style="margin: 0 0 16px 0; font-size: 16px; color: #1E293B; display: flex; align-items: center; gap: 8px;">
           💰 Beneficio Neto por Día
         </h3>
         <div id="beneficio-neto-diario-lista" style="max-height: 200px; overflow-y: auto; font-size: 13px;">
@@ -8387,12 +8388,16 @@
 
           const dias = datosResumenMensual.dias;
           const opex = JSON.parse(localStorage.getItem('opex_inputs') || '{}');
-          const gastosFijosMes = (parseFloat(opex.alquiler) || 0) + 
-                                  (parseFloat(opex.personal) || 0) + 
-                                  (parseFloat(opex.suministros) || 0) + 
-                                  (parseFloat(opex.otros) || 0);
-          const diasMes = dias.length;
-          const gastosFijosDia = diasMes > 0 ? (gastosFijosMes / diasMes) : 0;
+          const gastosFijosMes = (parseFloat(opex.alquiler) || 0) +
+            (parseFloat(opex.personal) || 0) +
+            (parseFloat(opex.suministros) || 0) +
+            (parseFloat(opex.otros) || 0);
+
+          // ✅ CORREGIDO: Usar días TOTALES del mes, no días con datos
+          const mes = parseInt(document.getElementById('diario-mes')?.value || new Date().getMonth() + 1);
+          const ano = parseInt(document.getElementById('diario-ano')?.value || new Date().getFullYear());
+          const diasTotalesMes = new Date(ano, mes, 0).getDate(); // Días reales del mes (28-31)
+          const gastosFijosDia = diasTotalesMes > 0 ? (gastosFijosMes / diasTotalesMes) : 0;
 
           let html = '';
           let acumulado = 0;
