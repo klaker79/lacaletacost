@@ -5618,11 +5618,11 @@
                   html += `<td><strong>${parseFloat(ped.total).toFixed(2)} €</strong></td>`;
                   html += `<td><span class="badge ${ped.estado === 'recibido' ? 'badge-received' : 'badge-pending'}">${ped.estado === 'recibido' ? 'Recibido' : 'Pendiente'}</span></td>`;
                   html += `<td><div class="actions">`;
-                  html += `<button class="icon-btn view" onclick="window.verDetallesPedido(${ped.id})" title="Ver detalles">👁️</button>`;
+                  html += `<button class="icon-btn view" data-action="ver" data-id="${ped.id}" title="Ver detalles">👁️</button>`;
                   if (ped.estado === 'pendiente') {
-                    html += `<button class="icon-btn receive" onclick="window.marcarPedidoRecibido(${ped.id})" title="Recibir pedido">📥</button>`;
+                    html += `<button class="icon-btn receive" data-action="recibir" data-id="${ped.id}" title="Recibir pedido">📥</button>`;
                   }
-                  html += `<button class="icon-btn delete" onclick="window.eliminarPedido(${ped.id})" title="Eliminar">🗑️</button>`;
+                  html += `<button class="icon-btn delete" data-action="eliminar" data-id="${ped.id}" title="Eliminar">🗑️</button>`;
                   html += '</div></td>';
                   html += '</tr>';
                 });
@@ -5641,6 +5641,23 @@
                 document.getElementById('resumen-pedidos').style.display = 'flex';
               }
             }
+
+            // Event delegation para botones de pedidos
+            document.getElementById('tabla-pedidos').addEventListener('click', function(e) {
+              const btn = e.target.closest('.icon-btn');
+              if (!btn) return;
+
+              const action = btn.dataset.action;
+              const id = parseInt(btn.dataset.id);
+
+              if (action === 'ver') {
+                window.verDetallesPedido(id);
+              } else if (action === 'recibir') {
+                window.marcarPedidoRecibido(id);
+              } else if (action === 'eliminar') {
+                window.eliminarPedido(id);
+              }
+            });
 
             // ========== ANÁLISIS (resumido) ==========
             window.renderizarAnalisis = async function () {
