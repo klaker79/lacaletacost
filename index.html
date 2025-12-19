@@ -2557,7 +2557,7 @@
                 <div class="form-group" style="margin: 0;">
                   <label style="font-size: 12px; color: #64748b;">Alquiler Local</label>
                   <div style="position: relative;">
-                    <input type="number" id="pl-input-alquiler" class="pl-input" value="1500"
+                    <input type="number" id="p1-input-alquiler" class="p1-input" value="1500" oninput="window.guardarGastoFinanzas('Alquiler', 'p1-input-alquiler'); window.calcularPnL()"
                       oninput="window.calcularPL()">
                     <span
                       style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8;">€</span>
@@ -2566,7 +2566,7 @@
                 <div class="form-group" style="margin: 0;">
                   <label style="font-size: 12px; color: #64748b;">Personal (Nóminas)</label>
                   <div style="position: relative;">
-                    <input type="number" id="pl-input-personal" class="pl-input" value="4500"
+                   <input type="number" id="p1-input-personal" class="p1-input" value="4500" oninput="window.guardarGastoFinanzas('Personal', 'p1-input-personal'); window.calcularPnL()"
                       oninput="window.calcularPL()">
                     <span
                       style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8;">€</span>
@@ -2575,7 +2575,7 @@
                 <div class="form-group" style="margin: 0;">
                   <label style="font-size: 12px; color: #64748b;">Suministros</label>
                   <div style="position: relative;">
-                    <input type="number" id="pl-input-suministros" class="pl-input" value="800"
+                   <input type="number" id="p1-input-suministros" class="p1-input" value="800" oninput="window.guardarGastoFinanzas('Suministros', 'p1-input-suministros'); window.calcularPnL()"
                       oninput="window.calcularPL()">
                     <span
                       style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8;">€</span>
@@ -2584,7 +2584,7 @@
                 <div class="form-group" style="margin: 0;">
                   <label style="font-size: 12px; color: #64748b;">Otros Gastos</label>
                   <div style="position: relative;">
-                    <input type="number" id="pl-input-otros" class="pl-input" value="500" oninput="window.calcularPL()">
+                    <input type="number" id="p1-input-otros" class="p1-input" value="500" oninput="window.guardarGastoFinanzas('Otros', 'p1-input-otros'); window.calcularPnL()"
                     <span
                       style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8;">€</span>
                   </div>
@@ -8239,6 +8239,53 @@ async function actualizarBeneficioRealDiario() {
 }
 
 setInterval(actualizarBeneficioRealDiario, 2000);
+
+  
+// ============ FINANZAS: Guardar/Cargar Gastos Fijos desde BD ============
+window.guardarGastoFinanzas = async function(concepto, inputId) {
+    const elem = document.getElementById(inputId);
+    if (!elem) return;
+    
+    const monto = parseFloat(elem.value) || 0;
+    
+    try {
+        const gastos = await window.API.getGastosFijos();
+        const existe = gastos.find(g => g.concepto === concepto);
+        
+        if (existe) {
+            await window.API.updateGastoFijo(existe.id, concepto, monto);
+        } else {
+            await window.API.createGastoFijo(concepto, monto);
+        }
+    } catch (error) {
+        console.error('Error guardando gasto:', error);
+    }
+};
+
+window.cargarGastosFinanzas = async function() {
+    try {
+        const gastos = await window.API.getGastosFijos();
+        
+        const mapa = {
+            'Alquiler': 'p1-input-alquiler',
+            'Personal': 'p1-input-personal',
+            'Suministros': 'p1-input-suministros',
+            'Otros': 'p1-input-otros'
+        };
+        
+        gastos.forEach(g => {
+            const inputId = mapa[g.concepto];
+            if (inputId) {
+                const elem = document.getElementById(inputId);
+                if (elem) elem.value = parseFloat(g.monto_mensual);
+            }
+        });
+        
+        if (typeof window.calcularPnL === 'function') window.calcularPnL();
+    } catch (error) {
+        console.error('Error cargando gastos:', error);
+    }
+};
 </script>
 </body>
 
