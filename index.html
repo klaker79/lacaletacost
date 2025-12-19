@@ -8366,7 +8366,9 @@
       window.cargarGastosFijos = cargarGastosFijos;
 
 
-      // Actualizar beneficio real con gastos fijos en Diario
+
+      // FUNCIÓN DESACTIVADA - Causa error 8372 llamando a API inexistente
+      /*
       async function actualizarBeneficioRealDiario() {
         try {
           const totales = await window.API.getTotalGastosFijos();
@@ -8392,6 +8394,8 @@
       }
 
       setInterval(actualizarBeneficioRealDiario, 2000);
+      */
+
 
 
       // ============ FINANZAS: Guardar/Cargar Gastos Fijos desde BD ============
