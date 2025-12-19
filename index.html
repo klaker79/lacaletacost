@@ -4916,6 +4916,19 @@
 
               renderItemsRecepcion();
               document.getElementById('modal-recibir-pedido').classList.add('active');
+
+              // FORZAR que la pestaña Pedidos permanezca activa
+              setTimeout(() => {
+                const tabPedidos = document.getElementById('tab-pedidos');
+                const btnPedidos = document.getElementById('tab-btn-pedidos');
+                if (tabPedidos && !tabPedidos.classList.contains('active')) {
+                  console.log('🔧 Forzando tab de pedidos a estar activo');
+                  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                  tabPedidos.classList.add('active');
+                  if (btnPedidos) btnPedidos.classList.add('active');
+                }
+              }, 10);
             };
 
             function renderItemsRecepcion() {
@@ -5193,6 +5206,19 @@
               document.getElementById('modal-ver-pedido-contenido').innerHTML = html;
               document.getElementById('modal-ver-pedido').classList.add('active');
               pedidoViendoId = pedidoId;
+
+              // FORZAR que la pestaña Pedidos permanezca activa
+              setTimeout(() => {
+                const tabPedidos = document.getElementById('tab-pedidos');
+                const btnPedidos = document.getElementById('tab-btn-pedidos');
+                if (tabPedidos && !tabPedidos.classList.contains('active')) {
+                  console.log('🔧 Forzando tab de pedidos a estar activo');
+                  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                  tabPedidos.classList.add('active');
+                  if (btnPedidos) btnPedidos.classList.add('active');
+                }
+              }, 10);
             };
 
             window.cerrarModalVerPedido = function () {
