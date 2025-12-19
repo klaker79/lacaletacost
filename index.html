@@ -2384,7 +2384,10 @@
             <h3>Food Cost</h3>
             <div class="value" id="diario-food-cost">0.0%</div>
           </div>
+        </div>
 
+        <!-- Tablas Diarias (FUERA del grid para que ocupen 100% ancho) -->
+        <div style="margin-top: 30px;">
           <!-- Vista Compras -->
           <div id="vista-compras" class="diario-vista" style="display: block;">
             <h3 style="margin-bottom: 15px;">🛒 Precio de Compra por Ingrediente / Día</h3>
@@ -8399,14 +8402,30 @@
         const monto = parseFloat(elem.value) || 0;
 
         try {
-          const gastos = await window.API.getGastosFijos();
-          const existe = gastos.find(g => g.concepto === concepto);
+          // Guardar en localStorage directamente (más rápido y confiable)
+          const opexData = JSON.parse(localStorage.getItem('opex_inputs') || '{}');
 
-          if (existe) {
-            await window.API.updateGastoFijo(existe.id, concepto, monto);
+          // Mapear concepto a clave correcta
+          const conceptoKey = concepto.toLowerCase();
+          opexData[conceptoKey] = monto;
+
+          localStorage.setItem('opex_inputs', JSON.stringify(opexData));
+
+          // También actualizar en gastos_fijos para compatibilidad
+          const gastosFijos = JSON.parse(localStorage.getItem('gastos_fijos') || '[]');
+          const idx = gastosFijos.findIndex(g => g.concepto === concepto);
+
+          if (idx >= 0) {
+            gastosFijos[idx].monto_mensual = monto;
           } else {
-            await window.API.createGastoFijo(concepto, monto);
+            gastosFijos.push({
+              id: Date.now(),
+              concepto: concepto,
+              monto_mensual: monto
+            });
           }
+
+          localStorage.setItem('gastos_fijos', JSON.stringify(gastosFijos));
         } catch (error) {
           console.error('Error guardando gasto:', error);
         }
