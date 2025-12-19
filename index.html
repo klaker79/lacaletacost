@@ -4600,7 +4600,9 @@ window.renderizarIngredientes();
           if (confirmado) {
             showLoading();
             try {
-              await api.deleteSupplier(id);
+              await api.deleteProveedor(id);
+              proveedores = proveedores.filter(p => p.id !== id);
+              window.renderizarProveedores();
               await cargarDatos();
               renderizarProveedores();
               renderizarIngredientes();
