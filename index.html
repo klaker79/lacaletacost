@@ -4063,8 +4063,49 @@
               });
               if (!res.ok) throw new Error('Error al obtener ingeniería de menú');
               return await res.json();
+            },
+
+            // GASTOS FIJOS (Fixed Expenses)
+            async getGastosFijos() {
+              const res = await fetch(API_BASE + '/gastos-fijos', {
+                headers: getAuthHeaders()
+              });
+              if (!res.ok) throw new Error('Error cargando gastos fijos');
+              return await res.json();
+            },
+
+            async createGastoFijo(concepto, monto_mensual) {
+              const res = await fetch(API_BASE + '/gastos-fijos', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ concepto, monto_mensual })
+              });
+              if (!res.ok) throw new Error('Error creando gasto fijo');
+              return await res.json();
+            },
+
+            async updateGastoFijo(id, concepto, monto_mensual) {
+              const res = await fetch(API_BASE + `/gastos-fijos/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ concepto, monto_mensual })
+              });
+              if (!res.ok) throw new Error('Error actualizando gasto fijo');
+              return await res.json();
+            },
+
+            async deleteGastoFijo(id) {
+              const res = await fetch(API_BASE + `/gastos-fijos/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+              });
+              if (!res.ok) throw new Error('Error eliminando gasto fijo');
+              return await res.json();
             }
           };
+
+          // Crear alias en mayúsculas para compatibilidad
+          window.API = window.api;
 
           async function cargarDatos() {
             try {
