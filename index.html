@@ -8292,10 +8292,32 @@
             }
 
             localStorage.setItem('gastos_fijos', JSON.stringify(gastosFijos));
+
+            // Actualizar el total
+            actualizarTotalGastosFijos();
           } catch (error) {
             console.error('Error guardando gasto:', error);
           }
         };
+
+        // Función para actualizar el total de gastos fijos
+        function actualizarTotalGastosFijos() {
+          try {
+            const opex = JSON.parse(localStorage.getItem('opex_inputs') || '{}');
+            const total = (parseFloat(opex.alquiler) || 0) +
+              (parseFloat(opex.personal) || 0) +
+              (parseFloat(opex.suministros) || 0) +
+              (parseFloat(opex.otros) || 0);
+
+            const elem = document.getElementById('diario-gastos-fijos-total');
+            if (elem) {
+              elem.textContent = total.toFixed(2) + ' €';
+            }
+          } catch (error) {
+            console.error('Error calculando total gastos fijos:', error);
+          }
+        }
+
 
 
       </script>
