@@ -3585,17 +3585,32 @@
 
               // Event delegation para botones de pedidos
               document.getElementById('tabla-pedidos').addEventListener('click', function(e) {
-                const btn = e.target.closest('.icon-btn');
-                if (!btn) return;
+                console.log('Click detectado en tabla-pedidos', e.target);
 
-                const action = btn.dataset.action;
-                const id = parseInt(btn.dataset.id);
+                let btn = e.target;
+                // Si clickeamos en el emoji, subir al botón
+                if (!btn.classList.contains('icon-btn')) {
+                  btn = btn.parentElement;
+                }
+
+                if (!btn || !btn.classList.contains('icon-btn')) {
+                  console.log('No es un icon-btn');
+                  return;
+                }
+
+                const action = btn.getAttribute('data-action');
+                const id = parseInt(btn.getAttribute('data-id'));
+
+                console.log('Acción:', action, 'ID:', id);
 
                 if (action === 'ver') {
+                  console.log('Llamando verDetallesPedido');
                   window.verDetallesPedido(id);
                 } else if (action === 'recibir') {
+                  console.log('Llamando marcarPedidoRecibido');
                   window.marcarPedidoRecibido(id);
                 } else if (action === 'eliminar') {
+                  console.log('Llamando eliminarPedido');
                   window.eliminarPedido(id);
                 }
               });
