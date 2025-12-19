@@ -4117,7 +4117,7 @@
   
   if (confirmado) {
     try {
-      await api.deleteIngredient(id);
+      await api.deleteIngrediente(id);
 ingredientes = ingredientes.filter(i => i.id !== id);
 window.renderizarIngredientes();
       showToast(`✅ Ingrediente "${ing.nombre}" eliminado correctamente`, 'success');
