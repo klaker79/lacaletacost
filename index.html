@@ -7383,6 +7383,11 @@
               const nombreNorm = nombre.toLowerCase().trim();
               recetaEncontrada = window.recetas.find(r => r.nombre.toLowerCase().trim() === nombreNorm);
             }
+            
+            // Validación: warning si no encuentra receta en importación
+            if (!recetaEncontrada && nombre) {
+            console.warn(`⚠️ Receta no encontrada en importación TPV: "${nombre}"`);
+            }
 
             const valido = cantidad > 0 && (recetaEncontrada || nombre.length > 0);
 
@@ -7563,6 +7568,12 @@
               const nombreNorm = ingredienteNombre.toLowerCase().trim();
               ingredienteEncontrado = window.ingredientes.find(i => i.nombre.toLowerCase().trim() === nombreNorm);
             }
+
+            
+            // Validación: warning si no encuentra ingrediente en importación
+            if (!ingredienteEncontrado && ingredienteNombre) {
+            console.warn(`⚠️ Ingrediente no encontrado en importación: "${ingredienteNombre}"`);
+           }
 
             const valido = cantidad > 0 && ingredienteNombre.length > 0;
 
