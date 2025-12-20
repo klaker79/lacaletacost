@@ -2653,10 +2653,14 @@
 
               const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
 
-              toast.innerHTML = `
-          <div class="toast-icon">${icons[type]}</div>
-          <div class="toast-message">${message}</div>
-        `;
+                // FIX: Crear estructura sin inyectar mensaje directamente
+  toast.innerHTML = `
+    <div class="toast-icon">${icons[type]}</div>
+    <div class="toast-message"></div>
+  `;
+  
+  // Establecer mensaje de forma segura (previene XSS)
+  toast.querySelector('.toast-message').textContent = message;
 
               container.appendChild(toast);
               setTimeout(() => {
@@ -3168,7 +3172,12 @@
                 } catch (error) {
                   console.warn('Using localStorage for gastos fijos:', error.message);
                   // Fallback a localStorage si falla la BD
-                  const savedOpex = JSON.parse(localStorage.getItem('opex_inputs') || '{}');
+                  let savedOpex = {};
+                  try {
+                  savedOpex = JSON.parse(localStorage.getItem('opex_inputs') || '{}');
+                } catch (parseError) {
+                  console.warn('opex_inputs corrupto:', parseError.message);
+        }
                   const alquilerEl = document.getElementById('pl-input-alquiler');
                   const personalEl = document.getElementById('pl-input-personal');
                   const suministrosEl = document.getElementById('pl-input-suministros');
@@ -3397,7 +3406,12 @@
                 const users = await api.getTeam();
 
                 // Update restaurant info
-                const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                let currentUser = {};
+              try {
+                currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+              } catch (parseError) {
+                console.warn('user localStorage corrupto:', parseError.message);
+          }
                 document.getElementById('config-restaurante-nombre').textContent = currentUser.restaurante || 'Mi Restaurante';
                 document.getElementById('config-restaurante-id').textContent = currentUser.restauranteId || '...';
 
@@ -3698,7 +3712,12 @@
 
             async function init() {
               // Mostrar nombre del restaurante
-              const user = JSON.parse(localStorage.getItem('user') || '{}');
+              let user = {};
+            try {
+            user = JSON.parse(localStorage.getItem('user') || '{}');
+          } catch (parseError) {
+            console.warn('user localStorage corrupto en init:', parseError.message);
+        }
               if (user.restaurante) {
                 document.getElementById('user-restaurant').textContent = '🍽️ ' + user.restaurante;
               }
@@ -5546,12 +5565,6 @@
     font-size: 36px !important;
   }
   
-  /* Modals */
-  .modal-content {
-    width: 95%;
-    padding: 20px;
-    max-height: 90vh;
-  }
   
   /* Ingrediente Item */
   .ingrediente-item {
