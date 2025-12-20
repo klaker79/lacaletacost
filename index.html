@@ -2666,11 +2666,11 @@
             }
 
             function showLoading() {
-              document.getElementById('loading-overlay').classList.add('active');
+              addElementClass('loading-overlay', 'active');
             }
 
             function hideLoading() {
-              document.getElementById('loading-overlay').classList.remove('active');
+              removeElementClass('loading-overlay', 'active');
             }
             // === EXPORT A EXCEL ===
             function exportarAExcel(datos, nombreArchivo, columnas) {
@@ -2697,6 +2697,133 @@
 
               showToast('Excel descargado correctamente', 'success');
             }
+
+            // === DOM HELPERS SEGUROS ===
+            // Previene crashes por elementos null/undefined
+
+            /**
+             * Obtiene elemento por ID de forma segura
+             * @param {string} id - ID del elemento
+             * @param {string} context - Contexto para debugging
+             * @returns {HTMLElement|null}
+             */
+            function getElement(id, context = '') {
+              const element = document.getElementById(id);
+              if (!element && context) {
+                console.warn(`[DOM] Elemento '${id}' no encontrado en contexto: ${context}`);
+              }
+              return element;
+            }
+
+            /**
+             * Establece texto de un elemento de forma segura
+             * @param {string} id - ID del elemento
+             * @param {string} text - Texto a establecer
+             * @param {string} fallback - Texto por defecto si elemento no existe
+             */
+            function setElementText(id, text, fallback = '') {
+              const element = getElement(id);
+              if (element) {
+                element.textContent = text;
+              } else if (fallback) {
+                console.warn(`[DOM] No se pudo actualizar '${id}', usando fallback`);
+              }
+            }
+
+            /**
+             * Establece HTML de un elemento de forma segura
+             * @param {string} id - ID del elemento
+             * @param {string} html - HTML a establecer
+             */
+            function setElementHTML(id, html) {
+              const element = getElement(id);
+              if (element) {
+                element.innerHTML = html;
+              }
+            }
+
+            /**
+             * Obtiene valor de un input de forma segura
+             * @param {string} id - ID del input
+             * @param {*} defaultValue - Valor por defecto
+             * @returns {string}
+             */
+            function getInputValue(id, defaultValue = '') {
+              const element = getElement(id);
+              return element?.value ?? defaultValue;
+            }
+
+            /**
+             * Establece valor de un input de forma segura
+             * @param {string} id - ID del input
+             * @param {*} value - Valor a establecer
+             */
+            function setInputValue(id, value) {
+              const element = getElement(id);
+              if (element) {
+                element.value = value;
+              }
+            }
+
+            /**
+             * Añade clase a elemento de forma segura
+             * @param {string} id - ID del elemento
+             * @param {string} className - Clase a añadir
+             */
+            function addElementClass(id, className) {
+              const element = getElement(id);
+              if (element) {
+                element.classList.add(className);
+              }
+            }
+
+            /**
+             * Elimina clase de elemento de forma segura
+             * @param {string} id - ID del elemento
+             * @param {string} className - Clase a eliminar
+             */
+            function removeElementClass(id, className) {
+              const element = getElement(id);
+              if (element) {
+                element.classList.remove(className);
+              }
+            }
+
+            /**
+             * Toggle clase de elemento de forma segura
+             * @param {string} id - ID del elemento
+             * @param {string} className - Clase a toggle
+             */
+            function toggleElementClass(id, className) {
+              const element = getElement(id);
+              if (element) {
+                element.classList.toggle(className);
+              }
+            }
+
+            /**
+             * Muestra elemento (display)
+             * @param {string} id - ID del elemento
+             * @param {string} displayType - Tipo de display ('block', 'flex', etc)
+             */
+            function showElement(id, displayType = 'block') {
+              const element = getElement(id);
+              if (element) {
+                element.style.display = displayType;
+              }
+            }
+
+            /**
+             * Oculta elemento
+             * @param {string} id - ID del elemento
+             */
+            function hideElement(id) {
+              const element = getElement(id);
+              if (element) {
+                element.style.display = 'none';
+              }
+            }
+
             // === EXPORTACIONES ESTANDARIZADAS (Formato TPV) ===
             function exportarIngredientes() {
               const columnas = [
@@ -2808,14 +2935,14 @@
               // 1. INGRESOS TOTALES (suma de ventas)
               api.getSales().then(ventas => {
                 const ingresos = ventas.reduce((sum, v) => sum + parseFloat(v.total), 0);
-                document.getElementById('kpi-ingresos').textContent = ingresos.toFixed(0) + '€';
+                setElementText('kpi-ingresos', ingresos.toFixed(0) + '€');
               }).catch(() => {
-                document.getElementById('kpi-ingresos').textContent = '0€';
+                setElementText('kpi-ingresos', '0€');
               });
 
               // 2. PEDIDOS ACTIVOS
               const pedidosActivos = window.pedidos.filter(p => p.estado === 'pendiente').length;
-              document.getElementById('kpi-pedidos').textContent = pedidosActivos;
+              setElementText('kpi-pedidos', pedidosActivos);
 
               // 3. STOCK BAJO
               const stockBajo = window.ingredientes.filter(ing => {
@@ -2823,9 +2950,8 @@
                 const stockMinimo = parseFloat(ing.stock_minimo) || 0;
                 return stockMinimo > 0 && stockActual <= stockMinimo;
               }).length;
-              document.getElementById('kpi-stock').textContent = stockBajo;
-              document.getElementById('kpi-stock-msg').textContent =
-                stockBajo > 0 ? 'Requieren atención' : 'Todo OK';
+              setElementText('kpi-stock', stockBajo);
+              setElementText('kpi-stock-msg', stockBajo > 0 ? 'Requieren atención' : 'Todo OK');
 
               // 4. MARGEN PROMEDIO
               if (window.recetas.length > 0) {
@@ -2840,9 +2966,9 @@
                   totalMargen += margen;
                 });
                 const margenPromedio = (totalMargen / window.recetas.length).toFixed(0);
-                document.getElementById('kpi-margen').textContent = margenPromedio + '%';
+                setElementText('kpi-margen', margenPromedio + '%');
               } else {
-                document.getElementById('kpi-margen').textContent = '0%';
+                setElementText('kpi-margen', '0%');
               }
             };
 
@@ -2939,15 +3065,17 @@
             }
             // === VENTAS ===
             window.renderizarVentas = async function () {
-              const select = document.getElementById('venta-receta');
-              select.innerHTML = '<option value="">Selecciona un plato...</option>';
-              window.recetas.forEach(r => {
-                select.innerHTML += `<option value="${r.id}">${r.nombre} - ${r.precio_venta}€</option>`;
-              });
+              const select = getElement('venta-receta');
+              if (select) {
+                select.innerHTML = '<option value="">Selecciona un plato...</option>';
+                window.recetas.forEach(r => {
+                  select.innerHTML += `<option value="${r.id}">${r.nombre} - ${r.precio_venta}€</option>`;
+                });
+              }
 
               // Obtener rango de fechas
-              const fechaDesde = document.getElementById('ventas-fecha-desde')?.value;
-              const fechaHasta = document.getElementById('ventas-fecha-hasta')?.value;
+              const fechaDesde = getInputValue('ventas-fecha-desde');
+              const fechaHasta = getInputValue('ventas-fecha-hasta');
 
               try {
                 const ventas = await api.getSales();
@@ -2988,9 +3116,9 @@
                 html += `<tr style="background:#10b981;color:white;font-weight:700;font-size:16px;"><td colspan="4">TOTAL</td><td>${totalGeneral.toFixed(2)}€</td></tr>`;
                 html += '</tbody></table>';
 
-                document.getElementById('tabla-ventas').innerHTML = html;
+                setElementHTML('tabla-ventas', html);
               } catch (error) {
-                document.getElementById('tabla-ventas').innerHTML = '<p style="color:#ef4444;">Error cargando ventas</p>';
+                setElementHTML('tabla-ventas', '<p style="color:#ef4444;">Error cargando ventas</p>');
               }
             };
             window.eliminarVenta = async function (id) {
@@ -4898,9 +5026,9 @@
               const prov = proveedores.find(p => p.id === pedido.proveedorId);
 
               // Llenar información del pedido
-              document.getElementById('modal-rec-proveedor').textContent = prov ? prov.nombre : 'Desconocido';
-              document.getElementById('modal-rec-fecha').textContent = new Date(pedido.fecha).toLocaleDateString('es-ES');
-              document.getElementById('modal-rec-total-original').textContent = parseFloat(pedido.total || 0).toFixed(2) + ' €';
+              setElementText('modal-rec-proveedor', prov ? prov.nombre : 'Desconocido');
+              setElementText('modal-rec-fecha', new Date(pedido.fecha).toLocaleDateString('es-ES'));
+              setElementText('modal-rec-total-original', parseFloat(pedido.total || 0).toFixed(2) + ' €');
 
               // Crear copia de items para edición
               if (!pedido.itemsRecepcion) {
@@ -4913,12 +5041,13 @@
               }
 
               renderItemsRecepcion();
-              document.getElementById('modal-recibir-pedido').classList.add('active');
+              addElementClass('modal-recibir-pedido', 'active');
             };
 
             function renderItemsRecepcion() {
               const pedido = pedidos.find(p => p.id === pedidoRecibiendoId);
-              const tbody = document.getElementById('modal-rec-items');
+              const tbody = getElement('modal-rec-items');
+              if (!tbody) return;
 
               let html = '';
               let totalOriginal = 0;
@@ -4982,12 +5111,14 @@
 
               // Actualizar resumen
               const varianza = totalRecibido - totalOriginal;
-              document.getElementById('modal-rec-resumen-original').textContent = totalOriginal.toFixed(2) + ' €';
-              document.getElementById('modal-rec-resumen-recibido').textContent = totalRecibido.toFixed(2) + ' €';
+              setElementText('modal-rec-resumen-original', totalOriginal.toFixed(2) + ' €');
+              setElementText('modal-rec-resumen-recibido', totalRecibido.toFixed(2) + ' €');
 
-              const varianzaEl = document.getElementById('modal-rec-resumen-varianza');
-              varianzaEl.textContent = (varianza >= 0 ? '+' : '') + varianza.toFixed(2) + ' €';
-              varianzaEl.style.color = varianza > 0 ? '#ef4444' : varianza < 0 ? '#10b981' : '#666';
+              const varianzaEl = getElement('modal-rec-resumen-varianza');
+              if (varianzaEl) {
+                varianzaEl.textContent = (varianza >= 0 ? '+' : '') + varianza.toFixed(2) + ' €';
+                varianzaEl.style.color = varianza > 0 ? '#ef4444' : varianza < 0 ? '#10b981' : '#666';
+              }
             }
 
             window.actualizarItemRecepcion = function (idx, tipo, valor) {
@@ -5020,7 +5151,7 @@
             };
 
             window.cerrarModalRecibirPedido = function () {
-              document.getElementById('modal-recibir-pedido').classList.remove('active');
+              removeElementClass('modal-recibir-pedido', 'active');
               pedidoRecibiendoId = null;
             };
 
@@ -5207,7 +5338,7 @@
             };
 
             window.cerrarModalVerPedido = function () {
-              document.getElementById('modal-ver-pedido').classList.remove('active');
+              removeElementClass('modal-ver-pedido', 'active');
               pedidoViendoId = null;
             };
 
