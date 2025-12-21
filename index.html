@@ -42,7 +42,7 @@
 
   <!-- jsPDF para export PDF profesional -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
   <style>
     * {
@@ -190,6 +190,268 @@
       outline: 2px solid #667eea;
       outline-offset: 2px;
     }
+
+    /* ========================================
+       MEJORAS VISUALES 2024 - Premium UI
+       ======================================== */
+
+    /* Skeleton Loader Animado */
+    .skeleton {
+      background: linear-gradient(90deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.3) 50%,
+          rgba(255, 255, 255, 0.1) 100%);
+      background-size: 200% 100%;
+      animation: skeleton-shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+
+    @keyframes skeleton-shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    .skeleton-text {
+      height: 16px;
+      margin-bottom: 8px;
+      width: 100%;
+    }
+
+    .skeleton-title {
+      height: 24px;
+      width: 60%;
+      margin-bottom: 12px;
+    }
+
+    .skeleton-card {
+      height: 100px;
+      width: 100%;
+    }
+
+    /* Empty State Premium */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.1) 100%);
+      border-radius: 20px;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .empty-state:hover {
+      border-color: rgba(102, 126, 234, 0.5);
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.1) 100%);
+    }
+
+    .empty-state-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.7;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .empty-state-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      color: #64748B;
+      font-size: 0.9rem;
+      max-width: 300px;
+    }
+
+    /* Glassmorphism Mejorado */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 24px;
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    /* Número Counter Animado */
+    .counter-value {
+      display: inline-block;
+      transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .counter-value.updating {
+      transform: scale(1.1);
+      color: #667eea;
+    }
+
+    /* Badges con Pulso */
+    .badge-pulse {
+      position: relative;
+    }
+
+    .badge-pulse::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 10px;
+      height: 10px;
+      background: #EF4444;
+      border-radius: 50%;
+      animation: pulse-ring 2s infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.5);
+        opacity: 0;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Hover Effects Premium para botones */
+    .btn-glow {
+      transition: all 0.3s ease;
+    }
+
+    .btn-glow:hover {
+      box-shadow:
+        0 0 20px rgba(102, 126, 234, 0.4),
+        0 0 40px rgba(102, 126, 234, 0.2);
+    }
+
+    /* Loading Spinner Moderno */
+    .spinner-modern {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(102, 126, 234, 0.2);
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Transiciones de entrada suave */
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .slide-in {
+      animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Tarjetas KPI con gradientes de color por tipo */
+    .kpi-card.ingresos {
+      border-left: 4px solid #10B981;
+    }
+
+    .kpi-card.pedidos {
+      border-left: 4px solid #3B82F6;
+    }
+
+    .kpi-card.stock {
+      border-left: 4px solid #F59E0B;
+    }
+
+    .kpi-card.margen {
+      border-left: 4px solid #8B5CF6;
+    }
+
+    /* Tabla con filas alternadas y hover */
+    .table-premium tbody tr {
+      transition: all 0.2s ease;
+    }
+
+    .table-premium tbody tr:nth-child(even) {
+      background: rgba(102, 126, 234, 0.03);
+    }
+
+    .table-premium tbody tr:hover {
+      background: rgba(102, 126, 234, 0.08);
+      transform: scale(1.01);
+    }
+
+    /* Scrollbar Premium */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #667eea, #764ba2);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #5a6fd6, #6a4190);
+    }
+
 
     .logo-circle {
       width: 50px;
@@ -1746,7 +2008,6 @@
       }
     }
   </style>
-  </style>
 
   <!-- Módulos ES6 -->
   <script type="module" src="./src/main.js?v=1734737962"></script>
@@ -3168,27 +3429,65 @@
                 label: 'Ingresos',
                 data: ingresos,
                 borderColor: '#10B981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                backgroundColor: 'rgba(16, 185, 129, 0.15)',
                 fill: true,
                 tension: 0.4,
-                borderWidth: 3
+                borderWidth: 3,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#10B981',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverBorderWidth: 3
               }, {
                 label: 'Costos',
                 data: costos,
                 borderColor: '#EF4444',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                backgroundColor: 'rgba(239, 68, 68, 0.15)',
                 fill: true,
                 tension: 0.4,
-                borderWidth: 3
+                borderWidth: 3,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#EF4444',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointHoverBorderWidth: 3
               }]
             },
             options: {
               responsive: true,
               maintainAspectRatio: true,
+              animation: {
+                duration: 1200,
+                easing: 'easeInOutQuart'
+              },
+              interaction: {
+                mode: 'index',
+                intersect: false
+              },
               plugins: {
                 legend: {
                   position: 'top',
                   labels: { usePointStyle: true, padding: 20, font: { size: 14, weight: '600' } }
+                },
+                tooltip: {
+                  enabled: true,
+                  backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                  titleColor: '#fff',
+                  bodyColor: '#fff',
+                  padding: 16,
+                  cornerRadius: 12,
+                  displayColors: true,
+                  borderColor: '#FF6B35',
+                  borderWidth: 2,
+                  titleFont: { size: 14, weight: 'bold' },
+                  bodyFont: { size: 13 },
+                  callbacks: {
+                    label: function (context) {
+                      return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + '€';
+                    }
+                  }
                 }
               },
               scales: {
@@ -3208,6 +3507,7 @@
          * CÓDIGO LEGACY - VENTAS (COMENTADO)
          * ✅ AHORA EN: src/modules/ventas/
          * Fecha migración: 2025-12-21
+         * NO BORRAR hasta validar 100% producción
          * ======================================== */
         window.renderizarVentas = async function () {
           const select = getElement('venta-receta');
@@ -3283,6 +3583,7 @@
             showToast('Error eliminando venta', 'error');
           }
         };
+        /* ======================================== */
         // === BALANCE ===
         // === P&L UNIFICADO (Cuenta de Resultados) ===
         window.renderizarBalance = async function () {
@@ -4503,15 +4804,17 @@
             document.getElementById('resumen-ingredientes').style.display = 'flex';
           }
         };
+        /* ======================================== */
 
         // ========== RECETAS (resumido) ==========
+
 
         /* ========================================
          * CÓDIGO LEGACY - RECETAS (COMENTADO)
          * ✅ AHORA EN: src/modules/recetas/
          * Fecha migración: 2025-12-21
          * NO BORRAR hasta validar 100% producción
-         * ======================================== */
+         * ======================================== 
         window.mostrarFormularioReceta = function () {
           if (ingredientes.length === 0) {
             showToast('Primero añade ingredientes', 'warning');
@@ -4806,15 +5109,17 @@
             showToast('Error actualizando stock: ' + error.message, 'error');
           }
         };
+        /* ======================================== */
 
         // ========== PROVEEDORES (resumido) ==========
+
 
         /* ========================================
          * CÓDIGO LEGACY - PROVEEDORES (COMENTADO)
          * ✅ AHORA EN: src/modules/proveedores/
          * Fecha migración: 2025-12-21
          * NO BORRAR hasta validar 100% producción
-         * ======================================== */
+         * ======================================== 
         window.mostrarFormularioProveedor = function () {
           document.getElementById('formulario-proveedor').style.display = 'block';
           cargarIngredientesProveedor();
@@ -5022,13 +5327,16 @@
             document.getElementById('resumen-proveedores').style.display = 'flex';
           }
         };
+        /* ======================================== */
 
         // ========== PEDIDOS ==========
+
 
         /* ========================================
          * CÓDIGO LEGACY - PEDIDOS (COMENTADO)
          * ✅ AHORA EN: src/modules/pedidos/
          * Fecha migración: 2025-12-21
+         * NO BORRAR hasta validar 100% producción
          * ======================================== */
         window.mostrarFormularioPedido = function () {
           if (proveedores.length === 0) {
@@ -5578,249 +5886,249 @@
       button { display: none; }
     }
     /* === RESPONSIVE MOBILE === */
-@media (max-width: 768px) {
+        @media(max - width: 768px) {
   /* Container */
   .container { padding: 12px; }
-  
+
   /* Header */
   .header {
-    padding: 8px 32px;
-    flex-direction: column;
-    text-align: center;
-    gap: 12px;
-  }
+            padding: 8px 32px;
+            flex - direction: column;
+            text - align: center;
+            gap: 12px;
+          }
   
-  .header h1 { font-size: 32px; }
-  .header p { font-size: 14px; }
-  
+  .header h1 { font - size: 32px; }
+  .header p { font - size: 14px; }
+
   /* KPI Dashboard */
-  .kpi-dashboard {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-    padding: 0 12px;
-    margin: 16px 0;
-  }
+  .kpi - dashboard {
+            grid - template - columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 0 12px;
+            margin: 16px 0;
+          }
   
-  .kpi-card {
-    padding: 16px;
-  }
+  .kpi - card {
+            padding: 16px;
+          }
   
-  .kpi-icon { font-size: 24px; margin-bottom: 8px; }
-  .kpi-label { font-size: 11px; }
-  .kpi-value { font-size: 28px; }
-  .kpi-trend { font-size: 12px; }
-  
+  .kpi - icon { font - size: 24px; margin - bottom: 8px; }
+  .kpi - label { font - size: 11px; }
+  .kpi - value { font - size: 28px; }
+  .kpi - trend { font - size: 12px; }
+
   /* Tabs */
   .tabs {
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    padding: 12px 12px 0;
-    gap: 8px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
+            overflow - x: auto;
+            overflow - y: hidden;
+            white - space: nowrap;
+            padding: 12px 12px 0;
+            gap: 8px;
+            -webkit - overflow - scrolling: touch;
+            scrollbar - width: none;
+          }
   
-  .tabs::-webkit-scrollbar { display: none; }
+  .tabs:: -webkit - scrollbar { display: none; }
   
   .tab {
-    padding: 10px 16px;
-    font-size: 13px;
-    display: inline-block;
-  }
-  
+            padding: 10px 16px;
+            font - size: 13px;
+            display: inline - block;
+          }
+
   /* Main Card */
-  .main-card {
-    padding: 16px;
-    border-radius: 16px 16px 0 0;
-  }
-  
+  .main - card {
+            padding: 16px;
+            border - radius: 16px 16px 0 0;
+          }
+
   /* Top Bar */
-  .top-bar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
+  .top - bar {
+            flex - direction: column;
+            align - items: flex - start;
+            gap: 12px;
+            margin - bottom: 20px;
+          }
   
-  .top-bar h2 { font-size: 22px; }
-  .top-bar p { font-size: 13px; }
-  
+  .top - bar h2 { font - size: 22px; }
+  .top - bar p { font - size: 13px; }
+
   /* Buttons */
   .btn {
-    width: 100%;
-    justify-content: center;
-    padding: 14px 20px;
-    font-size: 14px;
-  }
+            width: 100 %;
+            justify - content: center;
+            padding: 14px 20px;
+            font - size: 14px;
+          }
   
-  .btn-small {
-    width: auto;
-    padding: 10px 16px;
-  }
-  
+  .btn - small {
+            width: auto;
+            padding: 10px 16px;
+          }
+
   /* Search Box */
-  .search-box {
-    max-width: 100%;
-    margin: 16px 0;
-  }
-  
+  .search - box {
+            max - width: 100 %;
+            margin: 16px 0;
+          }
+
   /* Form Grid */
-  .form-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
+  .form - grid {
+            grid - template - columns: 1fr;
+            gap: 12px;
+          }
   
-  .form-card {
-    padding: 16px;
-  }
-  
+  .form - card {
+            padding: 16px;
+          }
+
   /* Tables */
   table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-  }
+            display: block;
+            overflow - x: auto;
+            white - space: nowrap;
+            -webkit - overflow - scrolling: touch;
+          }
   
   table thead th {
-    padding: 12px 16px;
-    font-size: 10px;
-  }
+            padding: 12px 16px;
+            font - size: 10px;
+          }
   
   table tbody td {
-    padding: 12px 16px;
-    font-size: 13px;
-  }
-  
+            padding: 12px 16px;
+            font - size: 13px;
+          }
+
   /* Actions */
   .actions {
-    gap: 6px;
-  }
+            gap: 6px;
+          }
   
-  .icon-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-  }
-  
+  .icon - btn {
+            width: 32px;
+            height: 32px;
+            font - size: 14px;
+          }
+
   /* Stats Grid */
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
+  .stats - grid {
+            grid - template - columns: 1fr;
+            gap: 16px;
+          }
+
   /* Charts Grid */
-  .charts-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  
-  /* Balance Cards */
-  [id^="tab-balance"] > div[style*="grid"] {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-  }
-  
-  /* Balance Cards Gradient */
-  [id="tab-balance"] > div:nth-child(2) > div {
-    padding: 24px !important;
-  }
-  
-  [id="tab-balance"] > div:nth-child(2) > div > div:first-child {
-    font-size: 100px !important;
-  }
-  
-  [id="tab-balance"] > div:nth-child(2) > div [id^="balance-"] {
-    font-size: 36px !important;
-  }
-  
-  
+  .charts - grid {
+            grid - template - columns: 1fr;
+            gap: 16px;
+          }
+
+          /* Balance Cards */
+          [id ^= "tab-balance"] > div[style *= "grid"] {
+            grid - template - columns: 1fr!important;
+            gap: 16px!important;
+          }
+
+          /* Balance Cards Gradient */
+          [id = "tab-balance"] > div: nth - child(2) > div {
+            padding: 24px!important;
+          }
+
+          [id = "tab-balance"] > div: nth - child(2) > div > div: first - child {
+            font - size: 100px!important;
+          }
+
+          [id = "tab-balance"] > div: nth - child(2) > div[id ^= "balance-"] {
+            font - size: 36px!important;
+          }
+
+
   /* Ingrediente Item */
-  .ingrediente-item {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
+  .ingrediente - item {
+            grid - template - columns: 1fr;
+            gap: 8px;
+          }
   
-  .ingrediente-item select,
-  .ingrediente-item input {
-    width: 100%;
-  }
-  
+  .ingrediente - item select,
+  .ingrediente - item input {
+            width: 100 %;
+          }
+
   /* Toast Container */
-  .toast-container {
-    top: 60px;
-    right: 12px;
-    left: 12px;
-    max-width: none;
-  }
+  .toast - container {
+            top: 60px;
+            right: 12px;
+            left: 12px;
+            max - width: none;
+          }
   
   .toast {
-    padding: 12px 16px;
-  }
-  
+            padding: 12px 16px;
+          }
+
   /* Summary */
   .summary {
-    flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
-  }
-}
+            flex - direction: column;
+            gap: 8px;
+            align - items: flex - start;
+          }
+        }
 
-@media (max-width: 480px) {
+        @media(max - width: 480px) {
   /* Extra pequeño */
-  .kpi-dashboard {
-    grid-template-columns: 1fr;
-  }
+  .kpi - dashboard {
+            grid - template - columns: 1fr;
+          }
   
-  .header h1 { font-size: 28px; }
+  .header h1 { font - size: 28px; }
   
-  .kpi-value { font-size: 32px; }
-}
-  </style>
-</head>
-<body>
-  <div class="header">
-    <img src="logo.png" onerror="this.style.display='none'">
-    <h1>${currentUser.restaurante || 'Mi Restaurante'}</h1>
-    <p>Pedido a Proveedor</p>
-  </div>
+  .kpi - value { font - size: 32px; }
+        }
+  </style >
+</head >
+          <body>
+            <div class="header">
+              <img src="logo.png" onerror="this.style.display='none'">
+                <h1>${currentUser.restaurante || 'Mi Restaurante'}</h1>
+                <p>Pedido a Proveedor</p>
+            </div>
 
-  <div class="info-grid">
-    <div class="info-item">
-      <strong>Proveedor</strong>
-      ${prov ? prov.nombre : 'Desconocido'}
-    </div>
-    <div class="info-item">
-      <strong>Fecha del Pedido</strong>
-      ${new Date(pedido.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-    </div>
-    <div class="info-item">
-      <strong>Estado</strong>
-      <span class="badge ${pedido.estado === 'recibido' ? 'badge-received' : 'badge-pending'}">
-        ${pedido.estado === 'recibido' ? 'Recibido' : 'Pendiente'}
-      </span>
-    </div>
-    ${pedido.estado === 'recibido' && pedido.fechaRecepcion ? `
+            <div class="info-grid">
+              <div class="info-item">
+                <strong>Proveedor</strong>
+                ${prov ? prov.nombre : 'Desconocido'}
+              </div>
+              <div class="info-item">
+                <strong>Fecha del Pedido</strong>
+                ${new Date(pedido.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+              </div>
+              <div class="info-item">
+                <strong>Estado</strong>
+                <span class="badge ${pedido.estado === 'recibido' ? 'badge-received' : 'badge-pending'}">
+                  ${pedido.estado === 'recibido' ? 'Recibido' : 'Pendiente'}
+                </span>
+              </div>
+              ${pedido.estado === 'recibido' && pedido.fechaRecepcion ? `
     <div class="info-item">
       <strong>Fecha de Recepción</strong>
       ${new Date(pedido.fechaRecepcion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
     </div>
     ` : ''}
-  </div>
+            </div>
 
-  <h3>Detalle del Pedido</h3>
-  <table>
-    <thead>
-      <tr>
-        <th>Ingrediente</th>
-        <th>Cantidad</th>
-        <th>Precio Unitario</th>
-        <th>Subtotal</th>
-        ${pedido.estado === 'recibido' ? '<th>Estado</th>' : ''}
-      </tr>
-    </thead>
-    <tbody>`;
+            <h3>Detalle del Pedido</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Ingrediente</th>
+                  <th>Cantidad</th>
+                  <th>Precio Unitario</th>
+                  <th>Subtotal</th>
+                  ${pedido.estado === 'recibido' ? '<th>Estado</th>' : ''}
+                </tr>
+              </thead>
+              <tbody>`;
 
           const items = pedido.ingredientes;
           let totalFinal = 0;
@@ -5874,22 +6182,22 @@
           if (pedido.estado === 'recibido' && pedido.totalRecibido !== undefined) {
             const varianza = pedido.totalRecibido - pedido.total;
             htmlPrint += `
-  <div class="total-box">
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center;">
-      <div>
-        <strong style="color:#666;font-size:14px;">Total Original</strong><br>
-        <span style="font-size:20px;">${pedido.total.toFixed(2)} €</span>
-      </div>
-      <div>
-        <strong style="color:#059669;font-size:14px;">Total Recibido</strong><br>
-        <strong>${pedido.totalRecibido.toFixed(2)} €</strong>
-      </div>
-      <div>
-        <strong style="color:#666;font-size:14px;">Varianza</strong><br>
-        <span style="font-size:20px;color:${varianza >= 0 ? '#ef4444' : '#10b981'};">${varianza >= 0 ? '+' : ''}${varianza.toFixed(2)} €</span>
-      </div>
-    </div>
-  </div>`;
+            <div class="total-box">
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; text-align: center;">
+                <div>
+                  <strong style="color:#666;font-size:14px;">Total Original</strong><br>
+                    <span style="font-size:20px;">${pedido.total.toFixed(2)} €</span>
+                </div>
+                <div>
+                  <strong style="color:#059669;font-size:14px;">Total Recibido</strong><br>
+                    <strong>${pedido.totalRecibido.toFixed(2)} €</strong>
+                </div>
+                <div>
+                  <strong style="color:#666;font-size:14px;">Varianza</strong><br>
+                    <span style="font-size:20px;color:${varianza >= 0 ? '#ef4444' : '#10b981'};">${varianza >= 0 ? '+' : ''}${varianza.toFixed(2)} €</span>
+                </div>
+              </div>
+            </div>`;
           } else {
             htmlPrint += `
   <div class="total-box">
@@ -5898,11 +6206,11 @@
           }
 
           htmlPrint += `
-  <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 11px; color: #999; text-align: center;">
-    Generado el ${new Date().toLocaleDateString('es-ES')} - ${currentUser.restaurante || 'MindLoop Dashboard'}
-  </div>
-</body>
-</html>`;
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 11px; color: #999; text-align: center;">
+              Generado el ${new Date().toLocaleDateString('es-ES')} - ${currentUser.restaurante || 'MindLoop Dashboard'}
+            </div>
+          </body>
+</html > `;
 
           // Abrir en nueva ventana para imprimir/guardar PDF
           const ventana = window.open('', '_blank');
@@ -5927,11 +6235,11 @@
 
           if (filtrados.length === 0) {
             container.innerHTML = `
-            <div class="empty-state">
+          < div class="empty-state" >
               <div class="icon">📋</div>
               <h3>${busqueda ? 'No encontrados' : 'Aún no hay pedidos'}</h3>
               <p>${busqueda ? 'Otra búsqueda' : 'Crea tu primer pedido'}</p>
-            </div>
+            </div >
           `;
             document.getElementById('resumen-pedidos').style.display = 'none';
           } else {
@@ -5944,18 +6252,18 @@
               const nombreProv = prov ? prov.nombre : 'Desconocido';
 
               html += '<tr>';
-              html += `<td>${new Date(ped.fecha).toLocaleDateString('es-ES')}</td>`;
-              html += `<td><strong>${nombreProv}</strong></td>`;
-              html += `<td>${ped.ingredientes.length} ingredientes</td>`;
-              html += `<td><strong>${parseFloat(ped.total).toFixed(2)} €</strong></td>`;
-              html += `<td><span class="badge ${ped.estado === 'recibido' ? 'badge-received' : 'badge-pending'}">${ped.estado === 'recibido' ? 'Recibido' : 'Pendiente'}</span></td>`;
-              html += `<td><div class="actions">`;
+              html += `< td > ${new Date(ped.fecha).toLocaleDateString('es-ES')}</td > `;
+              html += `< td > <strong>${nombreProv}</strong></td > `;
+              html += `< td > ${ped.ingredientes.length} ingredientes</td > `;
+              html += `< td > <strong>${parseFloat(ped.total).toFixed(2)} €</strong></td > `;
+              html += `< td > <span class="badge ${ped.estado === 'recibido' ? 'badge-received' : 'badge-pending'}">${ped.estado === 'recibido' ? 'Recibido' : 'Pendiente'}</span></td > `;
+              html += `< td > <div class="actions">`;
               html += `<button type="button" class="icon-btn view" onclick="window.verDetallesPedido(${ped.id})" title="Ver detalles">👁️</button>`;
               if (ped.estado === 'pendiente') {
                 html += `<button type="button" class="icon-btn receive" onclick="window.marcarPedidoRecibido(${ped.id})" title="Recibir pedido">📥</button>`;
               }
               html += `<button type="button" class="icon-btn delete" onclick="window.eliminarPedido(${ped.id})" title="Eliminar">🗑️</button>`;
-              html += '</div></td>';
+              html += '</div></td > ';
               html += '</tr>';
             });
 
@@ -5973,6 +6281,7 @@
             document.getElementById('resumen-pedidos').style.display = 'flex';
           }
         }
+        /* ======================================== */
 
         // ========== ANÁLISIS (resumido) ==========
         window.renderizarAnalisis = async function () {
@@ -6085,23 +6394,54 @@
               datasets: [{
                 label: 'Margen (%)',
                 data: ordenados.map(r => r.margenPct.toFixed(1)),
-                backgroundColor: ordenados.map(r => r.margenPct > 50 ? '#10b981' : r.margenPct > 30 ? '#f59e0b' : '#ef4444')
+                backgroundColor: ordenados.map(r => r.margenPct > 50 ? '#10b981' : r.margenPct > 30 ? '#f59e0b' : '#ef4444'),
+                borderWidth: 0,
+                borderRadius: 8,
+                hoverBackgroundColor: ordenados.map(r => r.margenPct > 50 ? '#059669' : r.margenPct > 30 ? '#d97706' : '#dc2626')
               }]
             },
             options: {
               responsive: true,
               maintainAspectRatio: true,
+              animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
+              },
               plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                  enabled: true,
+                  backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                  titleColor: '#fff',
+                  bodyColor: '#fff',
+                  padding: 16,
+                  cornerRadius: 12,
+                  displayColors: false,
+                  borderColor: '#FF6B35',
+                  borderWidth: 2,
+                  titleFont: { size: 14, weight: 'bold' },
+                  bodyFont: { size: 13 },
+                  callbacks: {
+                    label: function (context) {
+                      return 'Margen: ' + context.parsed.y + '%';
+                    }
+                  }
+                }
               },
               scales: {
                 y: {
                   beginAtZero: true,
+                  grid: { color: 'rgba(0, 0, 0, 0.05)' },
                   ticks: {
                     callback: function (value) {
                       return value + '%';
-                    }
+                    },
+                    font: { size: 12 }
                   }
+                },
+                x: {
+                  grid: { display: false },
+                  ticks: { font: { size: 12 } }
                 }
               }
             }
@@ -6126,14 +6466,24 @@
               datasets: [{
                 data: ordenados.map(i => i.precio),
                 backgroundColor: [
-                  '#c35a3f', '#d47157', '#10b981', '#3b82f6', '#f59e0b',
+                  '#FF6B35', '#F7931E', '#10b981', '#3b82f6', '#f59e0b',
                   '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'
-                ]
+                ],
+                borderWidth: 3,
+                borderColor: '#fff',
+                hoverOffset: 15,
+                hoverBorderWidth: 4
               }]
             },
             options: {
               responsive: true,
               maintainAspectRatio: true,
+              animation: {
+                duration: 1200,
+                easing: 'easeInOutQuart',
+                animateRotate: true,
+                animateScale: true
+              },
               plugins: {
                 legend: {
                   position: 'right',
@@ -6144,12 +6494,24 @@
                   }
                 },
                 tooltip: {
+                  enabled: true,
+                  backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                  titleColor: '#fff',
+                  bodyColor: '#fff',
+                  padding: 16,
+                  cornerRadius: 12,
+                  displayColors: true,
+                  borderColor: '#FF6B35',
+                  borderWidth: 2,
+                  titleFont: { size: 14, weight: 'bold' },
+                  bodyFont: { size: 13 },
                   callbacks: {
                     label: function (context) {
-                      return context.label + ': ' + context.parsed.toFixed(2) + ' €';
+                      return context.label + ': ' + context.parsed.toFixed(2) + '€';
                     }
                   }
-                }
+                },
+                cutout: '65%'
               }
             }
           });

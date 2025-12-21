@@ -1,80 +1,100 @@
-# Script para comentar código viejo del index.html
+# Estado de Funciones Modularizadas
 
-## Funciones a comentar (ya modularizadas):
+> **Estado:** ✅ FASE 2 COMPLETADA  
+> **Última actualización:** 2025-12-21
 
-### Ingredientes:
-- window.renderizarIngredientes
-- window.guardarIngrediente  
-- window.editarIngrediente
-- window.eliminarIngrediente
-- window.mostrarFormularioIngrediente
-- window.cerrarFormularioIngrediente
-- window.exportarIngredientes
+## Resumen
 
-### Recetas:
-- window.renderizarRecetas
-- window.guardarReceta
-- window.editarReceta
-- window.eliminarReceta
-- window.mostrarFormularioReceta
-- window.cerrarFormularioReceta
-- window.agregarIngredienteReceta
-- window.calcularCosteReceta
-- window.calcularCosteRecetaCompleto
-- window.exportarRecetas
-- window.abrirModalProducir
-- window.cerrarModalProducir
-- window.actualizarDetalleDescuento
-- window.confirmarProduccion
+| Módulo | Funciones | Estado |
+|--------|-----------|--------|
+| Ingredientes | 7 | ✅ ES6 + Header Legacy |
+| Recetas | 14 | ✅ ES6 + Header Legacy |
+| Pedidos | 15 | ✅ ES6 + Header Legacy |
+| Proveedores | 10 | ✅ ES6 + Header Legacy |
+| Ventas | 3 | ✅ ES6 + Header Legacy |
+| Dashboard | 1 | ✅ ES6 + Header Legacy |
+| **TOTAL** | **50** | ✅ |
 
-### Pedidos:
-- window.renderizarPedidos
-- window.guardarPedido
-- window.eliminarPedido
-- window.mostrarFormularioPedido
-- window.cerrarFormularioPedido
-- window.cargarIngredientesPedido
-- window.agregarIngredientePedido
-- window.calcularTotalPedido
-- window.marcarPedidoRecibido
-- window.cerrarModalRecibirPedido
-- window.confirmarRecepcionPedido
-- window.verDetallesPedido
-- window.cerrarModalVerPedido
-- window.descargarPedidoPDF
-- window.exportarPedidos
+## Funciones por Módulo
 
-### Proveedores:
-- window.renderizarProveedores
-- window.guardarProveedor
-- window.editarProveedor
-- window.eliminarProveedor
-- window.mostrarFormularioProveedor
-- window.cerrarFormularioProveedor
-- window.cargarIngredientesProveedor
-- window.filtrarIngredientesProveedor
-- window.verProveedorDetalles
-- window.cerrarModalVerProveedor
+### ✅ Ingredientes (src/modules/ingredientes/)
+- [x] renderizarIngredientes
+- [x] guardarIngrediente  
+- [x] editarIngrediente
+- [x] eliminarIngrediente
+- [x] mostrarFormularioIngrediente
+- [x] cerrarFormularioIngrediente
+- [x] exportarIngredientes
 
-### Ventas:
-- window.renderizarVentas
-- window.eliminarVenta
-- window.exportarVentas
+### ✅ Recetas (src/modules/recetas/)
+- [x] renderizarRecetas
+- [x] guardarReceta
+- [x] editarReceta
+- [x] eliminarReceta
+- [x] mostrarFormularioReceta
+- [x] cerrarFormularioReceta
+- [x] agregarIngredienteReceta
+- [x] calcularCosteReceta
+- [x] calcularCosteRecetaCompleto
+- [x] exportarRecetas
+- [x] abrirModalProducir
+- [x] cerrarModalProducir
+- [x] actualizarDetalleDescuento
+- [x] confirmarProduccion
 
-### Dashboard:
-- window.actualizarKPIs
+### ✅ Pedidos (src/modules/pedidos/)
+- [x] renderizarPedidos
+- [x] guardarPedido
+- [x] eliminarPedido
+- [x] mostrarFormularioPedido
+- [x] cerrarFormularioPedido
+- [x] cargarIngredientesPedido
+- [x] agregarIngredientePedido
+- [x] calcularTotalPedido
+- [x] marcarPedidoRecibido
+- [x] cerrarModalRecibirPedido
+- [x] confirmarRecepcionPedido
+- [x] verDetallesPedido
+- [x] cerrarModalVerPedido
+- [x] descargarPedidoPDF
+- [x] exportarPedidos
+
+### ✅ Proveedores (src/modules/proveedores/)
+- [x] renderizarProveedores
+- [x] guardarProveedor
+- [x] editarProveedor
+- [x] eliminarProveedor
+- [x] mostrarFormularioProveedor
+- [x] cerrarFormularioProveedor
+- [x] cargarIngredientesProveedor
+- [x] filtrarIngredientesProveedor
+- [x] verProveedorDetalles
+- [x] cerrarModalVerProveedor
+
+### ✅ Ventas (src/modules/ventas/)
+- [x] renderizarVentas
+- [x] eliminarVenta
+- [x] exportarVentas
+
+### ✅ Dashboard (src/modules/dashboard/)
+- [x] actualizarKPIs
+
+## Utilidades Migradas (src/utils/)
+
+- [x] showToast → ui/toast.js
+- [x] showLoading → utils/helpers.js
+- [x] hideLoading → utils/helpers.js
+- [x] exportarAExcel → utils/helpers.js
+- [x] DOM helpers → utils/dom-helpers.js
+- [x] formatCurrency → utils/helpers.js
+- [x] formatDate → utils/helpers.js
 
 ---
 
-## Marcador a usar:
+## Próximos Pasos Opcionales
 
-```javascript
-/* ========================================
- * CÓDIGO LEGACY - COMENTADO (MODULARIZADO)
- * Ahora en: src/modules/[modulo]/[archivo].js
- * Fecha: 2025-12-21
- * NO BORRAR HASTA VALIDAR 100% PRODUCCIÓN
- * ======================================== */
-```
-
-Total: ~62 funciones a comentar
+### FASE 3 (Mejoras Futuras)
+- [ ] Tests unitarios (Jest)
+- [ ] TypeScript
+- [ ] Build system (Vite)
+- [ ] CI/CD
