@@ -9,6 +9,13 @@
  * @param {Array} ingredientes - Array de todos los ingredientes disponibles
  */
 export function generarPDFReceta(receta, ingredientes) {
+    // Verificar que jsPDF está cargado
+    if (!window.jspdf) {
+        console.error('jsPDF no está cargado. Asegúrate de que los scripts CDN están cargados.');
+        window.showToast?.('Error: Librería PDF no cargada', 'error');
+        return null;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
