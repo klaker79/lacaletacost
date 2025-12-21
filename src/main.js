@@ -19,6 +19,14 @@ import * as RecetasCRUD from './modules/recetas/recetas-crud.js';
 import * as PedidosUI from './modules/pedidos/pedidos-ui.js';
 import * as PedidosCRUD from './modules/pedidos/pedidos-crud.js';
 
+// Importar módulo de proveedores
+import * as ProveedoresUI from './modules/proveedores/proveedores-ui.js';
+import * as ProveedoresCRUD from './modules/proveedores/proveedores-crud.js';
+
+// Importar módulo de ventas
+import * as VentasUI from './modules/ventas/ventas-ui.js';
+import * as VentasCRUD from './modules/ventas/ventas-crud.js';
+
 // Hacer disponibles globalmente para compatibilidad con código existente
 window.showToast = showToast;
 window.DOM = DOM;
@@ -75,8 +83,30 @@ window.descargarPedidoPDF = PedidosCRUD.descargarPedidoPDF;
 window.editandoIngredienteId = null;
 window.editandoRecetaId = null;
 window.editandoPedidoId = null;
+window.editandoProveedorId = null;
 
 console.log('✅ Módulos cargados correctamente');
 console.log('✅ Módulo Ingredientes integrado');
 console.log('✅ Módulo Recetas integrado');
 console.log('✅ Módulo Pedidos integrado');
+console.log('✅ Módulo Proveedores integrado');
+
+// Exponer módulo de proveedores globalmente
+window.renderizarProveedores = ProveedoresUI.renderizarProveedores;
+window.mostrarFormularioProveedor = ProveedoresUI.mostrarFormularioProveedor;
+window.cerrarFormularioProveedor = ProveedoresUI.cerrarFormularioProveedor;
+window.cargarIngredientesProveedor = ProveedoresUI.cargarIngredientesProveedor;
+window.filtrarIngredientesProveedor = ProveedoresUI.filtrarIngredientesProveedor;
+window.verProveedorDetalles = ProveedoresUI.verProveedorDetalles;
+window.cerrarModalVerProveedor = ProveedoresUI.cerrarModalVerProveedor;
+
+window.guardarProveedor = ProveedoresCRUD.guardarProveedor;
+window.editarProveedor = ProveedoresCRUD.editarProveedor;
+window.eliminarProveedor = ProveedoresCRUD.eliminarProveedor;
+
+// Exponer módulo de ventas globalmente
+window.renderizarVentas = VentasUI.renderizarVentas;
+window.exportarVentas = VentasUI.exportarVentas;
+
+window.eliminarVenta = VentasCRUD.eliminarVenta;
+console.log('✅ Módulo Ventas integrado');
