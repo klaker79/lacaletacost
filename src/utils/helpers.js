@@ -181,6 +181,220 @@ export function debounce(func, wait = 300) {
     };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 🗓️ FUNCIONES DE CALENDARIO Y TIEMPO
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Obtiene la fecha actual del sistema
+ * @returns {Date} Fecha actual
+ */
+export function getFechaHoy() {
+    return new Date();
+}
+
+/**
+ * Obtiene fecha formateada para mostrar en UI
+ * @returns {string} Ej: "Lunes, 23 de Diciembre de 2025"
+ */
+export function getFechaHoyFormateada() {
+    const hoy = new Date();
+    const opciones = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    };
+    return hoy.toLocaleDateString('es-ES', opciones);
+}
+
+/**
+ * Obtiene el período actual (semana, mes, año)
+ * @returns {Object} {semana, mes, año, trimestre}
+ */
+export function getPeriodoActual() {
+    const hoy = new Date();
+    const inicioAño = new Date(hoy.getFullYear(), 0, 1);
+    const diasDesdeInicio = Math.floor((hoy - inicioAño) / (24 * 60 * 60 * 1000));
+    const semana = Math.ceil((diasDesdeInicio + inicioAño.getDay() + 1) / 7);
+
+    return {
+        dia: hoy.getDate(),
+        diaSemana: hoy.toLocaleDateString('es-ES', { weekday: 'long' }),
+        semana: semana,
+        mes: hoy.getMonth() + 1,
+        mesNombre: hoy.toLocaleDateString('es-ES', { month: 'long' }),
+        año: hoy.getFullYear(),
+        trimestre: Math.ceil((hoy.getMonth() + 1) / 3)
+    };
+}
+
+/**
+ * Obtiene rango de fechas para un período
+ * @param {string} periodo - 'hoy', 'semana', 'mes', 'año'
+ * @returns {Object} {inicio, fin}
+ */
+export function getRangoFechas(periodo = 'semana') {
+    const hoy = new Date();
+    hoy.setHours(23, 59, 59, 999);
+    let inicio = new Date(hoy);
+
+    switch (periodo) {
+        case 'hoy':
+            inicio.setHours(0, 0, 0, 0);
+            break;
+        case 'semana':
+            const diaSemana = hoy.getDay() || 7; // Lunes = 1
+            inicio.setDate(hoy.getDate() - diaSemana + 1);
+            inicio.setHours(0, 0, 0, 0);
+            break;
+        case 'mes':
+            inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+            break;
+        case 'año':
+            inicio = new Date(hoy.getFullYear(), 0, 1);
+            break;
+        case 'semanaAnterior':
+            const diaSem = hoy.getDay() || 7;
+            inicio.setDate(hoy.getDate() - diaSem - 6);
+            inicio.setHours(0, 0, 0, 0);
+            const finSemAnt = new Date(inicio);
+            finSemAnt.setDate(inicio.getDate() + 6);
+            finSemAnt.setHours(23, 59, 59, 999);
+            return { inicio, fin: finSemAnt };
+        default:
+            inicio.setDate(hoy.getDate() - 7);
+    }
+
+    return { inicio, fin: hoy };
+}
+
+/**
+ * Filtra array de datos por rango de fechas
+ * @param {Array} datos - Array de objetos con campo fecha
+ * @param {string} campoFecha - Nombre del campo de fecha
+ * @param {string} periodo - 'hoy', 'semana', 'mes', 'año'
+ * @returns {Array} Datos filtrados
+ */
+export function filtrarPorPeriodo(datos, campoFecha = 'fecha', periodo = 'semana') {
+    const { inicio, fin } = getRangoFechas(periodo);
+
+    return datos.filter(item => {
+        const fecha = new Date(item[campoFecha]);
+        return fecha >= inicio && fecha <= fin;
+    });
+}
+
+/**
+ * Compara métricas de la semana actual vs semana anterior
+ * @param {Array} datos - Array de objetos con campo fecha y valor
+ * @param {string} campoFecha - Nombre del campo de fecha
+ * @param {string} campoValor - Nombre del campo numérico a sumar
+ * @returns {Object} {actual, anterior, diferencia, porcentaje}
+ */
+export function compararConSemanaAnterior(datos, campoFecha = 'fecha', campoValor = 'total') {
+    const rangoActual = getRangoFechas('semana');
+    const rangoAnterior = getRangoFechas('semanaAnterior');
+
+    const sumaPeriodo = (inicio, fin) => {
+        return datos
+            .filter(item => {
+                const fecha = new Date(item[campoFecha]);
+                return fecha >= inicio && fecha <= fin;
+            })
+            .reduce((acc, item) => acc + (parseFloat(item[campoValor]) || 0), 0);
+    };
+
+    const actual = sumaPeriodo(rangoActual.inicio, rangoActual.fin);
+    const anterior = sumaPeriodo(rangoAnterior.inicio, rangoAnterior.fin);
+    const diferencia = actual - anterior;
+    const porcentaje = anterior > 0 ? ((diferencia / anterior) * 100) : 0;
+
+    return {
+        actual: actual.toFixed(2),
+        anterior: anterior.toFixed(2),
+        diferencia: diferencia.toFixed(2),
+        porcentaje: porcentaje.toFixed(1),
+        tendencia: diferencia >= 0 ? 'up' : 'down'
+    };
+}
+
+/**
+ * Calcula días de stock disponible basado en consumo histórico
+ * @param {number} stockActual - Stock actual del ingrediente
+ * @param {Array} ventas - Array de ventas históricas
+ * @param {Array} recetas - Array de recetas
+ * @param {number} ingredienteId - ID del ingrediente
+ * @param {number} diasHistorico - Días para calcular promedio (default 7)
+ * @returns {Object} {diasStock, consumoDiario, alerta}
+ */
+export function calcularDiasDeStock(stockActual, ventas, recetas, ingredienteId, diasHistorico = 7) {
+    // Obtener ventas de los últimos X días
+    const { inicio } = getRangoFechas('semana');
+    const ventasRecientes = ventas.filter(v => new Date(v.fecha) >= inicio);
+
+    // Calcular consumo total del ingrediente
+    let consumoTotal = 0;
+
+    ventasRecientes.forEach(venta => {
+        const receta = recetas.find(r => r.id === venta.receta_id);
+        if (receta && receta.ingredientes) {
+            const ingredienteEnReceta = receta.ingredientes.find(
+                ing => ing.ingredienteId === ingredienteId || ing.ingrediente_id === ingredienteId
+            );
+            if (ingredienteEnReceta) {
+                consumoTotal += (parseFloat(ingredienteEnReceta.cantidad) || 0) * (parseInt(venta.cantidad) || 0);
+            }
+        }
+    });
+
+    const consumoDiario = consumoTotal / diasHistorico;
+    const diasStock = consumoDiario > 0 ? Math.floor(stockActual / consumoDiario) : 999;
+
+    let alerta = 'ok';
+    if (diasStock <= 2) alerta = 'critico';
+    else if (diasStock <= 5) alerta = 'bajo';
+    else if (diasStock <= 7) alerta = 'medio';
+
+    return {
+        diasStock,
+        consumoDiario: consumoDiario.toFixed(2),
+        alerta,
+        mensaje: diasStock === 999
+            ? 'Sin consumo reciente'
+            : `Stock para ${diasStock} días`
+    };
+}
+
+/**
+ * Genera proyección de consumo para los próximos días
+ * @param {Array} ingredientes - Lista de ingredientes
+ * @param {Array} ventas - Historial de ventas
+ * @param {Array} recetas - Lista de recetas
+ * @param {number} diasProyeccion - Días a proyectar (default 7)
+ * @returns {Array} Lista de ingredientes con proyección
+ */
+export function proyeccionConsumo(ingredientes, ventas, recetas, diasProyeccion = 7) {
+    return ingredientes.map(ing => {
+        const proyeccion = calcularDiasDeStock(
+            parseFloat(ing.stock_actual) || 0,
+            ventas,
+            recetas,
+            ing.id
+        );
+
+        return {
+            id: ing.id,
+            nombre: ing.nombre,
+            stockActual: ing.stock_actual,
+            unidad: ing.unidad,
+            ...proyeccion,
+            necesitaPedido: proyeccion.diasStock <= diasProyeccion
+        };
+    }).filter(ing => ing.necesitaPedido)
+        .sort((a, b) => a.diasStock - b.diasStock);
+}
+
 // Exponer al scope global para compatibilidad
 if (typeof window !== 'undefined') {
     window.showToast = showToast;
@@ -193,4 +407,13 @@ if (typeof window !== 'undefined') {
     window.debounce = debounce;
     window.getRestaurantName = getRestaurantName;
     window.getRestaurantNameForFile = getRestaurantNameForFile;
+    // Funciones de calendario
+    window.getFechaHoy = getFechaHoy;
+    window.getFechaHoyFormateada = getFechaHoyFormateada;
+    window.getPeriodoActual = getPeriodoActual;
+    window.getRangoFechas = getRangoFechas;
+    window.filtrarPorPeriodo = filtrarPorPeriodo;
+    window.compararConSemanaAnterior = compararConSemanaAnterior;
+    window.calcularDiasDeStock = calcularDiasDeStock;
+    window.proyeccionConsumo = proyeccionConsumo;
 }

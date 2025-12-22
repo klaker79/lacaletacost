@@ -2166,6 +2166,65 @@
       </div>
     </div>
 
+    <!-- 🗓️ Banner de Fecha Actual -->
+    <div id="fecha-actual-banner" style="
+      margin: 0 32px 16px 32px;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: 12px;
+      border-left: 4px solid #0ea5e9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    ">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 24px;">📅</span>
+        <div>
+          <div id="fecha-hoy-texto" style="font-size: 16px; font-weight: 600; color: #0c4a6e;">
+            Cargando fecha...
+          </div>
+          <div id="periodo-info" style="font-size: 12px; color: #0369a1; margin-top: 2px;">
+            Semana X · Mes de XXXX
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="window.cambiarPeriodoVista('hoy')" class="periodo-btn" data-periodo="hoy" style="
+          padding: 6px 12px;
+          border-radius: 6px;
+          border: 1px solid #0ea5e9;
+          background: white;
+          color: #0369a1;
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        ">Hoy</button>
+        <button onclick="window.cambiarPeriodoVista('semana')" class="periodo-btn active" data-periodo="semana" style="
+          padding: 6px 12px;
+          border-radius: 6px;
+          border: 1px solid #0ea5e9;
+          background: #0ea5e9;
+          color: white;
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        ">Semana</button>
+        <button onclick="window.cambiarPeriodoVista('mes')" class="periodo-btn" data-periodo="mes" style="
+          padding: 6px 12px;
+          border-radius: 6px;
+          border: 1px solid #0ea5e9;
+          background: white;
+          color: #0369a1;
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        ">Mes</button>
+      </div>
+    </div>
+
     <!-- KPI Dashboard -->
     <div class="kpi-dashboard">
       <div class="kpi-card">
@@ -3737,6 +3796,11 @@
          * Fecha migración: 2025-12-21
          * ======================================== */
         window.actualizarKPIs = function () {
+          // Inicializar banner de fecha actual
+          if (typeof window.inicializarFechaActual === 'function') {
+            window.inicializarFechaActual();
+          }
+
           // 1. INGRESOS TOTALES (suma de ventas)
           api.getSales().then(ventas => {
             const ingresos = ventas.reduce((sum, v) => sum + parseFloat(v.total), 0);
@@ -5276,9 +5340,86 @@
             showToast('Error conectando con la API', 'error');
           }
         }
-        
+
         // Exponer cargarDatos globalmente para los módulos CRUD
         window.cargarDatos = cargarDatos;
+
+        // ═══════════════════════════════════════════════════════════════
+        // 🗓️ FUNCIONES DE CALENDARIO Y PERÍODO
+        // ═══════════════════════════════════════════════════════════════
+
+        let periodoVistaActual = 'semana';
+
+        // Inicializa el banner de fecha actual
+        function inicializarFechaActual() {
+          const fechaTexto = document.getElementById('fecha-hoy-texto');
+          const periodoInfo = document.getElementById('periodo-info');
+
+          if (fechaTexto && typeof window.getFechaHoyFormateada === 'function') {
+            const fechaFormateada = window.getFechaHoyFormateada();
+            // Capitalizar primera letra
+            fechaTexto.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+          }
+
+          if (periodoInfo && typeof window.getPeriodoActual === 'function') {
+            const periodo = window.getPeriodoActual();
+            periodoInfo.textContent = `Semana ${periodo.semana} · ${periodo.mesNombre.charAt(0).toUpperCase() + periodo.mesNombre.slice(1)} ${periodo.año}`;
+          }
+        }
+
+        // Cambia el período de vista y actualiza KPIs
+        window.cambiarPeriodoVista = function (periodo) {
+          periodoVistaActual = periodo;
+
+          // Actualizar botones activos
+          document.querySelectorAll('.periodo-btn').forEach(btn => {
+            if (btn.dataset.periodo === periodo) {
+              btn.style.background = '#0ea5e9';
+              btn.style.color = 'white';
+            } else {
+              btn.style.background = 'white';
+              btn.style.color = '#0369a1';
+            }
+          });
+
+          // Actualizar KPIs según período
+          actualizarKPIsPorPeriodo(periodo);
+        };
+
+        // Actualiza KPIs filtrados por período
+        function actualizarKPIsPorPeriodo(periodo) {
+          try {
+            const ventas = window.ventas || [];
+
+            if (typeof window.filtrarPorPeriodo === 'function') {
+              const ventasFiltradas = window.filtrarPorPeriodo(ventas, 'fecha', periodo);
+              const totalVentas = ventasFiltradas.reduce((acc, v) => acc + (parseFloat(v.total) || 0), 0);
+
+              const kpiIngresos = document.getElementById('kpi-ingresos');
+              if (kpiIngresos) {
+                kpiIngresos.textContent = totalVentas.toFixed(2) + '€';
+              }
+
+              // Actualizar comparativa con período anterior
+              if (typeof window.compararConSemanaAnterior === 'function' && periodo === 'semana') {
+                const comparativa = window.compararConSemanaAnterior(ventas, 'fecha', 'total');
+                const trendEl = document.getElementById('kpi-ingresos-trend');
+                if (trendEl) {
+                  const signo = comparativa.tendencia === 'up' ? '+' : '';
+                  trendEl.textContent = `${signo}${comparativa.porcentaje}% vs anterior`;
+                  trendEl.parentElement.className = `kpi-trend ${comparativa.tendencia === 'up' ? 'positive' : 'negative'}`;
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error actualizando KPIs por período:', error);
+          }
+        }
+
+        // Exponer funciones globalmente
+        window.inicializarFechaActual = inicializarFechaActual;
+        window.actualizarKPIsPorPeriodo = actualizarKPIsPorPeriodo;
+
 
         window.cambiarTab = function (tab) {
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
