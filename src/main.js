@@ -40,6 +40,16 @@ window.exportarAExcel = Helpers.exportarAExcel;
 window.formatCurrency = Helpers.formatCurrency;
 window.formatDate = Helpers.formatDate;
 
+// Funciones de calendario
+window.getFechaHoy = Helpers.getFechaHoy;
+window.getFechaHoyFormateada = Helpers.getFechaHoyFormateada;
+window.getPeriodoActual = Helpers.getPeriodoActual;
+window.getRangoFechas = Helpers.getRangoFechas;
+window.filtrarPorPeriodo = Helpers.filtrarPorPeriodo;
+window.compararConSemanaAnterior = Helpers.compararConSemanaAnterior;
+window.calcularDiasDeStock = Helpers.calcularDiasDeStock;
+window.proyeccionConsumo = Helpers.proyeccionConsumo;
+
 // ============================================
 // MÓDULO: INGREDIENTES ✅ (Legacy comentado)
 // ============================================

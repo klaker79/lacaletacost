@@ -8,6 +8,17 @@
  */
 export async function renderizarVentas() {
     try {
+        // Poblar select de recetas para nueva venta
+        const select = document.getElementById('venta-receta');
+        const recetas = window.recetas || [];
+        if (select) {
+            select.innerHTML = '<option value="">Selecciona un plato...</option>';
+            recetas.forEach(r => {
+                const precio = parseFloat(r.precio_venta) || 0;
+                select.innerHTML += `<option value="${r.id}">${r.nombre} - ${precio.toFixed(2)}€</option>`;
+            });
+        }
+
         const ventas = await window.api.getSales();
         const container = document.getElementById('tabla-ventas');
 

@@ -623,7 +623,14 @@ async function sendMessage() {
                 message: message,
                 sessionId: chatSessionId,
                 restaurante: window.getRestaurantName ? window.getRestaurantName() : 'Restaurante',
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                fechaHoy: new Date().toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }),
+                fechaISO: new Date().toISOString().split('T')[0]
             })
         });
 
