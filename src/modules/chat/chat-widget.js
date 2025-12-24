@@ -984,7 +984,7 @@ function getCurrentTabContext() {
             ).length;
         }
 
-        // Siempre incluir resumen de recetas (top 10 con análisis)
+        // Siempre incluir resumen de recetas con ingredientes detallados
         if (window.recetas && Array.isArray(window.recetas)) {
             context.recetas = window.recetas
                 .slice(0, 15)
@@ -993,13 +993,29 @@ function getCurrentTabContext() {
                     const precioVenta = parseFloat(r.precio_venta) || 0;
                     const foodCost = precioVenta > 0 ? (coste / precioVenta * 100) : 0;
                     const margen = precioVenta > 0 ? ((precioVenta - coste) / precioVenta * 100) : 0;
+
+                    // Incluir ingredientes detallados
+                    const ingredientesDetalle = (r.ingredientes || []).map(item => {
+                        const ing = window.ingredientes?.find(i => i.id === item.ingredienteId);
+                        const precio = ing ? parseFloat(ing.precio) || 0 : 0;
+                        const cantidad = parseFloat(item.cantidad) || 0;
+                        return {
+                            nombre: ing?.nombre || 'Desconocido',
+                            cantidad: cantidad,
+                            unidad: ing?.unidad || 'kg',
+                            precioUd: precio,
+                            coste: Math.round(precio * cantidad * 100) / 100
+                        };
+                    });
+
                     return {
                         nombre: r.nombre,
                         categoria: r.categoria,
                         coste: Math.round(coste * 100) / 100,
                         precioVenta: precioVenta,
                         foodCost: Math.round(foodCost * 10) / 10,
-                        margen: Math.round(margen * 10) / 10
+                        margen: Math.round(margen * 10) / 10,
+                        ingredientes: ingredientesDetalle
                     };
                 });
             context.totalRecetas = window.recetas.length;
