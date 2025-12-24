@@ -432,6 +432,46 @@ function createChatStyles() {
             fill: white;
         }
         
+        /* Microphone Button */
+        .chat-mic-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .chat-mic-btn:hover {
+            background: #e2e8f0;
+        }
+        
+        .chat-mic-btn.recording {
+            background: #fee2e2;
+            border-color: #ef4444;
+            animation: pulse-mic 1s infinite;
+        }
+        
+        @keyframes pulse-mic {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .chat-mic-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #64748b;
+        }
+        
+        .chat-mic-btn.recording svg {
+            fill: #ef4444;
+        }
+        
         /* Quick Actions */
         .chat-quick-actions {
             display: flex;
@@ -529,6 +569,11 @@ function createChatHTML() {
                     placeholder="${CHAT_CONFIG.placeholderText}"
                     rows="1"
                 ></textarea>
+                <button class="chat-mic-btn" id="chat-mic" title="Hablar">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
                 <button class="chat-send-btn" id="chat-send">
                     <svg viewBox="0 0 24 24">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
@@ -583,6 +628,57 @@ function bindChatEvents() {
             sendMessage();
         }
     });
+
+    // Speech recognition (voice input)
+    const micBtn = document.getElementById('chat-mic');
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'es-ES';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        let isRecording = false;
+
+        micBtn.addEventListener('click', () => {
+            if (isRecording) {
+                recognition.stop();
+                micBtn.classList.remove('recording');
+                isRecording = false;
+            } else {
+                recognition.start();
+                micBtn.classList.add('recording');
+                isRecording = true;
+            }
+        });
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            input.value = transcript;
+            input.focus();
+            micBtn.classList.remove('recording');
+            isRecording = false;
+            // Optional: auto-send after recognition
+            // sendMessage();
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            micBtn.classList.remove('recording');
+            isRecording = false;
+            if (event.error === 'not-allowed') {
+                window.showToast?.('Permite el acceso al micrófono', 'warning');
+            }
+        };
+
+        recognition.onend = () => {
+            micBtn.classList.remove('recording');
+            isRecording = false;
+        };
+    } else {
+        // Browser doesn't support speech recognition
+        micBtn.style.display = 'none';
+    }
 
     // Update quick buttons on tab change
     updateQuickButtons();
