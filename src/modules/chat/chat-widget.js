@@ -820,6 +820,17 @@ function getCurrentTabContext() {
     const context = { tab };
 
     try {
+        // Siempre incluir gastos fijos reales
+        const opex = JSON.parse(localStorage.getItem('opex_inputs') || '{}');
+        context.gastosFijos = {
+            alquiler: parseFloat(opex.alquiler) || 0,
+            personal: parseFloat(opex.personal) || 0,
+            suministros: parseFloat(opex.suministros) || 0,
+            otros: parseFloat(opex.otros) || 0,
+            total: (parseFloat(opex.alquiler) || 0) + (parseFloat(opex.personal) || 0) +
+                (parseFloat(opex.suministros) || 0) + (parseFloat(opex.otros) || 0)
+        };
+
         if (tab === 'recetas' && window.recetas) {
             context.totalRecetas = window.recetas.length;
             const recetasConMargen = window.recetas.filter(r => r.precio_venta > 0);
