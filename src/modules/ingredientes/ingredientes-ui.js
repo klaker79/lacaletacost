@@ -133,8 +133,10 @@ window.irAPaginaIngredientes = function (pagina) {
  */
 export function renderizarIngredientes() {
     const busqueda = getElement('busqueda-ingredientes')?.value?.toLowerCase() || '';
-    const ingredientes = window.ingredientes || [];
-    const proveedores = window.proveedores || [];
+    const rawIngredientes = window.ingredientes;
+    const ingredientes = Array.isArray(rawIngredientes) ? rawIngredientes : [];
+    const rawProveedores = window.proveedores;
+    const proveedores = Array.isArray(rawProveedores) ? rawProveedores : [];
 
     // Filtrar por búsqueda y familia
     let filtrados = ingredientes.filter(ing => {
