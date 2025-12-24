@@ -750,6 +750,50 @@ async function executeAction(actionData) {
             window.renderizarRecetas?.();
             window.showToast?.(`${rec.nombre} actualizado: precio = ${value}€`, 'success');
             return true;
+
+        } else if (action === 'update' && entity === 'receta_ingrediente') {
+            // Formato: update|receta_ingrediente|RECETA|INGREDIENTE|cantidad|VALOR
+            const recetaNombre = name;
+            const ingredienteNombre = field;
+            const nuevaCantidad = parseFloat(value);
+
+            // Buscar receta
+            const rec = window.recetas?.find(r =>
+                r.nombre.toLowerCase().includes(recetaNombre.toLowerCase())
+            );
+            if (!rec) {
+                console.error('Receta no encontrada:', recetaNombre);
+                return false;
+            }
+
+            // Buscar ingrediente
+            const ing = window.ingredientes?.find(i =>
+                i.nombre.toLowerCase().includes(ingredienteNombre.toLowerCase())
+            );
+            if (!ing) {
+                console.error('Ingrediente no encontrado:', ingredienteNombre);
+                return false;
+            }
+
+            // Buscar el ingrediente en la receta
+            const ingredienteEnReceta = rec.ingredientes?.find(item =>
+                item.ingredienteId === ing.id
+            );
+            if (!ingredienteEnReceta) {
+                console.error('El ingrediente no está en la receta');
+                return false;
+            }
+
+            // Actualizar cantidad
+            ingredienteEnReceta.cantidad = nuevaCantidad;
+
+            // Llamar API para actualizar receta
+            await window.api.updateReceta(rec.id, rec);
+            await window.cargarDatos();
+            window.renderizarRecetas?.();
+            window.calcularCosteReceta?.();
+            window.showToast?.(`${rec.nombre}: ${ing.nombre} ahora = ${nuevaCantidad}`, 'success');
+            return true;
         }
 
         console.warn('Acción no reconocida:', actionData);
