@@ -489,6 +489,11 @@ function createChatHTML() {
                     <p>Asistente inteligente de costos</p>
                 </div>
                 <div class="chat-header-status"></div>
+                <button class="chat-clear-btn" id="chat-clear" title="Limpiar chat" style="background:none;border:none;cursor:pointer;padding:8px;margin-right:4px;">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="white">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                    </svg>
+                </button>
                 <button class="chat-close-btn" id="chat-close">
                     <svg viewBox="0 0 24 24">
                         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -499,12 +504,9 @@ function createChatHTML() {
             <!-- Messages -->
             <div class="chat-messages" id="chat-messages"></div>
             
-            <!-- Quick Actions -->
-            <div class="chat-quick-actions">
-                <button class="chat-quick-btn" data-msg="¿Cuál es el food cost actual?">📊 Food Cost</button>
-                <button class="chat-quick-btn" data-msg="¿Cuántas raciones puedo hacer?">🍽️ Raciones</button>
-                <button class="chat-quick-btn" data-msg="¿Qué proveedor es más barato?">🏪 Proveedores</button>
-                <button class="chat-quick-btn" data-msg="Muéstrame los márgenes">📈 Márgenes</button>
+            <!-- Quick Actions (contextual) -->
+            <div class="chat-quick-actions" id="chat-quick-actions">
+                <!-- Se actualizan dinámicamente según la pestaña -->
             </div>
             
             <!-- Input -->
@@ -541,6 +543,10 @@ function bindChatEvents() {
     fab.addEventListener('click', () => toggleChat());
     closeBtn.addEventListener('click', () => toggleChat(false));
 
+    // Clear chat
+    const clearBtn = document.getElementById('chat-clear');
+    clearBtn.addEventListener('click', () => clearChat());
+
     // Send message
     sendBtn.addEventListener('click', () => sendMessage());
 
@@ -558,13 +564,16 @@ function bindChatEvents() {
         input.style.height = Math.min(input.scrollHeight, 100) + 'px';
     });
 
-    // Quick actions
-    quickBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            input.value = btn.dataset.msg;
+    // Quick actions (delegated event)
+    document.getElementById('chat-quick-actions').addEventListener('click', (e) => {
+        if (e.target.classList.contains('chat-quick-btn')) {
+            input.value = e.target.dataset.msg;
             sendMessage();
-        });
+        }
     });
+
+    // Update quick buttons on tab change
+    updateQuickButtons();
 }
 
 /**
@@ -667,6 +676,8 @@ async function sendMessage() {
     showTyping();
 
     try {
+        const tabContext = getCurrentTabContext();
+
         const response = await fetch(CHAT_CONFIG.webhookUrl, {
             method: 'POST',
             headers: {
@@ -683,7 +694,8 @@ async function sendMessage() {
                     month: 'long',
                     day: 'numeric'
                 }),
-                fechaISO: new Date().toISOString().split('T')[0]
+                fechaISO: new Date().toISOString().split('T')[0],
+                contexto: tabContext
             })
         });
 
@@ -735,6 +747,110 @@ export function clearChatHistory() {
         addMessage('bot', CHAT_CONFIG.welcomeMessage);
     }
 }
+
+/**
+ * Limpia el chat (wrapper para el botón)
+ */
+function clearChat() {
+    if (confirm('¿Borrar toda la conversación?')) {
+        clearChatHistory();
+    }
+}
+
+/**
+ * Actualiza botones rápidos según la pestaña actual
+ */
+function updateQuickButtons() {
+    const container = document.getElementById('chat-quick-actions');
+    if (!container) return;
+
+    const currentTab = getCurrentTab();
+
+    const buttonsByTab = {
+        'ingredientes': [
+            { msg: '¿Qué ingrediente ha subido de precio?', label: '📈 Subidas' },
+            { msg: '¿Qué ingredientes tengo con stock bajo?', label: '⚠️ Stock bajo' },
+            { msg: '¿Cuál es mi ingrediente más caro?', label: '💰 Más caro' }
+        ],
+        'recetas': [
+            { msg: '¿Cuál es mi plato más rentable?', label: '⭐ Más rentable' },
+            { msg: '¿Qué platos tienen food cost alto?', label: '🔴 Food cost alto' },
+            { msg: '¿Qué precio debería poner a este plato?', label: '💵 Precio sugerido' }
+        ],
+        'proveedores': [
+            { msg: '¿Qué proveedor es más barato para el mismo producto?', label: '🏪 Comparar' },
+            { msg: '¿Cuánto gasto por proveedor?', label: '💳 Gastos' }
+        ],
+        'dashboard': [
+            { msg: 'Dame un resumen del día', label: '📊 Resumen' },
+            { msg: '¿Cuál es el food cost actual?', label: '🎯 Food Cost' },
+            { msg: '¿Cuántas raciones puedo hacer hoy?', label: '🍽️ Raciones' }
+        ],
+        'default': [
+            { msg: '¿Cuál es el food cost actual?', label: '📊 Food Cost' },
+            { msg: '¿Cuántas raciones puedo hacer?', label: '🍽️ Raciones' },
+            { msg: '¿Qué proveedor es más barato?', label: '🏪 Proveedores' },
+            { msg: 'Muéstrame los márgenes', label: '📈 Márgenes' }
+        ]
+    };
+
+    const buttons = buttonsByTab[currentTab] || buttonsByTab['default'];
+
+    container.innerHTML = buttons.map(btn =>
+        `<button class="chat-quick-btn" data-msg="${btn.msg}">${btn.label}</button>`
+    ).join('');
+}
+
+/**
+ * Obtiene la pestaña actual
+ */
+function getCurrentTab() {
+    const activeTab = document.querySelector('.tab-btn.active');
+    if (activeTab) {
+        return activeTab.textContent.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    }
+    return 'dashboard';
+}
+
+/**
+ * Obtiene contexto de la pestaña actual para enviar al agente
+ */
+function getCurrentTabContext() {
+    const tab = getCurrentTab();
+    const context = { tab };
+
+    try {
+        if (tab === 'recetas' && window.recetas) {
+            context.totalRecetas = window.recetas.length;
+            const recetasConMargen = window.recetas.filter(r => r.precio_venta > 0);
+            if (recetasConMargen.length > 0) {
+                context.recetasBajoMargen = recetasConMargen.filter(r => {
+                    const coste = window.calcularCosteRecetaCompleto ? window.calcularCosteRecetaCompleto(r) : 0;
+                    const foodCost = r.precio_venta > 0 ? (coste / r.precio_venta * 100) : 0;
+                    return foodCost > 33;
+                }).length;
+            }
+        } else if (tab === 'ingredientes' && window.ingredientes) {
+            context.totalIngredientes = window.ingredientes.length;
+            context.stockBajo = window.ingredientes.filter(i =>
+                i.stock_minimo > 0 && parseFloat(i.stock_actual) <= parseFloat(i.stock_minimo)
+            ).length;
+        } else if (tab === 'proveedores' && window.proveedores) {
+            context.totalProveedores = window.proveedores.length;
+        }
+    } catch (e) {
+        console.warn('Error obteniendo contexto:', e);
+    }
+
+    return context;
+}
+
+// Escuchar cambios de pestaña para actualizar botones
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tab-btn')) {
+        setTimeout(updateQuickButtons, 100);
+    }
+});
 
 /**
  * Parse Markdown to HTML (tablas, negritas, listas, código)
