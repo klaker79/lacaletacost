@@ -625,6 +625,132 @@ function addMessage(type, text, save = true) {
 }
 
 /**
+ * Añade mensaje con botones de acción
+ */
+function addMessageWithAction(type, text, actionData) {
+    const messagesContainer = document.getElementById('chat-messages');
+    const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const actionId = 'action_' + Date.now();
+
+    const messageEl = document.createElement('div');
+    messageEl.className = `chat-message ${type}`;
+    messageEl.innerHTML = `
+        <div class="chat-message-avatar">🤖</div>
+        <div>
+            <div class="chat-message-content">${parseMarkdown(text)}</div>
+            <div class="chat-action-buttons" id="${actionId}" style="margin-top: 12px; display: flex; gap: 8px;">
+                <button class="chat-action-confirm" data-action="${encodeURIComponent(actionData)}" 
+                    style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                    ✅ Confirmar
+                </button>
+                <button class="chat-action-cancel" 
+                    style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    ❌ Cancelar
+                </button>
+            </div>
+            <div class="chat-message-time">${time}</div>
+        </div>
+    `;
+
+    messagesContainer.appendChild(messageEl);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    // Eventos de los botones
+    const confirmBtn = messageEl.querySelector('.chat-action-confirm');
+    const cancelBtn = messageEl.querySelector('.chat-action-cancel');
+    const buttonsContainer = document.getElementById(actionId);
+
+    confirmBtn.addEventListener('click', async () => {
+        buttonsContainer.innerHTML = '<span style="color: #f59e0b;">⏳ Ejecutando...</span>';
+        const success = await executeAction(actionData);
+        if (success) {
+            buttonsContainer.innerHTML = '<span style="color: #10b981;">✅ ¡Hecho! Cambio aplicado correctamente.</span>';
+            addMessage('bot', '✅ Acción completada. Los datos se han actualizado.', false);
+        } else {
+            buttonsContainer.innerHTML = '<span style="color: #ef4444;">❌ Error al ejecutar la acción.</span>';
+        }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        buttonsContainer.innerHTML = '<span style="color: #64748b;">🚫 Acción cancelada.</span>';
+    });
+
+    // Guardar mensaje (sin la acción)
+    chatMessages.push({ type, text, time: Date.now() });
+    if (chatMessages.length > 50) chatMessages = chatMessages.slice(-50);
+    localStorage.setItem('chatHistory', JSON.stringify(chatMessages));
+}
+
+/**
+ * Ejecuta una acción del chat
+ * Formato: tipo|entidad|campo|valor (ej: "update|ingrediente|PULPO|precio|25")
+ */
+async function executeAction(actionData) {
+    try {
+        const parts = actionData.split('|');
+        const action = parts[0]; // update, add, etc.
+        const entity = parts[1]; // ingrediente, receta
+        const name = parts[2];   // nombre del item
+        const field = parts[3];  // campo a modificar
+        const value = parts[4];  // nuevo valor
+
+        console.log('🔧 Ejecutando acción:', { action, entity, name, field, value });
+
+        if (action === 'update' && entity === 'ingrediente') {
+            // Buscar ingrediente por nombre
+            const ing = window.ingredientes?.find(i =>
+                i.nombre.toLowerCase().includes(name.toLowerCase())
+            );
+            if (!ing) {
+                console.error('Ingrediente no encontrado:', name);
+                return false;
+            }
+
+            // Preparar actualización
+            const updates = { ...ing };
+            if (field === 'precio') updates.precio = parseFloat(value);
+            if (field === 'stock') updates.stock_actual = parseFloat(value);
+
+            // Llamar API
+            await window.api.updateIngrediente(ing.id, updates);
+            await window.cargarDatos();
+            window.renderizarIngredientes?.();
+            window.showToast?.(`${ing.nombre} actualizado: ${field} = ${value}`, 'success');
+            return true;
+
+        } else if (action === 'update' && entity === 'receta') {
+            // Buscar receta por nombre
+            const rec = window.recetas?.find(r =>
+                r.nombre.toLowerCase().includes(name.toLowerCase())
+            );
+            if (!rec) {
+                console.error('Receta no encontrada:', name);
+                return false;
+            }
+
+            // Preparar actualización
+            const updates = { ...rec };
+            if (field === 'precio' || field === 'precio_venta') updates.precio_venta = parseFloat(value);
+
+            // Llamar API
+            await window.api.updateReceta(rec.id, updates);
+            await window.cargarDatos();
+            window.renderizarRecetas?.();
+            window.showToast?.(`${rec.nombre} actualizado: precio = ${value}€`, 'success');
+            return true;
+        }
+
+        console.warn('Acción no reconocida:', actionData);
+        return false;
+
+    } catch (error) {
+        console.error('Error ejecutando acción:', error);
+        window.showToast?.('Error: ' + error.message, 'error');
+        return false;
+    }
+}
+
+/**
  * Muestra indicador de typing
  */
 function showTyping() {
@@ -706,7 +832,16 @@ async function sendMessage() {
         }
 
         const data = await response.text();
-        addMessage('bot', data || 'No hay respuesta disponible.');
+
+        // Detectar si hay una acción pendiente de confirmar
+        const actionMatch = data.match(/\[ACTION:([^\]]+)\]/);
+        if (actionMatch) {
+            const actionData = actionMatch[1];
+            const cleanMessage = data.replace(/\[ACTION:[^\]]+\]/, '').trim();
+            addMessageWithAction('bot', cleanMessage, actionData);
+        } else {
+            addMessage('bot', data || 'No hay respuesta disponible.');
+        }
 
     } catch (error) {
         hideTyping();
