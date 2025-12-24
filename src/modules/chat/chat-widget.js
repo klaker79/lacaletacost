@@ -831,30 +831,74 @@ function getCurrentTabContext() {
                 (parseFloat(opex.suministros) || 0) + (parseFloat(opex.otros) || 0)
         };
 
-        if (tab === 'recetas' && window.recetas) {
-            context.totalRecetas = window.recetas.length;
-            const recetasConMargen = window.recetas.filter(r => r.precio_venta > 0);
-            if (recetasConMargen.length > 0) {
-                context.recetasBajoMargen = recetasConMargen.filter(r => {
-                    const coste = window.calcularCosteRecetaCompleto ? window.calcularCosteRecetaCompleto(r) : 0;
-                    const foodCost = r.precio_venta > 0 ? (coste / r.precio_venta * 100) : 0;
-                    return foodCost > 33;
-                }).length;
-            }
-        } else if (tab === 'ingredientes' && window.ingredientes) {
+        // Siempre incluir resumen de ingredientes (top 10 por precio)
+        if (window.ingredientes && Array.isArray(window.ingredientes)) {
+            context.ingredientes = window.ingredientes
+                .slice(0, 15)
+                .map(i => ({
+                    nombre: i.nombre,
+                    precio: parseFloat(i.precio) || 0,
+                    unidad: i.unidad || 'kg',
+                    stock: parseFloat(i.stock_actual) || 0,
+                    stockMinimo: parseFloat(i.stock_minimo) || 0,
+                    proveedor: i.proveedor?.nombre || 'Sin proveedor'
+                }));
             context.totalIngredientes = window.ingredientes.length;
             context.stockBajo = window.ingredientes.filter(i =>
                 i.stock_minimo > 0 && parseFloat(i.stock_actual) <= parseFloat(i.stock_minimo)
             ).length;
-        } else if (tab === 'proveedores' && window.proveedores) {
+        }
+
+        // Siempre incluir resumen de recetas (top 10 con análisis)
+        if (window.recetas && Array.isArray(window.recetas)) {
+            context.recetas = window.recetas
+                .slice(0, 15)
+                .map(r => {
+                    const coste = window.calcularCosteRecetaCompleto ? window.calcularCosteRecetaCompleto(r) : 0;
+                    const precioVenta = parseFloat(r.precio_venta) || 0;
+                    const foodCost = precioVenta > 0 ? (coste / precioVenta * 100) : 0;
+                    const margen = precioVenta > 0 ? ((precioVenta - coste) / precioVenta * 100) : 0;
+                    return {
+                        nombre: r.nombre,
+                        categoria: r.categoria,
+                        coste: Math.round(coste * 100) / 100,
+                        precioVenta: precioVenta,
+                        foodCost: Math.round(foodCost * 10) / 10,
+                        margen: Math.round(margen * 10) / 10
+                    };
+                });
+            context.totalRecetas = window.recetas.length;
+            context.recetasFoodCostAlto = context.recetas.filter(r => r.foodCost > 33).length;
+        }
+
+        // Incluir proveedores
+        if (window.proveedores && Array.isArray(window.proveedores)) {
+            context.proveedores = window.proveedores.map(p => ({
+                nombre: p.nombre,
+                telefono: p.telefono || '',
+                email: p.email || ''
+            }));
             context.totalProveedores = window.proveedores.length;
         }
+
+        // Incluir ventas si existen
+        if (window.ventas && Array.isArray(window.ventas)) {
+            const hoy = new Date().toISOString().split('T')[0];
+            const ventasHoy = window.ventas.filter(v => v.fecha === hoy);
+            const totalVentasHoy = ventasHoy.reduce((sum, v) => sum + (parseFloat(v.total) || 0), 0);
+            context.ventas = {
+                hoy: Math.round(totalVentasHoy * 100) / 100,
+                totalRegistros: window.ventas.length
+            };
+        }
+
     } catch (e) {
         console.warn('Error obteniendo contexto:', e);
     }
 
     return context;
 }
+
 
 // Escuchar cambios de pestaña para actualizar botones
 document.addEventListener('click', (e) => {
