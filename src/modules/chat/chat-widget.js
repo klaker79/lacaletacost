@@ -3,6 +3,8 @@
  * Integración con n8n para asistente contable inteligente
  */
 
+import { logger } from '../../utils/logger.js';
+
 const CHAT_CONFIG = {
     // Webhook URL configurable via environment variables con fallback
     webhookUrl: import.meta.env.VITE_CHAT_WEBHOOK_URL || 'https://n8niker.mindloop.cloud/webhook/3f075a6e-b005-407d-911c-93f710727449',
@@ -664,7 +666,7 @@ function bindChatEvents() {
         };
 
         recognition.onerror = (event) => {
-            console.error('Speech recognition error:', event.error);
+            logger.error('Speech recognition error:', event.error);
             micBtn.classList.remove('recording');
             isRecording = false;
             if (event.error === 'not-allowed') {
@@ -811,7 +813,7 @@ async function executeAction(actionData) {
                 i.nombre.toLowerCase().includes(name.toLowerCase())
             );
             if (!ing) {
-                console.error('Ingrediente no encontrado:', name);
+                logger.error('Ingrediente no encontrado:', name);
                 return false;
             }
 
@@ -847,7 +849,7 @@ async function executeAction(actionData) {
                 r.nombre.toLowerCase().includes(name.toLowerCase())
             );
             if (!rec) {
-                console.error('Receta no encontrada:', name);
+                logger.error('Receta no encontrada:', name);
                 return false;
             }
 
@@ -885,7 +887,7 @@ async function executeAction(actionData) {
             // Actualizando receta_ingrediente
 
             if (isNaN(nuevaCantidad)) {
-                console.error('Cantidad inválida:', parts[5]);
+                logger.error('Cantidad inválida:', parts[5]);
                 return false;
             }
 
@@ -894,7 +896,7 @@ async function executeAction(actionData) {
                 r.nombre.toLowerCase().includes(recetaNombre.toLowerCase())
             );
             if (!rec) {
-                console.error('Receta no encontrada:', recetaNombre);
+                logger.error('Receta no encontrada:', recetaNombre);
                 return false;
             }
 
@@ -903,7 +905,7 @@ async function executeAction(actionData) {
                 i.nombre.toLowerCase().includes(ingredienteNombre.toLowerCase())
             );
             if (!ing) {
-                console.error('Ingrediente no encontrado:', ingredienteNombre);
+                logger.error('Ingrediente no encontrado:', ingredienteNombre);
                 return false;
             }
 
@@ -912,7 +914,7 @@ async function executeAction(actionData) {
                 item.ingredienteId === ing.id
             );
             if (ingredienteIdx === -1 || ingredienteIdx === undefined) {
-                console.error('El ingrediente no está en la receta');
+                logger.error('El ingrediente no está en la receta');
                 return false;
             }
 
@@ -938,11 +940,11 @@ async function executeAction(actionData) {
             return true;
         }
 
-        console.warn('Acción no reconocida:', actionData);
+        logger.warn('Acción no reconocida:', actionData);
         return false;
 
     } catch (error) {
-        console.error('Error ejecutando acción:', error);
+        logger.error('Error ejecutando acción:', error);
         window.showToast?.('Error: ' + error.message, 'error');
         return false;
     }
@@ -1043,7 +1045,7 @@ async function sendMessage() {
 
     } catch (error) {
         hideTyping();
-        console.error('Chat error:', error);
+        logger.error('Chat error:', error);
         addMessage('bot', CHAT_CONFIG.errorMessage);
     } finally {
         isWaitingResponse = false;
@@ -1055,14 +1057,32 @@ async function sendMessage() {
 
 /**
  * Renderiza el historial
+ * ⚡ Optimizado: Usa DocumentFragment para evitar múltiples reflows
  */
 function renderChatHistory() {
     const messagesContainer = document.getElementById('chat-messages');
     messagesContainer.innerHTML = '';
 
+    // ⚡ OPTIMIZACIÓN: Crear fragmento para batch DOM operations
+    const fragment = document.createDocumentFragment();
+
     chatMessages.forEach(msg => {
-        addMessage(msg.type, msg.text, false);
+        const time = new Date(msg.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        const messageEl = document.createElement('div');
+        messageEl.className = `chat-message ${msg.type}`;
+        messageEl.innerHTML = `
+            <div class="chat-message-avatar">${msg.type === 'bot' ? '🤖' : '👤'}</div>
+            <div>
+                <div class="chat-message-content">${parseMarkdown(msg.text)}</div>
+                <div class="chat-message-time">${time}</div>
+            </div>
+        `;
+        fragment.appendChild(messageEl);
     });
+
+    // Una sola operación DOM en lugar de N operaciones
+    messagesContainer.appendChild(fragment);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
 /**
@@ -1242,7 +1262,7 @@ function getCurrentTabContext() {
         }
 
     } catch (e) {
-        console.warn('Error obteniendo contexto:', e);
+        logger.warn('Error obteniendo contexto:', e);
     }
 
     return context;
