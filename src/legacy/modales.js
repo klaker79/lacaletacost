@@ -524,7 +524,7 @@ setInterval(async () => {
 // Limpiar campos de búsqueda al cargar (combate autocompletado de Chrome)
 setTimeout(function () {
   ['busqueda-ingredientes', 'busqueda-recetas', 'busqueda-proveedores', 'busqueda-pedidos'].forEach(function (id) {
-    var el = document.getElementById(id);
+    const el = document.getElementById(id);
     if (el) el.value = '';
   });
 }, 100);

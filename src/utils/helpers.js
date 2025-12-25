@@ -243,18 +243,19 @@ export function getRangoFechas(periodo = 'semana') {
         case 'hoy':
             inicio.setHours(0, 0, 0, 0);
             break;
-        case 'semana':
+        case 'semana': {
             const diaSemana = hoy.getDay() || 7; // Lunes = 1
             inicio.setDate(hoy.getDate() - diaSemana + 1);
             inicio.setHours(0, 0, 0, 0);
             break;
+        }
         case 'mes':
             inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
             break;
         case 'año':
             inicio = new Date(hoy.getFullYear(), 0, 1);
             break;
-        case 'semanaAnterior':
+        case 'semanaAnterior': {
             const diaSem = hoy.getDay() || 7;
             inicio.setDate(hoy.getDate() - diaSem - 6);
             inicio.setHours(0, 0, 0, 0);
@@ -262,6 +263,7 @@ export function getRangoFechas(periodo = 'semana') {
             finSemAnt.setDate(inicio.getDate() + 6);
             finSemAnt.setHours(23, 59, 59, 999);
             return { inicio, fin: finSemAnt };
+        }
         default:
             inicio.setDate(hoy.getDate() - 7);
     }

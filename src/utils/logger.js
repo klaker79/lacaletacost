@@ -219,14 +219,16 @@ export const perfLogger = {
         }
     },
 
-    measure(name, startMark, endMark) {
+    measureMarks(name, startMark, endMark) {
         if (isDebugEnabled) {
             try {
                 performance.measure(name, startMark, endMark);
-                const measure = performance.getEntriesByName(name)[0];
-                logger.debug(`⚡ ${name}: ${measure.duration.toFixed(2)}ms`);
-            } catch (e) {
-                logger.warn('Performance measure failed:', e);
+                const entries = performance.getEntriesByName(name);
+                if (entries.length > 0) {
+                    logger.debug(`⚡ ${name}: ${entries[0].duration.toFixed(2)}ms`);
+                }
+            } catch (_e) {
+                logger.warn('Performance measure failed:', _e);
             }
         }
     }

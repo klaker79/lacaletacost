@@ -38,7 +38,7 @@ async function initAuth() {
             AppState.token = token;
             return true;
         }
-    } catch (e) {
+    } catch (_e) {
         logger.warn('Token inválido o expirado, limpiando sesión...');
         logout();
     }
