@@ -18,7 +18,7 @@ const AppState = {
     token: localStorage.getItem('token'),
     user: JSON.parse(localStorage.getItem('user') || 'null'),
     isAuthenticated: false,
-    lastError: null
+    lastError: null,
 };
 
 /**
@@ -56,7 +56,7 @@ async function fetchAPI(endpoint, options = {}) {
 
     const defaultHeaders = {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json',
     };
 
     if (token) {
@@ -67,8 +67,8 @@ async function fetchAPI(endpoint, options = {}) {
         ...options,
         headers: {
             ...defaultHeaders,
-            ...options.headers
-        }
+            ...options.headers,
+        },
     };
 
     try {
@@ -88,7 +88,7 @@ async function fetchAPI(endpoint, options = {}) {
             logger.warn(`Auth error en ${endpoint}:`, data.error || 'Token inválido');
             AppState.lastError = {
                 code: data.code || 'AUTH_ERROR',
-                message: data.error || 'Error de autenticación'
+                message: data.error || 'Error de autenticación',
             };
 
             // Token expirado o inválido
@@ -102,10 +102,13 @@ async function fetchAPI(endpoint, options = {}) {
 
         // Manejar otros errores HTTP
         if (!response.ok) {
-            console.error(`Error HTTP ${response.status} en ${endpoint}:`, data.error || response.statusText);
+            console.error(
+                `Error HTTP ${response.status} en ${endpoint}:`,
+                data.error || response.statusText
+            );
             AppState.lastError = {
                 code: response.status,
-                message: data.error || response.statusText
+                message: data.error || response.statusText,
             };
 
             // Si la respuesta tiene datos a pesar del error, usarlos
@@ -120,12 +123,11 @@ async function fetchAPI(endpoint, options = {}) {
         AppState.lastError = null;
 
         return data;
-
     } catch (networkError) {
         console.error(`Error de red en ${endpoint}:`, networkError);
         AppState.lastError = {
             code: 'NETWORK_ERROR',
-            message: 'Error de conexión. Verifica tu internet.'
+            message: 'Error de conexión. Verifica tu internet.',
         };
 
         showToast('Error de conexión con el servidor', 'error');
@@ -149,7 +151,7 @@ function getDefaultResponse(endpoint) {
         '/api/team',
         '/api/inventory/complete',
         '/api/balance/comparativa',
-        '/api/analysis/menu-engineering'
+        '/api/analysis/menu-engineering',
     ];
 
     // Verificar si el endpoint devuelve array
@@ -216,54 +218,54 @@ async function getBalance(mes, ano) {
 async function createIngredient(data) {
     return await fetchAPI('/api/ingredients', {
         method: 'POST',
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
     });
 }
 
 async function updateIngredient(id, data) {
     return await fetchAPI(`/api/ingredients/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
     });
 }
 
 async function deleteIngredient(id) {
     return await fetchAPI(`/api/ingredients/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
     });
 }
 
 async function createRecipe(data) {
     return await fetchAPI('/api/recipes', {
         method: 'POST',
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
     });
 }
 
 async function updateRecipe(id, data) {
     return await fetchAPI(`/api/recipes/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
     });
 }
 
 async function deleteRecipe(id) {
     return await fetchAPI(`/api/recipes/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
     });
 }
 
 async function createSale(recetaId, cantidad) {
     return await fetchAPI('/api/sales', {
         method: 'POST',
-        body: JSON.stringify({ recetaId, cantidad })
+        body: JSON.stringify({ recetaId, cantidad }),
     });
 }
 
 async function bulkSales(ventas) {
     return await fetchAPI('/api/sales/bulk', {
         method: 'POST',
-        body: JSON.stringify({ ventas })
+        body: JSON.stringify({ ventas }),
     });
 }
 
@@ -273,7 +275,7 @@ async function bulkSales(ventas) {
 async function login(email, password) {
     const result = await fetchAPI('/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
     });
 
     if (result.token) {
@@ -313,7 +315,8 @@ function showToast(message, type = 'info') {
     if (!container) {
         container = document.createElement('div');
         container.id = 'toast-container';
-        container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
+        container.style.cssText =
+            'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;';
         document.body.appendChild(container);
     }
 
@@ -322,7 +325,7 @@ function showToast(message, type = 'info') {
         info: '#3498db',
         success: '#27ae60',
         error: '#e74c3c',
-        warning: '#f39c12'
+        warning: '#f39c12',
     };
 
     toast.style.cssText = `
@@ -367,7 +370,7 @@ document.head.appendChild(style);
 async function generateAPIToken(nombre = 'n8n Integration', duracionDias = 365) {
     const result = await fetchAPI('/api/auth/api-token', {
         method: 'POST',
-        body: JSON.stringify({ nombre, duracionDias })
+        body: JSON.stringify({ nombre, duracionDias }),
     });
 
     if (result.apiToken) {
@@ -403,5 +406,5 @@ window.API = {
     initAuth,
     generateAPIToken,
     showToast,
-    state: AppState
+    state: AppState,
 };

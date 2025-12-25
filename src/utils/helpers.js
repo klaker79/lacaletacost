@@ -118,7 +118,7 @@ export function exportarAExcel(datos, nombreArchivo, columnas) {
         // Ajustar ancho de columnas
         ws['!cols'] = columnas.map(() => ({ wch: 20 }));
 
-        XLSX.utils.book_append_sheet(wb, ws, "Datos");
+        XLSX.utils.book_append_sheet(wb, ws, 'Datos');
 
         // Descargar con fecha
         const fecha = new Date().toISOString().split('T')[0];
@@ -203,7 +203,7 @@ export function getFechaHoyFormateada() {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
     };
     return hoy.toLocaleDateString('es-ES', opciones);
 }
@@ -225,7 +225,7 @@ export function getPeriodoActual() {
         mes: hoy.getMonth() + 1,
         mesNombre: hoy.toLocaleDateString('es-ES', { month: 'long' }),
         año: hoy.getFullYear(),
-        trimestre: Math.ceil((hoy.getMonth() + 1) / 3)
+        trimestre: Math.ceil((hoy.getMonth() + 1) / 3),
     };
 }
 
@@ -310,14 +310,14 @@ export function compararConSemanaAnterior(datos, campoFecha = 'fecha', campoValo
     const actual = sumaPeriodo(rangoActual.inicio, rangoActual.fin);
     const anterior = sumaPeriodo(rangoAnterior.inicio, rangoAnterior.fin);
     const diferencia = actual - anterior;
-    const porcentaje = anterior > 0 ? ((diferencia / anterior) * 100) : 0;
+    const porcentaje = anterior > 0 ? (diferencia / anterior) * 100 : 0;
 
     return {
         actual: actual.toFixed(2),
         anterior: anterior.toFixed(2),
         diferencia: diferencia.toFixed(2),
         porcentaje: porcentaje.toFixed(1),
-        tendencia: diferencia >= 0 ? 'up' : 'down'
+        tendencia: diferencia >= 0 ? 'up' : 'down',
     };
 }
 
@@ -331,7 +331,13 @@ export function compararConSemanaAnterior(datos, campoFecha = 'fecha', campoValo
  * @param {number} diasHistorico - Días para calcular promedio (default 7)
  * @returns {Object} {diasStock, consumoDiario, alerta}
  */
-export function calcularDiasDeStock(stockActual, ventas, recetas, ingredienteId, diasHistorico = 7) {
+export function calcularDiasDeStock(
+    stockActual,
+    ventas,
+    recetas,
+    ingredienteId,
+    diasHistorico = 7
+) {
     // Obtener ventas de los últimos X días
     const { inicio } = getRangoFechas('semana');
     const ventasRecientes = ventas.filter(v => new Date(v.fecha) >= inicio);
@@ -349,7 +355,9 @@ export function calcularDiasDeStock(stockActual, ventas, recetas, ingredienteId,
                 ing => ing.ingredienteId === ingredienteId || ing.ingrediente_id === ingredienteId
             );
             if (ingredienteEnReceta) {
-                consumoTotal += (parseFloat(ingredienteEnReceta.cantidad) || 0) * (parseInt(venta.cantidad) || 0);
+                consumoTotal +=
+                    (parseFloat(ingredienteEnReceta.cantidad) || 0) *
+                    (parseInt(venta.cantidad) || 0);
             }
         }
     });
@@ -366,9 +374,7 @@ export function calcularDiasDeStock(stockActual, ventas, recetas, ingredienteId,
         diasStock,
         consumoDiario: consumoDiario.toFixed(2),
         alerta,
-        mensaje: diasStock === 999
-            ? 'Sin consumo reciente'
-            : `Stock para ${diasStock} días`
+        mensaje: diasStock === 999 ? 'Sin consumo reciente' : `Stock para ${diasStock} días`,
     };
 }
 
@@ -405,29 +411,32 @@ export function proyeccionConsumo(ingredientes, ventas, recetas, diasProyeccion 
     });
 
     // Ahora mapear ingredientes con búsquedas O(1)
-    return ingredientes.map(ing => {
-        const consumoTotal = consumoPorIngrediente.get(ing.id) || 0;
-        const consumoDiario = consumoTotal / diasHistorico;
-        const stockActual = parseFloat(ing.stock_actual) || 0;
-        const diasStock = consumoDiario > 0 ? Math.floor(stockActual / consumoDiario) : 999;
+    return ingredientes
+        .map(ing => {
+            const consumoTotal = consumoPorIngrediente.get(ing.id) || 0;
+            const consumoDiario = consumoTotal / diasHistorico;
+            const stockActual = parseFloat(ing.stock_actual) || 0;
+            const diasStock = consumoDiario > 0 ? Math.floor(stockActual / consumoDiario) : 999;
 
-        let alerta = 'ok';
-        if (diasStock <= 2) alerta = 'critico';
-        else if (diasStock <= 5) alerta = 'bajo';
-        else if (diasStock <= 7) alerta = 'medio';
+            let alerta = 'ok';
+            if (diasStock <= 2) alerta = 'critico';
+            else if (diasStock <= 5) alerta = 'bajo';
+            else if (diasStock <= 7) alerta = 'medio';
 
-        return {
-            id: ing.id,
-            nombre: ing.nombre,
-            stockActual: ing.stock_actual,
-            unidad: ing.unidad,
-            diasStock,
-            consumoDiario: consumoDiario.toFixed(2),
-            alerta,
-            mensaje: diasStock === 999 ? 'Sin consumo reciente' : `Stock para ${diasStock} días`,
-            necesitaPedido: diasStock <= diasProyeccion
-        };
-    }).filter(ing => ing.necesitaPedido)
+            return {
+                id: ing.id,
+                nombre: ing.nombre,
+                stockActual: ing.stock_actual,
+                unidad: ing.unidad,
+                diasStock,
+                consumoDiario: consumoDiario.toFixed(2),
+                alerta,
+                mensaje:
+                    diasStock === 999 ? 'Sin consumo reciente' : `Stock para ${diasStock} días`,
+                necesitaPedido: diasStock <= diasProyeccion,
+            };
+        })
+        .filter(ing => ing.necesitaPedido)
         .sort((a, b) => a.diasStock - b.diasStock);
 }
 

@@ -29,11 +29,13 @@ export function cerrarFormularioProveedor() {
 export function cargarIngredientesProveedor(seleccionados = []) {
     const container = document.getElementById('lista-ingredientes-proveedor');
     if (window.ingredientes.length === 0) {
-        container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">Primero añade ingredientes</p>';
+        container.innerHTML =
+            '<p style="color:#999;text-align:center;padding:20px;">Primero añade ingredientes</p>';
         return;
     }
 
-    let html = '<div class="search-box-small"><input type="text" id="buscar-ing-prov" placeholder="Buscar ingrediente..." oninput="window.filtrarIngredientesProveedor()"></div>';
+    let html =
+        '<div class="search-box-small"><input type="text" id="buscar-ing-prov" placeholder="Buscar ingrediente..." oninput="window.filtrarIngredientesProveedor()"></div>';
     html += '<div id="lista-ing-checks">';
 
     window.ingredientes.forEach(ing => {
@@ -68,10 +70,11 @@ export function filtrarIngredientesProveedor() {
  */
 export function renderizarProveedores() {
     const busqueda = document.getElementById('busqueda-proveedores')?.value.toLowerCase() || '';
-    const filtrados = window.proveedores.filter(p =>
-        p.nombre.toLowerCase().includes(busqueda) ||
-        (p.telefono && p.telefono.includes(busqueda)) ||
-        (p.email && p.email.toLowerCase().includes(busqueda))
+    const filtrados = window.proveedores.filter(
+        p =>
+            p.nombre.toLowerCase().includes(busqueda) ||
+            (p.telefono && p.telefono.includes(busqueda)) ||
+            (p.email && p.email.toLowerCase().includes(busqueda))
     );
 
     const container = document.getElementById('tabla-proveedores');

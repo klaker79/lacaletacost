@@ -19,18 +19,19 @@ export const appConfig = {
         baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://lacaleta-api.mindloop.cloud',
         timeout: 30000, // 30 segundos
         retries: 3,
-        retryDelay: 1000 // 1 segundo entre reintentos
+        retryDelay: 1000, // 1 segundo entre reintentos
     },
 
     /**
      * Configuración de Chat
      */
     chat: {
-        webhookUrl: import.meta.env.VITE_CHAT_WEBHOOK_URL ||
+        webhookUrl:
+            import.meta.env.VITE_CHAT_WEBHOOK_URL ||
             'https://n8niker.mindloop.cloud/webhook/3f075a6e-b005-407d-911c-93f710727449',
         botName: 'Asistente CostOS',
         enabled: true,
-        maxHistoryMessages: 50
+        maxHistoryMessages: 50,
     },
 
     /**
@@ -40,7 +41,7 @@ export const appConfig = {
         enabled: true,
         ttl: CACHE_TTL,
         maxSize: 100, // Máximo número de entradas en cache
-        strategy: 'LRU' // Least Recently Used
+        strategy: 'LRU', // Least Recently Used
     },
 
     /**
@@ -50,7 +51,7 @@ export const appConfig = {
         debounceDelay: DEBOUNCE_DELAY.SEARCH,
         minLength: 2,
         maxResults: 50,
-        highlightMatches: true
+        highlightMatches: true,
     },
 
     /**
@@ -59,7 +60,7 @@ export const appConfig = {
     pagination: {
         pageSize: PAGE_SIZE,
         showPagination: true,
-        showPageNumbers: true
+        showPageNumbers: true,
     },
 
     /**
@@ -68,7 +69,7 @@ export const appConfig = {
     validation: {
         showInlineErrors: true,
         validateOnBlur: true,
-        validateOnChange: false
+        validateOnChange: false,
     },
 
     /**
@@ -80,7 +81,7 @@ export const appConfig = {
         compactMode: false,
         dateFormat: 'DD/MM/YYYY',
         timeFormat: 'HH:mm',
-        firstDayOfWeek: 1 // Lunes
+        firstDayOfWeek: 1, // Lunes
     },
 
     /**
@@ -90,7 +91,7 @@ export const appConfig = {
         enabled: true,
         position: 'top-right',
         autoClose: true,
-        pauseOnHover: true
+        pauseOnHover: true,
     },
 
     /**
@@ -100,7 +101,7 @@ export const appConfig = {
         enabled: import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING !== 'false',
         logSlowQueries: true,
         slowQueryThreshold: 1000, // ms
-        trackMemory: false
+        trackMemory: false,
     },
 
     /**
@@ -109,8 +110,8 @@ export const appConfig = {
     debug: {
         enabled: import.meta.env.VITE_ENABLE_DEBUG === 'true',
         logLevel: import.meta.env.VITE_LOG_LEVEL || 'info',
-        showPerformanceMetrics: false
-    }
+        showPerformanceMetrics: false,
+    },
 };
 
 /**

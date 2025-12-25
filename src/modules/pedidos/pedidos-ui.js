@@ -83,7 +83,8 @@ export function agregarIngredientePedido() {
 
     const div = document.createElement('div');
     div.className = 'ingrediente-item';
-    div.style.cssText = 'display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px;';
+    div.style.cssText =
+        'display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px;';
 
     let opciones = '<option value="">Seleccionar...</option>';
     ingredientesProveedor.forEach(ing => {
@@ -154,7 +155,8 @@ export function renderizarPedidos() {
     }
 
     let html = '<table><thead><tr>';
-    html += '<th>ID</th><th>Fecha</th><th>Proveedor</th><th>Items</th><th>Total</th><th>Estado</th><th>Acciones</th>';
+    html +=
+        '<th>ID</th><th>Fecha</th><th>Proveedor</th><th>Items</th><th>Total</th><th>Estado</th><th>Acciones</th>';
     html += '</tr></thead><tbody>';
 
     pedidosFiltrados.forEach(ped => {
@@ -193,18 +195,23 @@ export function renderizarPedidos() {
 export function exportarPedidos() {
     const columnas = [
         { header: 'ID', key: 'id' },
-        { header: 'Fecha Pedido', value: (p) => new Date(p.fecha).toLocaleDateString('es-ES') },
+        { header: 'Fecha Pedido', value: p => new Date(p.fecha).toLocaleDateString('es-ES') },
         {
-            header: 'Proveedor', value: (p) => {
+            header: 'Proveedor',
+            value: p => {
                 const prov = window.proveedores.find(pr => pr.id === p.proveedorId);
                 return prov ? prov.nombre : 'Sin proveedor';
-            }
+            },
         },
         { header: 'Estado', key: 'estado' },
-        { header: 'Nº Ingredientes', value: (p) => (p.ingredientes || []).length },
-        { header: 'Total (€)', value: (p) => parseFloat(p.total || 0).toFixed(2) },
-        { header: 'Total Recibido (€)', value: (p) => parseFloat(p.total_recibido || 0).toFixed(2) },
-        { header: 'Fecha Recepción', value: (p) => p.fecha_recepcion ? new Date(p.fecha_recepcion).toLocaleDateString('es-ES') : '-' }
+        { header: 'Nº Ingredientes', value: p => (p.ingredientes || []).length },
+        { header: 'Total (€)', value: p => parseFloat(p.total || 0).toFixed(2) },
+        { header: 'Total Recibido (€)', value: p => parseFloat(p.total_recibido || 0).toFixed(2) },
+        {
+            header: 'Fecha Recepción',
+            value: p =>
+                p.fecha_recepcion ? new Date(p.fecha_recepcion).toLocaleDateString('es-ES') : '-',
+        },
     ];
 
     window.exportarAExcel(window.pedidos, `Pedidos_${window.getRestaurantNameForFile()}`, columnas);

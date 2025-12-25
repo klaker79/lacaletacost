@@ -9,7 +9,9 @@
 export async function guardarProveedor(event) {
     event.preventDefault();
 
-    const checks = document.querySelectorAll('#lista-ingredientes-proveedor input[type="checkbox"]:checked');
+    const checks = document.querySelectorAll(
+        '#lista-ingredientes-proveedor input[type="checkbox"]:checked'
+    );
     const ingredientesIds = Array.from(checks).map(cb => parseInt(cb.value));
 
     const proveedor = {
@@ -19,7 +21,7 @@ export async function guardarProveedor(event) {
         email: document.getElementById('prov-email').value || '',
         direccion: document.getElementById('prov-direccion').value || '',
         notas: document.getElementById('prov-notas').value || '',
-        ingredientes: ingredientesIds
+        ingredientes: ingredientesIds,
     };
 
     window.showLoading();
@@ -34,7 +36,10 @@ export async function guardarProveedor(event) {
         await window.cargarDatos();
         window.renderizarProveedores();
         window.hideLoading();
-        window.showToast(window.editandoProveedorId ? 'Proveedor actualizado' : 'Proveedor creado', 'success');
+        window.showToast(
+            window.editandoProveedorId ? 'Proveedor actualizado' : 'Proveedor creado',
+            'success'
+        );
         window.cerrarFormularioProveedor();
     } catch (error) {
         window.hideLoading();

@@ -87,7 +87,7 @@ export default [
             'prefer-const': 'warn',
             'no-var': 'error',
             'eqeqeq': ['error', 'always'],
-            'curly': ['error', 'multi-line'],
+            'curly': 'off', // Prettier handles this
             'no-eval': 'error',
             'no-implied-eval': 'error'
         }

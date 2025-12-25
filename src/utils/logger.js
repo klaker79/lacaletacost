@@ -24,7 +24,7 @@ const LOG_LEVELS = {
     WARN: 1,
     INFO: 2,
     LOG: 3,
-    DEBUG: 4
+    DEBUG: 4,
 };
 
 /**
@@ -70,7 +70,7 @@ const STYLES = {
     WARN: 'color: #f59e0b; font-weight: bold;',
     INFO: 'color: #3b82f6;',
     LOG: 'color: #6b7280;',
-    DEBUG: 'color: #8b5cf6;'
+    DEBUG: 'color: #8b5cf6;',
 };
 
 /**
@@ -176,7 +176,7 @@ export const logger = {
             const formatted = formatMessage('ASSERT FAILED', args);
             console.error('%c' + formatted[0], STYLES.ERROR, ...formatted.slice(1));
         }
-    }
+    },
 };
 
 /**
@@ -193,7 +193,7 @@ export const apiLogger = {
 
     error(method, url, error) {
         logger.error(`API ${method} Error:`, url, error);
-    }
+    },
 };
 
 /**
@@ -231,7 +231,7 @@ export const perfLogger = {
                 logger.warn('Performance measure failed:', _e);
             }
         }
-    }
+    },
 };
 
 /**
@@ -239,11 +239,18 @@ export const perfLogger = {
  */
 export function logSystemInfo() {
     if (import.meta.env.DEV || isDebugEnabled) {
-        console.group('%c🚀 MindLoop CostOS', 'color: #667eea; font-size: 16px; font-weight: bold;');
+        console.group(
+            '%c🚀 MindLoop CostOS',
+            'color: #667eea; font-size: 16px; font-weight: bold;'
+        );
         console.log('%cVersion:', 'font-weight: bold;', APP_INFO.VERSION);
         console.log('%cEnvironment:', 'font-weight: bold;', APP_INFO.ENV);
         console.log('%cBuild Date:', 'font-weight: bold;', APP_INFO.BUILD_DATE);
-        console.log('%cLog Level:', 'font-weight: bold;', Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === currentLevel));
+        console.log(
+            '%cLog Level:',
+            'font-weight: bold;',
+            Object.keys(LOG_LEVELS).find(k => LOG_LEVELS[k] === currentLevel)
+        );
         console.log('%cDebug Mode:', 'font-weight: bold;', isDebugEnabled);
         console.groupEnd();
     }

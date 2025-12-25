@@ -49,7 +49,8 @@ export function agregarIngredienteReceta() {
     const lista = document.getElementById('lista-ingredientes-receta');
     const item = document.createElement('div');
     item.className = 'ingrediente-item';
-    item.style.cssText = 'display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px;';
+    item.style.cssText =
+        'display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px;';
 
     // Ordenar ingredientes alfabéticamente
     const ingredientesOrdenados = [...(window.ingredientes || [])].sort((a, b) =>
@@ -104,11 +105,11 @@ export function calcularCosteReceta() {
         const foodCostSpan = document.getElementById('foodcost-receta-valor');
 
         if (precioVenta > 0) {
-            const margen = ((precioVenta - costeTotal) / precioVenta * 100);
-            const foodCost = (costeTotal / precioVenta * 100);
+            const margen = ((precioVenta - costeTotal) / precioVenta) * 100;
+            const foodCost = (costeTotal / precioVenta) * 100;
 
             // Colores visibles sobre fondo verde: blanco = bueno, amarillo = ajustado, rojo = malo
-            const getColor = (fc) => fc <= 33 ? '#ffffff' : fc <= 38 ? '#fde047' : '#fca5a5';
+            const getColor = fc => (fc <= 33 ? '#ffffff' : fc <= 38 ? '#fde047' : '#fca5a5');
 
             // Actualizar Margen
             if (margenSpan) {
@@ -135,9 +136,10 @@ export function renderizarRecetas() {
     const busqueda = busquedaEl?.value?.toLowerCase() || '';
     const recetas = Array.isArray(window.recetas) ? window.recetas : [];
 
-    const filtradas = recetas.filter(r =>
-        r.nombre.toLowerCase().includes(busqueda) ||
-        (r.codigo && r.codigo.toString().includes(busqueda))
+    const filtradas = recetas.filter(
+        r =>
+            r.nombre.toLowerCase().includes(busqueda) ||
+            (r.codigo && r.codigo.toString().includes(busqueda))
     );
 
     const container = document.getElementById('tabla-recetas');
@@ -153,16 +155,22 @@ export function renderizarRecetas() {
         document.getElementById('resumen-recetas').style.display = 'none';
     } else {
         let html = '<table><thead><tr>';
-        html += '<th>Cód.</th><th>Plato</th><th>Categoría</th><th>Coste</th><th>Precio</th><th>Margen</th><th>Acciones</th>';
+        html +=
+            '<th>Cód.</th><th>Plato</th><th>Categoría</th><th>Coste</th><th>Precio</th><th>Margen</th><th>Acciones</th>';
         html += '</tr></thead><tbody>';
 
         filtradas.forEach(rec => {
             const coste = window.calcularCosteRecetaCompleto(rec);
             const margen = rec.precio_venta - coste;
             const pct = rec.precio_venta > 0 ? ((margen / rec.precio_venta) * 100).toFixed(0) : 0;
-            const foodCost = rec.precio_venta > 0 ? (coste / rec.precio_venta * 100) : 100;
+            const foodCost = rec.precio_venta > 0 ? (coste / rec.precio_venta) * 100 : 100;
             // Badge basado en Food Cost: ≤33% success, ≤38% warning, >38% danger
-            const badgeClass = foodCost <= 33 ? 'badge-success' : foodCost <= 38 ? 'badge-warning' : 'badge-danger';
+            const badgeClass =
+                foodCost <= 33
+                    ? 'badge-success'
+                    : foodCost <= 38
+                      ? 'badge-warning'
+                      : 'badge-danger';
 
             html += '<tr>';
             html += `<td><span style="color:#666;font-size:12px;">${rec.codigo || '-'}</span></td>`;
@@ -203,42 +211,54 @@ export function exportarRecetas() {
 
     const columnas = [
         { header: 'ID', key: 'id' },
-        { header: 'Código', value: (rec) => rec.codigo || `REC-${String(rec.id).padStart(4, '0')}` },
+        { header: 'Código', value: rec => rec.codigo || `REC-${String(rec.id).padStart(4, '0')}` },
         { header: 'Nombre', key: 'nombre' },
         { header: 'Categoría', key: 'categoria' },
-        { header: 'Precio Venta (€)', value: (rec) => parseFloat(rec.precio_venta || 0).toFixed(2) },
+        { header: 'Precio Venta (€)', value: rec => parseFloat(rec.precio_venta || 0).toFixed(2) },
         {
-            header: 'Coste (€)', value: (rec) => {
-                return (rec.ingredientes || []).reduce((sum, item) => {
-                    const ing = ingredientes.find(i => i.id === item.ingredienteId);
-                    return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
-                }, 0).toFixed(2);
-            }
+            header: 'Coste (€)',
+            value: rec => {
+                return (rec.ingredientes || [])
+                    .reduce((sum, item) => {
+                        const ing = ingredientes.find(i => i.id === item.ingredienteId);
+                        return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
+                    }, 0)
+                    .toFixed(2);
+            },
         },
         {
-            header: 'Margen (€)', value: (rec) => {
+            header: 'Margen (€)',
+            value: rec => {
                 const coste = (rec.ingredientes || []).reduce((sum, item) => {
                     const ing = ingredientes.find(i => i.id === item.ingredienteId);
                     return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
                 }, 0);
                 return (parseFloat(rec.precio_venta || 0) - coste).toFixed(2);
-            }
+            },
         },
         {
-            header: 'Margen (%)', value: (rec) => {
+            header: 'Margen (%)',
+            value: rec => {
                 const coste = (rec.ingredientes || []).reduce((sum, item) => {
                     const ing = ingredientes.find(i => i.id === item.ingredienteId);
                     return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
                 }, 0);
-                const margen = rec.precio_venta > 0 ? ((parseFloat(rec.precio_venta) - coste) / parseFloat(rec.precio_venta) * 100) : 0;
+                const margen =
+                    rec.precio_venta > 0
+                        ? ((parseFloat(rec.precio_venta) - coste) / parseFloat(rec.precio_venta)) *
+                          100
+                        : 0;
                 return margen.toFixed(1) + '%';
-            }
+            },
         },
         { header: 'Porciones', key: 'porciones' },
-        { header: 'Nº Ingredientes', value: (rec) => (rec.ingredientes || []).length }
+        { header: 'Nº Ingredientes', value: rec => (rec.ingredientes || []).length },
     ];
 
-    if (typeof window.exportarAExcel === 'function' && typeof window.getRestaurantNameForFile === 'function') {
+    if (
+        typeof window.exportarAExcel === 'function' &&
+        typeof window.getRestaurantNameForFile === 'function'
+    ) {
         window.exportarAExcel(recetas, `Recetas_${window.getRestaurantNameForFile()}`, columnas);
     }
 }

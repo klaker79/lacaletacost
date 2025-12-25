@@ -2,7 +2,7 @@
  * Event Bindings Module
  * Centralizes all DOM event handlers using data-action attributes
  * Eliminates all inline onclick/onchange/onsubmit
- * 
+ *
  * @module ui/event-bindings
  */
 
@@ -13,7 +13,7 @@
 const actionHandlers = {
     // Auth
     'mostrar-registro': () => window.mostrarRegistro?.(),
-    'logout': () => window.logout?.(),
+    logout: () => window.logout?.(),
 
     // Ingredientes
     'mostrar-form-ingrediente': () => window.mostrarFormularioIngrediente?.(),
@@ -97,7 +97,7 @@ const actionHandlers = {
     'cancelar-confirmacion': () => window.cerrarConfirmacion?.(),
 
     // Toggle expand (BCG cards)
-    'toggle-expand': (e) => e.currentTarget.classList.toggle('expanded'),
+    'toggle-expand': e => e.currentTarget.classList.toggle('expanded'),
 };
 
 /**
@@ -205,7 +205,7 @@ function bindFormSubmits() {
     forms.forEach(({ id, handler }) => {
         const form = document.getElementById(id);
         if (form) {
-            form.addEventListener('submit', (e) => {
+            form.addEventListener('submit', e => {
                 e.preventDefault();
                 handler();
             });

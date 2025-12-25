@@ -7,11 +7,14 @@ import { logger } from '../../utils/logger.js';
 
 const CHAT_CONFIG = {
     // Webhook URL configurable via environment variables con fallback
-    webhookUrl: import.meta.env.VITE_CHAT_WEBHOOK_URL || 'https://n8niker.mindloop.cloud/webhook/3f075a6e-b005-407d-911c-93f710727449',
+    webhookUrl:
+        import.meta.env.VITE_CHAT_WEBHOOK_URL ||
+        'https://n8niker.mindloop.cloud/webhook/3f075a6e-b005-407d-911c-93f710727449',
     botName: 'Asistente CostOS',
-    welcomeMessage: '¡Hola! 👋 Soy tu asistente de costos. Puedo ayudarte con:\n\n• 📊 Análisis de food cost\n• 💰 Costes de platos y recetas\n• 📦 Stock y raciones disponibles\n• 📈 Márgenes y rentabilidad\n• 🏪 Comparativa de proveedores\n\n¿En qué puedo ayudarte?',
+    welcomeMessage:
+        '¡Hola! 👋 Soy tu asistente de costos. Puedo ayudarte con:\n\n• 📊 Análisis de food cost\n• 💰 Costes de platos y recetas\n• 📦 Stock y raciones disponibles\n• 📈 Márgenes y rentabilidad\n• 🏪 Comparativa de proveedores\n\n¿En qué puedo ayudarte?',
     placeholderText: 'Escribe tu pregunta...',
-    errorMessage: 'Lo siento, hubo un error. Inténtalo de nuevo.'
+    errorMessage: 'Lo siento, hubo un error. Inténtalo de nuevo.',
 };
 
 // Generar sessionId único
@@ -611,7 +614,7 @@ function bindChatEvents() {
     sendBtn.addEventListener('click', () => sendMessage());
 
     // Enter to send
-    input.addEventListener('keydown', (e) => {
+    input.addEventListener('keydown', e => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
@@ -625,7 +628,7 @@ function bindChatEvents() {
     });
 
     // Quick actions (delegated event)
-    document.getElementById('chat-quick-actions').addEventListener('click', (e) => {
+    document.getElementById('chat-quick-actions').addEventListener('click', e => {
         if (e.target.classList.contains('chat-quick-btn')) {
             input.value = e.target.dataset.msg;
             sendMessage();
@@ -655,7 +658,7 @@ function bindChatEvents() {
             }
         });
 
-        recognition.onresult = (event) => {
+        recognition.onresult = event => {
             const transcript = event.results[0][0].transcript;
             input.value = transcript;
             input.focus();
@@ -665,7 +668,7 @@ function bindChatEvents() {
             // sendMessage();
         };
 
-        recognition.onerror = (event) => {
+        recognition.onerror = event => {
             logger.error('Speech recognition error:', event.error);
             micBtn.classList.remove('recording');
             isRecording = false;
@@ -775,10 +778,12 @@ function addMessageWithAction(type, text, actionData) {
         buttonsContainer.innerHTML = '<span style="color: #f59e0b;">⏳ Ejecutando...</span>';
         const success = await executeAction(actionData);
         if (success) {
-            buttonsContainer.innerHTML = '<span style="color: #10b981;">✅ ¡Hecho! Cambio aplicado correctamente.</span>';
+            buttonsContainer.innerHTML =
+                '<span style="color: #10b981;">✅ ¡Hecho! Cambio aplicado correctamente.</span>';
             addMessage('bot', '✅ Acción completada. Los datos se han actualizado.', false);
         } else {
-            buttonsContainer.innerHTML = '<span style="color: #ef4444;">❌ Error al ejecutar la acción.</span>';
+            buttonsContainer.innerHTML =
+                '<span style="color: #ef4444;">❌ Error al ejecutar la acción.</span>';
         }
     });
 
@@ -801,9 +806,9 @@ async function executeAction(actionData) {
         const parts = actionData.split('|');
         const action = parts[0]; // update, add, etc.
         const entity = parts[1]; // ingrediente, receta
-        const name = parts[2];   // nombre del item
-        const field = parts[3];  // campo a modificar
-        const value = parts[4];  // nuevo valor
+        const name = parts[2]; // nombre del item
+        const field = parts[3]; // campo a modificar
+        const value = parts[4]; // nuevo valor
 
         // Ejecutando acción
 
@@ -835,14 +840,14 @@ async function executeAction(actionData) {
                         document.getElementById('ing-precio').value = ingredienteActualizado.precio;
                     }
                     if (field === 'stock') {
-                        document.getElementById('ing-stock').value = ingredienteActualizado.stock_actual;
+                        document.getElementById('ing-stock').value =
+                            ingredienteActualizado.stock_actual;
                     }
                 }
             }
 
             window.showToast?.(`${ing.nombre} actualizado: ${field} = ${value}`, 'success');
             return true;
-
         } else if (action === 'update' && entity === 'receta') {
             // Buscar receta por nombre
             const rec = window.recetas?.find(r =>
@@ -855,7 +860,8 @@ async function executeAction(actionData) {
 
             // Preparar actualización
             const updates = { ...rec };
-            if (field === 'precio' || field === 'precio_venta') updates.precio_venta = parseFloat(value);
+            if (field === 'precio' || field === 'precio_venta')
+                updates.precio_venta = parseFloat(value);
 
             // Llamar API
             await window.api.updateReceta(rec.id, updates);
@@ -867,7 +873,8 @@ async function executeAction(actionData) {
                 const recetaActualizada = window.recetas?.find(r => r.id === rec.id);
                 if (recetaActualizada) {
                     if (field === 'precio' || field === 'precio_venta') {
-                        document.getElementById('rec-precio_venta').value = recetaActualizada.precio_venta;
+                        document.getElementById('rec-precio_venta').value =
+                            recetaActualizada.precio_venta;
                     }
                     // Recalcular coste y márgenes
                     window.calcularCosteReceta?.();
@@ -876,13 +883,12 @@ async function executeAction(actionData) {
 
             window.showToast?.(`${rec.nombre} actualizado: precio = ${value}€`, 'success');
             return true;
-
         } else if (action === 'update' && entity === 'receta_ingrediente') {
             // Formato: update|receta_ingrediente|RECETA|INGREDIENTE|cantidad|VALOR
             // parts[0]=update, parts[1]=receta_ingrediente, parts[2]=RECETA, parts[3]=INGREDIENTE, parts[4]=cantidad, parts[5]=VALOR
             const recetaNombre = parts[2];
             const ingredienteNombre = parts[3];
-            const nuevaCantidad = parseFloat(parts[5]);  // El valor está en parts[5]
+            const nuevaCantidad = parseFloat(parts[5]); // El valor está en parts[5]
 
             // Actualizando receta_ingrediente
 
@@ -910,8 +916,8 @@ async function executeAction(actionData) {
             }
 
             // Buscar el ingrediente en la receta
-            const ingredienteIdx = rec.ingredientes?.findIndex(item =>
-                item.ingredienteId === ing.id
+            const ingredienteIdx = rec.ingredientes?.findIndex(
+                item => item.ingredienteId === ing.id
             );
             if (ingredienteIdx === -1 || ingredienteIdx === undefined) {
                 logger.error('El ingrediente no está en la receta');
@@ -922,13 +928,13 @@ async function executeAction(actionData) {
             const nuevosIngredientes = [...rec.ingredientes];
             nuevosIngredientes[ingredienteIdx] = {
                 ...nuevosIngredientes[ingredienteIdx],
-                cantidad: nuevaCantidad
+                cantidad: nuevaCantidad,
             };
 
             // Crear objeto actualizado
             const recetaActualizada = {
                 ...rec,
-                ingredientes: nuevosIngredientes
+                ingredientes: nuevosIngredientes,
             };
 
             // Llamar API para actualizar receta
@@ -942,7 +948,6 @@ async function executeAction(actionData) {
 
         logger.warn('Acción no reconocida:', actionData);
         return false;
-
     } catch (error) {
         logger.error('Error ejecutando acción:', error);
         window.showToast?.('Error: ' + error.message, 'error');
@@ -1007,7 +1012,7 @@ async function sendMessage() {
         const response = await fetch(CHAT_CONFIG.webhookUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 message: message,
@@ -1018,11 +1023,11 @@ async function sendMessage() {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    day: 'numeric',
                 }),
                 fechaISO: new Date().toISOString().split('T')[0],
-                contexto: tabContext
-            })
+                contexto: tabContext,
+            }),
         });
 
         hideTyping();
@@ -1042,7 +1047,6 @@ async function sendMessage() {
         } else {
             addMessage('bot', data || 'No hay respuesta disponible.');
         }
-
     } catch (error) {
         hideTyping();
         logger.error('Chat error:', error);
@@ -1067,7 +1071,10 @@ function renderChatHistory() {
     const fragment = document.createDocumentFragment();
 
     chatMessages.forEach(msg => {
-        const time = new Date(msg.time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        const time = new Date(msg.time).toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+        });
         const messageEl = document.createElement('div');
         messageEl.className = `chat-message ${msg.type}`;
         messageEl.innerHTML = `
@@ -1120,38 +1127,38 @@ function updateQuickButtons() {
     const currentTab = getCurrentTab();
 
     const buttonsByTab = {
-        'ingredientes': [
+        ingredientes: [
             { msg: '¿Qué ingrediente ha subido de precio?', label: '📈 Subidas' },
             { msg: '¿Qué ingredientes tengo con stock bajo?', label: '⚠️ Stock bajo' },
-            { msg: '¿Cuál es mi ingrediente más caro?', label: '💰 Más caro' }
+            { msg: '¿Cuál es mi ingrediente más caro?', label: '💰 Más caro' },
         ],
-        'recetas': [
+        recetas: [
             { msg: '¿Cuál es mi plato más rentable?', label: '⭐ Más rentable' },
             { msg: '¿Qué platos tienen food cost alto?', label: '🔴 Food cost alto' },
-            { msg: '¿Qué precio debería poner a este plato?', label: '💵 Precio sugerido' }
+            { msg: '¿Qué precio debería poner a este plato?', label: '💵 Precio sugerido' },
         ],
-        'proveedores': [
+        proveedores: [
             { msg: '¿Qué proveedor es más barato para el mismo producto?', label: '🏪 Comparar' },
-            { msg: '¿Cuánto gasto por proveedor?', label: '💳 Gastos' }
+            { msg: '¿Cuánto gasto por proveedor?', label: '💳 Gastos' },
         ],
-        'dashboard': [
+        dashboard: [
             { msg: 'Dame un resumen del día', label: '📊 Resumen' },
             { msg: '¿Cuál es el food cost actual?', label: '🎯 Food Cost' },
-            { msg: '¿Cuántas raciones puedo hacer hoy?', label: '🍽️ Raciones' }
+            { msg: '¿Cuántas raciones puedo hacer hoy?', label: '🍽️ Raciones' },
         ],
-        'default': [
+        default: [
             { msg: '¿Cuál es el food cost actual?', label: '📊 Food Cost' },
             { msg: '¿Cuántas raciones puedo hacer?', label: '🍽️ Raciones' },
             { msg: '¿Qué proveedor es más barato?', label: '🏪 Proveedores' },
-            { msg: 'Muéstrame los márgenes', label: '📈 Márgenes' }
-        ]
+            { msg: 'Muéstrame los márgenes', label: '📈 Márgenes' },
+        ],
     };
 
     const buttons = buttonsByTab[currentTab] || buttonsByTab['default'];
 
-    container.innerHTML = buttons.map(btn =>
-        `<button class="chat-quick-btn" data-msg="${btn.msg}">${btn.label}</button>`
-    ).join('');
+    container.innerHTML = buttons
+        .map(btn => `<button class="chat-quick-btn" data-msg="${btn.msg}">${btn.label}</button>`)
+        .join('');
 }
 
 /**
@@ -1160,7 +1167,11 @@ function updateQuickButtons() {
 function getCurrentTab() {
     const activeTab = document.querySelector('.tab-btn.active');
     if (activeTab) {
-        return activeTab.textContent.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+        return activeTab.textContent
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim();
     }
     return 'dashboard';
 }
@@ -1180,62 +1191,63 @@ function getCurrentTabContext() {
             personal: parseFloat(opex.personal) || 0,
             suministros: parseFloat(opex.suministros) || 0,
             otros: parseFloat(opex.otros) || 0,
-            total: (parseFloat(opex.alquiler) || 0) + (parseFloat(opex.personal) || 0) +
-                (parseFloat(opex.suministros) || 0) + (parseFloat(opex.otros) || 0)
+            total:
+                (parseFloat(opex.alquiler) || 0) +
+                (parseFloat(opex.personal) || 0) +
+                (parseFloat(opex.suministros) || 0) +
+                (parseFloat(opex.otros) || 0),
         };
 
         // Siempre incluir resumen de ingredientes (top 10 por precio)
         if (window.ingredientes && Array.isArray(window.ingredientes)) {
-            context.ingredientes = window.ingredientes
-                .slice(0, 15)
-                .map(i => ({
-                    nombre: i.nombre,
-                    precio: parseFloat(i.precio) || 0,
-                    unidad: i.unidad || 'kg',
-                    stock: parseFloat(i.stock_actual) || 0,
-                    stockMinimo: parseFloat(i.stock_minimo) || 0,
-                    proveedor: i.proveedor?.nombre || 'Sin proveedor'
-                }));
+            context.ingredientes = window.ingredientes.slice(0, 15).map(i => ({
+                nombre: i.nombre,
+                precio: parseFloat(i.precio) || 0,
+                unidad: i.unidad || 'kg',
+                stock: parseFloat(i.stock_actual) || 0,
+                stockMinimo: parseFloat(i.stock_minimo) || 0,
+                proveedor: i.proveedor?.nombre || 'Sin proveedor',
+            }));
             context.totalIngredientes = window.ingredientes.length;
-            context.stockBajo = window.ingredientes.filter(i =>
-                i.stock_minimo > 0 && parseFloat(i.stock_actual) <= parseFloat(i.stock_minimo)
+            context.stockBajo = window.ingredientes.filter(
+                i => i.stock_minimo > 0 && parseFloat(i.stock_actual) <= parseFloat(i.stock_minimo)
             ).length;
         }
 
         // Siempre incluir resumen de recetas con ingredientes detallados
         if (window.recetas && Array.isArray(window.recetas)) {
-            context.recetas = window.recetas
-                .slice(0, 15)
-                .map(r => {
-                    const coste = window.calcularCosteRecetaCompleto ? window.calcularCosteRecetaCompleto(r) : 0;
-                    const precioVenta = parseFloat(r.precio_venta) || 0;
-                    const foodCost = precioVenta > 0 ? (coste / precioVenta * 100) : 0;
-                    const margen = precioVenta > 0 ? ((precioVenta - coste) / precioVenta * 100) : 0;
+            context.recetas = window.recetas.slice(0, 15).map(r => {
+                const coste = window.calcularCosteRecetaCompleto
+                    ? window.calcularCosteRecetaCompleto(r)
+                    : 0;
+                const precioVenta = parseFloat(r.precio_venta) || 0;
+                const foodCost = precioVenta > 0 ? (coste / precioVenta) * 100 : 0;
+                const margen = precioVenta > 0 ? ((precioVenta - coste) / precioVenta) * 100 : 0;
 
-                    // Incluir ingredientes detallados
-                    const ingredientesDetalle = (r.ingredientes || []).map(item => {
-                        const ing = window.ingredientes?.find(i => i.id === item.ingredienteId);
-                        const precio = ing ? parseFloat(ing.precio) || 0 : 0;
-                        const cantidad = parseFloat(item.cantidad) || 0;
-                        return {
-                            nombre: ing?.nombre || 'Desconocido',
-                            cantidad: cantidad,
-                            unidad: ing?.unidad || 'kg',
-                            precioUd: precio,
-                            coste: Math.round(precio * cantidad * 100) / 100
-                        };
-                    });
-
+                // Incluir ingredientes detallados
+                const ingredientesDetalle = (r.ingredientes || []).map(item => {
+                    const ing = window.ingredientes?.find(i => i.id === item.ingredienteId);
+                    const precio = ing ? parseFloat(ing.precio) || 0 : 0;
+                    const cantidad = parseFloat(item.cantidad) || 0;
                     return {
-                        nombre: r.nombre,
-                        categoria: r.categoria,
-                        coste: Math.round(coste * 100) / 100,
-                        precioVenta: precioVenta,
-                        foodCost: Math.round(foodCost * 10) / 10,
-                        margen: Math.round(margen * 10) / 10,
-                        ingredientes: ingredientesDetalle
+                        nombre: ing?.nombre || 'Desconocido',
+                        cantidad: cantidad,
+                        unidad: ing?.unidad || 'kg',
+                        precioUd: precio,
+                        coste: Math.round(precio * cantidad * 100) / 100,
                     };
                 });
+
+                return {
+                    nombre: r.nombre,
+                    categoria: r.categoria,
+                    coste: Math.round(coste * 100) / 100,
+                    precioVenta: precioVenta,
+                    foodCost: Math.round(foodCost * 10) / 10,
+                    margen: Math.round(margen * 10) / 10,
+                    ingredientes: ingredientesDetalle,
+                };
+            });
             context.totalRecetas = window.recetas.length;
             context.recetasFoodCostAlto = context.recetas.filter(r => r.foodCost > 33).length;
         }
@@ -1245,7 +1257,7 @@ function getCurrentTabContext() {
             context.proveedores = window.proveedores.map(p => ({
                 nombre: p.nombre,
                 telefono: p.telefono || '',
-                email: p.email || ''
+                email: p.email || '',
             }));
             context.totalProveedores = window.proveedores.length;
         }
@@ -1254,13 +1266,15 @@ function getCurrentTabContext() {
         if (window.ventas && Array.isArray(window.ventas)) {
             const hoy = new Date().toISOString().split('T')[0];
             const ventasHoy = window.ventas.filter(v => v.fecha === hoy);
-            const totalVentasHoy = ventasHoy.reduce((sum, v) => sum + (parseFloat(v.total) || 0), 0);
+            const totalVentasHoy = ventasHoy.reduce(
+                (sum, v) => sum + (parseFloat(v.total) || 0),
+                0
+            );
             context.ventas = {
                 hoy: Math.round(totalVentasHoy * 100) / 100,
-                totalRegistros: window.ventas.length
+                totalRegistros: window.ventas.length,
             };
         }
-
     } catch (e) {
         logger.warn('Error obteniendo contexto:', e);
     }
@@ -1268,9 +1282,8 @@ function getCurrentTabContext() {
     return context;
 }
 
-
 // Escuchar cambios de pestaña para actualizar botones
-document.addEventListener('click', (e) => {
+document.addEventListener('click', e => {
     if (e.target.classList.contains('tab-btn')) {
         setTimeout(updateQuickButtons, 100);
     }
@@ -1325,7 +1338,8 @@ function parseMarkdown(text) {
             if (/^\|?[\s\-:]+\|/.test(line.trim())) continue;
 
             // Extraer celdas
-            const cells = line.split('|')
+            const cells = line
+                .split('|')
                 .map(c => c.trim())
                 .filter(c => c !== '');
 
@@ -1345,17 +1359,13 @@ function parseMarkdown(text) {
     return formatTextContent(text);
 }
 
-
 /**
  * Formatea contenido de texto (negritas, listas, etc.)
  */
 function formatTextContent(text) {
     if (!text) return '';
 
-    let html = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     // Negritas **texto** o __texto__
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -1369,7 +1379,10 @@ function formatTextContent(text) {
     html = html.replace(/(<li>.*<\/li>)+/g, '<ul class="chat-list">$&</ul>');
 
     // Emojis en mayúsculas como títulos (simplificado)
-    html = html.replace(/([📊💰📦📈🏪🎯✅❌⚠️🔴🟢🟡])\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]*:)/g, '<strong>$1 $2</strong>');
+    html = html.replace(
+        /([📊💰📦📈🏪🎯✅❌⚠️🔴🟢🟡])\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]*:)/g,
+        '<strong>$1 $2</strong>'
+    );
 
     // Saltos de línea
     html = html.replace(/\n/g, '<br>');

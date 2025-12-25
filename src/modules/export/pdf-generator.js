@@ -75,7 +75,9 @@ export function generarPDFReceta(receta, ingredientes) {
 
     if (receta.ingredientes && Array.isArray(receta.ingredientes)) {
         receta.ingredientes.forEach(item => {
-            const ing = ingredientes.find(i => i.id === item.ingredienteId || i.id === item.ingrediente_id);
+            const ing = ingredientes.find(
+                i => i.id === item.ingredienteId || i.id === item.ingrediente_id
+            );
             if (ing) {
                 const cantidad = item.cantidad || 0;
                 const precio = ing.precio || 0;
@@ -86,7 +88,7 @@ export function generarPDFReceta(receta, ingredientes) {
                     ing.nombre,
                     `${cantidad} ${ing.unidad || 'kg'}`,
                     `${precio.toFixed(2)}€`,
-                    `${subtotal.toFixed(2)}€`
+                    `${subtotal.toFixed(2)}€`,
                 ]);
             }
         });
@@ -103,22 +105,22 @@ export function generarPDFReceta(receta, ingredientes) {
             textColor: [255, 255, 255],
             fontSize: 10,
             fontStyle: 'bold',
-            halign: 'left'
+            halign: 'left',
         },
         bodyStyles: {
             fontSize: 9,
-            textColor: colorText
+            textColor: colorText,
         },
         alternateRowStyles: {
-            fillColor: [248, 250, 252]
+            fillColor: [248, 250, 252],
         },
         columnStyles: {
             0: { cellWidth: 70 },
             1: { cellWidth: 40, halign: 'center' },
             2: { cellWidth: 35, halign: 'right' },
-            3: { cellWidth: 35, halign: 'right' }
+            3: { cellWidth: 35, halign: 'right' },
         },
-        margin: { left: 20, right: 20 }
+        margin: { left: 20, right: 20 },
     });
 
     // === RESUMEN FINANCIERO ===
@@ -131,7 +133,7 @@ export function generarPDFReceta(receta, ingredientes) {
     yPos += 12;
 
     const precioVenta = receta.precio_venta || 0;
-    const margen = precioVenta > 0 ? ((precioVenta - costoTotal) / precioVenta * 100) : 0;
+    const margen = precioVenta > 0 ? ((precioVenta - costoTotal) / precioVenta) * 100 : 0;
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -156,8 +158,16 @@ export function generarPDFReceta(receta, ingredientes) {
     doc.setTextColor(...colorText);
     doc.text(`MARGEN:`, 20, yPos);
     // Colores basados en Food Cost: ≤28% verde brillante, ≤33% verde, ≤38% amarillo, >38% rojo
-    const foodCost = precioVenta > 0 ? (costoTotal / precioVenta * 100) : 100;
-    doc.setTextColor(foodCost <= 28 ? [5, 150, 105] : foodCost <= 33 ? [16, 185, 129] : foodCost <= 38 ? [245, 158, 11] : [239, 68, 68]);
+    const foodCost = precioVenta > 0 ? (costoTotal / precioVenta) * 100 : 100;
+    doc.setTextColor(
+        foodCost <= 28
+            ? [5, 150, 105]
+            : foodCost <= 33
+              ? [16, 185, 129]
+              : foodCost <= 38
+                ? [245, 158, 11]
+                : [239, 68, 68]
+    );
     doc.text(`${margen.toFixed(1)}%`, 100, yPos, { align: 'right' });
 
     // === FOOTER ===
@@ -201,7 +211,7 @@ export function generarPDFIngredientes(ingredientes) {
         ing.unidad || 'kg',
         `${(ing.precio || 0).toFixed(2)}€`,
         `${(ing.stock_actual || 0).toFixed(2)}`,
-        ing.proveedor?.nombre || 'N/A'
+        ing.proveedor?.nombre || 'N/A',
     ]);
 
     doc.autoTable({
@@ -213,19 +223,19 @@ export function generarPDFIngredientes(ingredientes) {
             fillColor: colorPrimary,
             textColor: [255, 255, 255],
             fontSize: 10,
-            fontStyle: 'bold'
+            fontStyle: 'bold',
         },
         bodyStyles: {
             fontSize: 9,
-            textColor: colorText
+            textColor: colorText,
         },
         alternateRowStyles: {
-            fillColor: [248, 250, 252]
+            fillColor: [248, 250, 252],
         },
         columnStyles: {
             2: { halign: 'right' },
-            3: { halign: 'right' }
-        }
+            3: { halign: 'right' },
+        },
     });
 
     // Footer

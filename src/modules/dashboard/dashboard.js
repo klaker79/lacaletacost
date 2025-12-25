@@ -7,7 +7,7 @@ import {
     getFechaHoyFormateada,
     getPeriodoActual,
     filtrarPorPeriodo,
-    compararConSemanaAnterior
+    compararConSemanaAnterior,
 } from '../../utils/helpers.js';
 
 // Variable para recordar el período actual (default: semana)
@@ -24,13 +24,14 @@ export function inicializarFechaActual() {
         try {
             const fechaFormateada = getFechaHoyFormateada();
             // Capitalizar primera letra
-            fechaTexto.textContent = fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
+            fechaTexto.textContent =
+                fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
         } catch (e) {
             fechaTexto.textContent = new Date().toLocaleDateString('es-ES', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
-                day: 'numeric'
+                day: 'numeric',
             });
         }
     }
@@ -38,10 +39,14 @@ export function inicializarFechaActual() {
     if (periodoInfo) {
         try {
             const periodo = getPeriodoActual();
-            const mesCapitalizado = periodo.mesNombre.charAt(0).toUpperCase() + periodo.mesNombre.slice(1);
+            const mesCapitalizado =
+                periodo.mesNombre.charAt(0).toUpperCase() + periodo.mesNombre.slice(1);
             periodoInfo.textContent = `Semana ${periodo.semana} · ${mesCapitalizado} ${periodo.año}`;
         } catch (e) {
-            periodoInfo.textContent = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+            periodoInfo.textContent = new Date().toLocaleDateString('es-ES', {
+                month: 'long',
+                year: 'numeric',
+            });
         }
     }
 }
@@ -102,7 +107,6 @@ async function actualizarKPIsPorPeriodo(periodo) {
                 }
             }
         }
-
     } catch (error) {
         console.error('Error actualizando KPIs por período:', error);
     }
@@ -143,18 +147,22 @@ export async function actualizarKPIs() {
         const recetasConMargen = recetas.filter(r => r.precio_venta > 0);
         if (recetasConMargen.length > 0) {
             // ⚡ OPTIMIZACIÓN: Usar función memoizada para calcular costes
-            const calcularCoste = window.Performance?.calcularCosteRecetaMemoizado || window.calcularCosteRecetaCompleto;
+            const calcularCoste =
+                window.Performance?.calcularCosteRecetaMemoizado ||
+                window.calcularCosteRecetaCompleto;
 
             const margenTotal = recetasConMargen.reduce((sum, rec) => {
                 const coste = typeof calcularCoste === 'function' ? calcularCoste(rec) : 0;
-                const margen = rec.precio_venta > 0 ? ((rec.precio_venta - coste) / rec.precio_venta * 100) : 0;
+                const margen =
+                    rec.precio_venta > 0
+                        ? ((rec.precio_venta - coste) / rec.precio_venta) * 100
+                        : 0;
                 return sum + margen;
             }, 0);
             const margenPromedio = margenTotal / recetasConMargen.length;
             const margenEl = document.getElementById('kpi-margen');
             if (margenEl) margenEl.textContent = Math.round(margenPromedio) + '%';
         }
-
     } catch (error) {
         console.error('Error actualizando KPIs:', error);
     }
@@ -166,4 +174,3 @@ if (typeof window !== 'undefined') {
     window.cambiarPeriodoVista = cambiarPeriodoVista;
     window.actualizarKPIsPorPeriodo = actualizarKPIsPorPeriodo;
 }
-

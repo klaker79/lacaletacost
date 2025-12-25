@@ -32,7 +32,8 @@ function obtenerCategorias() {
  * Renderiza los filtros por familia (alimento/bebida)
  */
 function renderizarFiltrosCategorias(container) {
-    let html = '<div class="filtros-ingredientes" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center;">';
+    let html =
+        '<div class="filtros-ingredientes" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; align-items: center;">';
     html += '<span style="font-weight: 600; color: #64748b; margin-right: 8px;">Filtrar:</span>';
 
     // Botón "Todas"
@@ -148,7 +149,8 @@ export function renderizarIngredientes() {
             ? window.dataMaps.getNombreProveedor(ing.proveedor_id).toLowerCase()
             : 'sin proveedor';
         const familiaIng = (ing.familia || 'alimento').toLowerCase();
-        const matchBusqueda = ing.nombre.toLowerCase().includes(busqueda) ||
+        const matchBusqueda =
+            ing.nombre.toLowerCase().includes(busqueda) ||
             nombreProv.includes(busqueda) ||
             familiaIng.includes(busqueda);
 
@@ -167,14 +169,17 @@ export function renderizarIngredientes() {
     // Calcular paginación
     const totalItems = filtrados.length;
     const totalPaginas = Math.ceil(totalItems / ITEMS_POR_PAGINA);
-    if (paginaActualIngredientes > totalPaginas) paginaActualIngredientes = Math.max(1, totalPaginas);
+    if (paginaActualIngredientes > totalPaginas)
+        paginaActualIngredientes = Math.max(1, totalPaginas);
 
     const inicio = (paginaActualIngredientes - 1) * ITEMS_POR_PAGINA;
     const fin = inicio + ITEMS_POR_PAGINA;
     const paginados = filtrados.slice(inicio, fin);
 
     if (filtrados.length === 0) {
-        container.innerHTML = renderizarFiltrosCategorias() + `
+        container.innerHTML =
+            renderizarFiltrosCategorias() +
+            `
       <div class="empty-state">
         <div class="icon">📦</div>
         <h3>${busqueda || filtroCategoria !== 'todas' ? 'No encontrados' : 'Aún no hay ingredientes'}</h3>
@@ -187,7 +192,8 @@ export function renderizarIngredientes() {
         let html = renderizarFiltrosCategorias();
 
         html += '<table><thead><tr>';
-        html += '<th>Ingrediente</th><th>Familia</th><th>Proveedor</th><th>Precio</th><th>Stock</th><th>Stock Mínimo</th><th>Acciones</th>';
+        html +=
+            '<th>Ingrediente</th><th>Familia</th><th>Proveedor</th><th>Precio</th><th>Stock</th><th>Stock Mínimo</th><th>Acciones</th>';
         html += '</tr></thead><tbody>';
 
         // ⚡ OPTIMIZACIÓN: Array.map + join en lugar de concatenación en bucle
@@ -209,9 +215,11 @@ export function renderizarIngredientes() {
                 <td><span class="badge ${familiaBadge}">${familiaLabel}</span></td>
                 <td>${nombreProv}</td>
                 <td>${ing.precio ? parseFloat(ing.precio).toFixed(2) + ' €/' + ing.unidad : '-'}</td>
-                <td>${ing.stock_actual
-                    ? `<span class="stock-badge ${stockBajo ? 'stock-low' : 'stock-ok'}">${ing.stock_actual} ${ing.unidad}</span>${stockBajo && ing.stock_minimo ? ' ⚠️' : ''}`
-                    : '-'}
+                <td>${
+                    ing.stock_actual
+                        ? `<span class="stock-badge ${stockBajo ? 'stock-low' : 'stock-ok'}">${ing.stock_actual} ${ing.unidad}</span>${stockBajo && ing.stock_minimo ? ' ⚠️' : ''}`
+                        : '-'
+                }
                 </td>
                 <td>${ing.stock_minimo ? parseFloat(ing.stock_minimo) + ' ' + ing.unidad : '-'}</td>
                 <td>
@@ -232,9 +240,16 @@ export function renderizarIngredientes() {
 
             // Mostrar números de página
             for (let i = 1; i <= totalPaginas; i++) {
-                if (i === 1 || i === totalPaginas || (i >= paginaActualIngredientes - 2 && i <= paginaActualIngredientes + 2)) {
+                if (
+                    i === 1 ||
+                    i === totalPaginas ||
+                    (i >= paginaActualIngredientes - 2 && i <= paginaActualIngredientes + 2)
+                ) {
                     html += `<button onclick="window.irAPaginaIngredientes(${i})" style="${i === paginaActualIngredientes ? 'background: #667eea; color: white; border-color: #667eea;' : ''}">${i}</button>`;
-                } else if (i === paginaActualIngredientes - 3 || i === paginaActualIngredientes + 3) {
+                } else if (
+                    i === paginaActualIngredientes - 3 ||
+                    i === paginaActualIngredientes + 3
+                ) {
                     html += '<span style="padding: 0 8px;">...</span>';
                 }
             }
@@ -327,15 +342,16 @@ export function exportarIngredientes() {
         { header: 'Nombre', key: 'nombre' },
         { header: 'Categoría', key: 'categoria' },
         {
-            header: 'Proveedor', value: (ing) => {
+            header: 'Proveedor',
+            value: ing => {
                 const prov = (window.proveedores || []).find(p => p.id === ing.proveedor_id);
                 return prov ? prov.nombre : 'Sin proveedor';
-            }
+            },
         },
-        { header: 'Precio (€)', value: (ing) => parseFloat(ing.precio || 0).toFixed(2) },
+        { header: 'Precio (€)', value: ing => parseFloat(ing.precio || 0).toFixed(2) },
         { header: 'Unidad', key: 'unidad' },
-        { header: 'Stock Actual', value: (ing) => parseFloat(ing.stock_actual || 0).toFixed(2) },
-        { header: 'Stock Mínimo', value: (ing) => parseFloat(ing.stock_minimo || 0).toFixed(2) }
+        { header: 'Stock Actual', value: ing => parseFloat(ing.stock_actual || 0).toFixed(2) },
+        { header: 'Stock Mínimo', value: ing => parseFloat(ing.stock_minimo || 0).toFixed(2) },
     ];
 
     window.exportarAExcel(window.ingredientes || [], 'Ingredientes_CostOS', columnas);

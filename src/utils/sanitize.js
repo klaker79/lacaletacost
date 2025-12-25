@@ -14,10 +14,29 @@ ación segura de DOMPurify
  */
 const CONFIG = {
     // Permitir solo tags seguros
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'span', 'div', 'ul', 'ol', 'li', 'table', 'tr', 'td', 'th', 'thead', 'tbody'],
+    ALLOWED_TAGS: [
+        'b',
+        'i',
+        'em',
+        'strong',
+        'a',
+        'p',
+        'br',
+        'span',
+        'div',
+        'ul',
+        'ol',
+        'li',
+        'table',
+        'tr',
+        'td',
+        'th',
+        'thead',
+        'tbody',
+    ],
     ALLOWED_ATTR: ['href', 'class', 'id', 'style', 'onclick'],
     KEEP_CONTENT: true,
-    RETURN_TRUSTED_TYPE: false
+    RETURN_TRUSTED_TYPE: false,
 };
 
 /**
@@ -91,5 +110,5 @@ export default {
     sanitizeHTML,
     setHTMLSafe,
     setTextSafe,
-    sanitizeURL
+    sanitizeURL,
 };

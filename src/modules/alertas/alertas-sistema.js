@@ -17,7 +17,8 @@ export function detectarStockBajo() {
 
         if (stockActual < stockMinimo) {
             const porcentaje = stockMinimo > 0 ? Math.round((stockActual / stockMinimo) * 100) : 0;
-            const criticidad = porcentaje < 25 ? 'critico' : porcentaje < 50 ? 'bajo' : 'advertencia';
+            const criticidad =
+                porcentaje < 25 ? 'critico' : porcentaje < 50 ? 'bajo' : 'advertencia';
 
             alertas.push({
                 tipo: 'stock_bajo',
@@ -27,10 +28,11 @@ export function detectarStockBajo() {
                 stockActual,
                 stockMinimo,
                 porcentaje,
-                mensaje: stockActual === 0
-                    ? `${ing.nombre}: SIN STOCK`
-                    : `${ing.nombre}: ${stockActual.toFixed(2)} ${ing.unidad || 'u'} (mín: ${stockMinimo})`,
-                accion: () => window.cambiarTab?.('ingredientes')
+                mensaje:
+                    stockActual === 0
+                        ? `${ing.nombre}: SIN STOCK`
+                        : `${ing.nombre}: ${stockActual.toFixed(2)} ${ing.unidad || 'u'} (mín: ${stockMinimo})`,
+                accion: () => window.cambiarTab?.('ingredientes'),
             });
         }
     });
@@ -59,7 +61,8 @@ export function detectarPedidosPendientes(diasLimite = 3) {
 
             if (diasPendiente >= diasLimite) {
                 const proveedor = window.proveedores?.find(p => p.id === ped.proveedorId);
-                const criticidad = diasPendiente >= 7 ? 'critico' : diasPendiente >= 5 ? 'bajo' : 'advertencia';
+                const criticidad =
+                    diasPendiente >= 7 ? 'critico' : diasPendiente >= 5 ? 'bajo' : 'advertencia';
 
                 alertas.push({
                     tipo: 'pedido_pendiente',
@@ -73,7 +76,7 @@ export function detectarPedidosPendientes(diasLimite = 3) {
                     accion: () => {
                         window.cambiarTab?.('pedidos');
                         setTimeout(() => window.verDetallesPedido?.(ped.id), 100);
-                    }
+                    },
                 });
             }
         }
@@ -97,7 +100,7 @@ export function sugerirInventario(diasSugerencia = 7) {
             mensaje: '📋 Sugerencia: Realiza tu primer inventario',
             descripcion: 'Mantén tu stock actualizado para cálculos precisos',
             accion: () => window.cambiarTab?.('ingredientes'),
-            dismissKey: 'inventario_sugerido_dismissed'
+            dismissKey: 'inventario_sugerido_dismissed',
         };
     }
 
@@ -113,7 +116,7 @@ export function sugerirInventario(diasSugerencia = 7) {
             descripcion: 'Revisa tu stock para mantener datos precisos',
             diasDesdeUltimo,
             accion: () => window.cambiarTab?.('ingredientes'),
-            dismissKey: 'inventario_sugerido_dismissed'
+            dismissKey: 'inventario_sugerido_dismissed',
         };
     }
 
@@ -130,7 +133,8 @@ export function generarAlertas() {
     const inventario = sugerirInventario();
 
     const totalAlertas = stockBajo.length + pedidosPendientes.length + (inventario ? 1 : 0);
-    const criticosCount = stockBajo.filter(a => a.criticidad === 'critico').length +
+    const criticosCount =
+        stockBajo.filter(a => a.criticidad === 'critico').length +
         pedidosPendientes.filter(a => a.criticidad === 'critico').length;
 
     return {
@@ -140,8 +144,8 @@ export function generarAlertas() {
         resumen: {
             total: totalAlertas,
             criticos: criticosCount,
-            hayAlertas: totalAlertas > 0
-        }
+            hayAlertas: totalAlertas > 0,
+        },
     };
 }
 
@@ -164,7 +168,9 @@ export function renderizarAlertas() {
         container.className = 'alertas-container';
 
         // Insertar al principio del dashboard
-        const primerHijo = dashboard.querySelector('.dashboard-top, .kpi-container, .dashboard-kpis');
+        const primerHijo = dashboard.querySelector(
+            '.dashboard-top, .kpi-container, .dashboard-kpis'
+        );
         if (primerHijo) {
             primerHijo.parentNode.insertBefore(container, primerHijo);
         } else {
@@ -207,8 +213,12 @@ export function renderizarAlertas() {
         `;
 
         alertas.stockBajo.slice(0, 5).forEach(alerta => {
-            const iconClass = alerta.criticidad === 'critico' ? 'danger' :
-                alerta.criticidad === 'bajo' ? 'warning' : 'info';
+            const iconClass =
+                alerta.criticidad === 'critico'
+                    ? 'danger'
+                    : alerta.criticidad === 'bajo'
+                      ? 'warning'
+                      : 'info';
             html += `
                 <li class="alerta-item ${alerta.criticidad}" onclick="window.cambiarTab('ingredientes')">
                     <span class="alerta-indicator ${iconClass}"></span>

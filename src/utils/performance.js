@@ -34,7 +34,7 @@ export function memoize(namespace, fn, keyFn) {
 
     const cache = memoCache.get(namespace);
 
-    return function(...args) {
+    return function (...args) {
         const key = keyFn ? keyFn(...args) : JSON.stringify(args);
 
         if (cache.has(key)) {
@@ -134,7 +134,7 @@ export class DataMaps {
      * Verifica si los mapas están actualizados
      */
     isStale() {
-        return !this.lastUpdate || (Date.now() - this.lastUpdate > 60000); // 1 minuto
+        return !this.lastUpdate || Date.now() - this.lastUpdate > 60000; // 1 minuto
     }
 
     /**
@@ -158,7 +158,8 @@ export const dataMaps = new DataMaps();
  * Cache con tiempo de vida (TTL)
  */
 export class TTLCache {
-    constructor(ttl = 300000) { // 5 minutos por defecto
+    constructor(ttl = 300000) {
+        // 5 minutos por defecto
         this.cache = new Map();
         this.ttl = ttl;
     }
@@ -166,7 +167,7 @@ export class TTLCache {
     set(key, value) {
         this.cache.set(key, {
             value,
-            timestamp: Date.now()
+            timestamp: Date.now(),
         });
     }
 
@@ -222,7 +223,7 @@ export function calcularCosteRecetaMemoizado(receta) {
     const coste = receta.ingredientes.reduce((total, item) => {
         const ing = dataMaps.getIngrediente(item.ingredienteId);
         const precio = ing ? parseFloat(ing.precio || 0) : 0;
-        return total + (precio * (item.cantidad || 0));
+        return total + precio * (item.cantidad || 0);
     }, 0);
 
     costeRecetasCache.set(key, coste);
@@ -283,18 +284,21 @@ export function throttle(fn, wait = 300) {
     let timeout;
     let lastRan;
 
-    return function(...args) {
+    return function (...args) {
         if (!lastRan) {
             fn.apply(this, args);
             lastRan = Date.now();
         } else {
             clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                if (Date.now() - lastRan >= wait) {
-                    fn.apply(this, args);
-                    lastRan = Date.now();
-                }
-            }, wait - (Date.now() - lastRan));
+            timeout = setTimeout(
+                () => {
+                    if (Date.now() - lastRan >= wait) {
+                        fn.apply(this, args);
+                        lastRan = Date.now();
+                    }
+                },
+                wait - (Date.now() - lastRan)
+            );
         }
     };
 }
@@ -315,6 +319,6 @@ if (typeof window !== 'undefined') {
         invalidarCacheRecetas,
         invalidarCacheIngredientes,
         measurePerformance,
-        throttle
+        throttle,
     };
 }

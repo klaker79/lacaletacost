@@ -35,7 +35,7 @@ export function setElementText(id, text, fallback = '') {
 /**
  * Establece HTML de un elemento de forma segura
  * ADVERTENCIA: Solo usar con HTML trusted, no con input de usuario
- * @param {string} id - ID del elemento  
+ * @param {string} id - ID del elemento
  * @param {string} html - HTML a establecer
  */
 export function setElementHTML(id, html) {

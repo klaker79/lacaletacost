@@ -228,4 +228,3 @@ if (import.meta.env?.DEV || window.location.hostname === 'localhost') {
     console.log('🚀 Todos los módulos cargados');
     console.log('');
 }
-

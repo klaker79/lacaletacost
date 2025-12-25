@@ -19,7 +19,7 @@ export async function guardarReceta(event) {
         if (select.value && input.value) {
             ingredientesReceta.push({
                 ingredienteId: parseInt(select.value),
-                cantidad: parseFloat(input.value)
+                cantidad: parseFloat(input.value),
             });
         }
     });
@@ -35,7 +35,7 @@ export async function guardarReceta(event) {
         categoria: document.getElementById('rec-categoria').value,
         precio_venta: parseFloat(document.getElementById('rec-precio_venta').value) || 0,
         porciones: parseInt(document.getElementById('rec-porciones').value) || 1,
-        ingredientes: ingredientesReceta
+        ingredientes: ingredientesReceta,
     };
 
     window.showLoading();
@@ -49,7 +49,10 @@ export async function guardarReceta(event) {
         await window.cargarDatos();
         window.renderizarRecetas();
         window.hideLoading();
-        window.showToast(window.editandoRecetaId ? 'Receta actualizada' : 'Receta creada', 'success');
+        window.showToast(
+            window.editandoRecetaId ? 'Receta actualizada' : 'Receta creada',
+            'success'
+        );
         window.cerrarFormularioReceta();
     } catch (error) {
         window.hideLoading();
@@ -75,7 +78,9 @@ export function editarReceta(id) {
     document.getElementById('lista-ingredientes-receta').innerHTML = '';
     rec.ingredientes.forEach(item => {
         window.agregarIngredienteReceta();
-        const lastItem = document.querySelector('#lista-ingredientes-receta .ingrediente-item:last-child');
+        const lastItem = document.querySelector(
+            '#lista-ingredientes-receta .ingrediente-item:last-child'
+        );
         lastItem.querySelector('select').value = item.ingredienteId;
         lastItem.querySelector('input').value = item.cantidad;
     });
@@ -122,7 +127,7 @@ export function calcularCosteRecetaCompleto(receta) {
     return receta.ingredientes.reduce((total, item) => {
         const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
         const precio = ing ? parseFloat(ing.precio) : 0;
-        return total + (precio * item.cantidad);
+        return total + precio * item.cantidad;
     }, 0);
 }
 
@@ -195,10 +200,10 @@ export async function confirmarProduccion() {
         for (const item of rec.ingredientes) {
             const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
             if (ing) {
-                const nuevoStock = Math.max(0, ing.stockActual - (item.cantidad * cant));
+                const nuevoStock = Math.max(0, ing.stockActual - item.cantidad * cant);
                 await window.api.updateIngrediente(ing.id, {
                     ...ing,
-                    stockActual: nuevoStock
+                    stockActual: nuevoStock,
                 });
             }
         }

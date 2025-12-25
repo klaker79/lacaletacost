@@ -19,7 +19,7 @@ export async function guardarIngrediente(event) {
         precio: parseFloat(getInputValue('ing-precio')) || 0,
         unidad: getInputValue('ing-unidad'),
         stockActual: parseFloat(getInputValue('ing-stockActual')) || 0,
-        stockMinimo: parseFloat(getInputValue('ing-stockMinimo')) || 0
+        stockMinimo: parseFloat(getInputValue('ing-stockMinimo')) || 0,
     };
 
     // Validaciones
@@ -64,7 +64,7 @@ export async function guardarIngrediente(event) {
                     ingredientesDelProveedor.push(ingredienteId);
                     await window.api.updateProveedor(proveedor.id, {
                         ...proveedor,
-                        ingredientes: ingredientesDelProveedor
+                        ingredientes: ingredientesDelProveedor,
                     });
                 }
             }
@@ -86,7 +86,8 @@ export async function guardarIngrediente(event) {
         window.renderizarIngredientes();
         if (typeof window.renderizarInventario === 'function') window.renderizarInventario();
         if (typeof window.actualizarKPIs === 'function') window.actualizarKPIs();
-        if (typeof window.actualizarDashboardExpandido === 'function') window.actualizarDashboardExpandido();
+        if (typeof window.actualizarDashboardExpandido === 'function')
+            window.actualizarDashboardExpandido();
 
         if (typeof window.hideLoading === 'function') window.hideLoading();
         showToast(editandoId ? 'Ingrediente actualizado' : 'Ingrediente creado', 'success');
@@ -174,7 +175,8 @@ export async function eliminarIngrediente(id) {
             window.renderizarIngredientes();
             if (typeof window.renderizarInventario === 'function') window.renderizarInventario();
             if (typeof window.actualizarKPIs === 'function') window.actualizarKPIs();
-            if (typeof window.actualizarDashboardExpandido === 'function') window.actualizarDashboardExpandido();
+            if (typeof window.actualizarDashboardExpandido === 'function')
+                window.actualizarDashboardExpandido();
 
             if (typeof window.hideLoading === 'function') window.hideLoading();
             if (typeof showToast === 'function') {

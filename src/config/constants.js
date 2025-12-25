@@ -23,10 +23,10 @@ export const STOCK_WARNING_THRESHOLD = parseFloat(
  * Niveles de alerta de stock
  */
 export const STOCK_LEVELS = {
-    CRITICAL: 0.1,  // 10% - Crítico
-    LOW: 0.2,       // 20% - Bajo
-    MEDIUM: 0.5,    // 50% - Medio
-    GOOD: 1.0       // 100% - Bien
+    CRITICAL: 0.1, // 10% - Crítico
+    LOW: 0.2, // 20% - Bajo
+    MEDIUM: 0.5, // 50% - Medio
+    GOOD: 1.0, // 100% - Bien
 };
 
 // ============================================
@@ -47,16 +47,16 @@ export const CACHE_TTL = {
     INGREDIENTS: 600000,
 
     // 15 minutos para proveedores (datos muy estáticos)
-    PROVIDERS: 900000
+    PROVIDERS: 900000,
 };
 
 /**
  * Configuración de debouncing para búsquedas (ms)
  */
 export const DEBOUNCE_DELAY = {
-    SEARCH: 300,      // Búsquedas en inputs
+    SEARCH: 300, // Búsquedas en inputs
     AUTOCOMPLETE: 150, // Autocomplete más rápido
-    RESIZE: 150       // Eventos de resize
+    RESIZE: 150, // Eventos de resize
 };
 
 // ============================================
@@ -71,7 +71,7 @@ export const PAGE_SIZE = {
     INGREDIENTS: 20,
     RECIPES: 15,
     SALES: 30,
-    ORDERS: 25
+    ORDERS: 25,
 };
 
 // ============================================
@@ -85,7 +85,7 @@ export const LOCALE = {
     DEFAULT: 'es-ES',
     CURRENCY: 'EUR',
     DATE_FORMAT: 'DD/MM/YYYY',
-    DATETIME_FORMAT: 'DD/MM/YYYY HH:mm'
+    DATETIME_FORMAT: 'DD/MM/YYYY HH:mm',
 };
 
 /**
@@ -95,7 +95,7 @@ export const CURRENCY_FORMAT_OPTIONS = {
     style: 'currency',
     currency: LOCALE.CURRENCY,
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
 };
 
 // ============================================
@@ -119,7 +119,7 @@ export const VALIDATION = {
     COST_DECIMALS: 2,
 
     // Margen mínimo recomendado (%)
-    MIN_RECOMMENDED_MARGIN: 30
+    MIN_RECOMMENDED_MARGIN: 30,
 };
 
 // ============================================
@@ -133,7 +133,7 @@ export const TOAST_DURATION = {
     SUCCESS: 3000,
     ERROR: 5000,
     WARNING: 4000,
-    INFO: 3000
+    INFO: 3000,
 };
 
 /**
@@ -145,7 +145,7 @@ export const STATUS_COLORS = {
     WARNING: '#f59e0b',
     INFO: '#3b82f6',
     PRIMARY: '#667eea',
-    SECONDARY: '#764ba2'
+    SECONDARY: '#764ba2',
 };
 
 // ============================================
@@ -159,7 +159,7 @@ export const USER_ROLES = {
     ADMIN: 'admin',
     MANAGER: 'manager',
     STAFF: 'staff',
-    VIEWER: 'viewer'
+    VIEWER: 'viewer',
 };
 
 /**
@@ -169,7 +169,7 @@ export const PERMISSIONS = {
     [USER_ROLES.ADMIN]: ['read', 'write', 'delete', 'export', 'manage_users'],
     [USER_ROLES.MANAGER]: ['read', 'write', 'export'],
     [USER_ROLES.STAFF]: ['read', 'write'],
-    [USER_ROLES.VIEWER]: ['read']
+    [USER_ROLES.VIEWER]: ['read'],
 };
 
 // ============================================
@@ -184,7 +184,7 @@ export const ORDER_STATUS = {
     CONFIRMED: 'confirmado',
     IN_TRANSIT: 'en_transito',
     DELIVERED: 'entregado',
-    CANCELLED: 'cancelado'
+    CANCELLED: 'cancelado',
 };
 
 /**
@@ -193,7 +193,7 @@ export const ORDER_STATUS = {
 export const SALE_STATUS = {
     DRAFT: 'borrador',
     COMPLETED: 'completada',
-    REFUNDED: 'reembolsada'
+    REFUNDED: 'reembolsada',
 };
 
 // ============================================
@@ -211,7 +211,7 @@ export const INGREDIENT_CATEGORIES = {
     GRAINS: 'cereales',
     SPICES: 'especias',
     BEVERAGES: 'bebidas',
-    OTHER: 'otros'
+    OTHER: 'otros',
 };
 
 /**
@@ -221,7 +221,7 @@ export const UNITS = {
     WEIGHT: ['kg', 'g', 'mg'],
     VOLUME: ['l', 'ml', 'cl'],
     COUNT: ['ud', 'docena'],
-    CUSTOM: ['ración', 'pizca', 'al gusto']
+    CUSTOM: ['ración', 'pizca', 'al gusto'],
 };
 
 // ============================================
@@ -239,7 +239,7 @@ export const EXPORT_CONFIG = {
     DEFAULT_COMPANY_NAME: 'MindLoop CostOS',
 
     // Máximo de filas en Excel antes de warning
-    MAX_EXCEL_ROWS: 10000
+    MAX_EXCEL_ROWS: 10000,
 };
 
 // ============================================
@@ -255,7 +255,7 @@ export const FEATURES = {
     ENABLE_PERFORMANCE_MONITORING: import.meta.env.VITE_ENABLE_PERFORMANCE_MONITORING !== 'false',
     ENABLE_CHATBOT: true,
     ENABLE_EXPORT_PDF: true,
-    ENABLE_EXPORT_EXCEL: true
+    ENABLE_EXPORT_EXCEL: true,
 };
 
 // ============================================
@@ -269,7 +269,7 @@ export const APP_INFO = {
     NAME: import.meta.env.VITE_APP_NAME || 'MindLoop CostOS',
     VERSION: import.meta.env.VITE_APP_VERSION || '2.0.0',
     ENV: import.meta.env.VITE_APP_ENV || import.meta.env.MODE || 'production',
-    BUILD_DATE: new Date().toISOString()
+    BUILD_DATE: new Date().toISOString(),
 };
 
 // ============================================
@@ -284,14 +284,14 @@ export const DEFAULTS = {
         stock: 0,
         stockMin: 5,
         precio: 0,
-        categoria: INGREDIENT_CATEGORIES.OTHER
+        categoria: INGREDIENT_CATEGORIES.OTHER,
     },
     RECIPE: {
         raciones: 1,
-        margen: 30
+        margen: 30,
     },
     SALE: {
         cantidad: 1,
-        status: SALE_STATUS.COMPLETED
-    }
+        status: SALE_STATUS.COMPLETED,
+    },
 };
