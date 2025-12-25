@@ -167,42 +167,39 @@ function actualizarDatosCostTracker() {
     const recetasConCoste = recetas.map(receta => {
         let costeActual = 0;
 
-        // Acceder a ingredientes - puede ser 'ingredientes' o parseado de JSON
-        let recetaIngredientes = receta.ingredientes;
-        if (typeof recetaIngredientes === 'string') {
-            try {
-                recetaIngredientes = JSON.parse(recetaIngredientes);
-            } catch (e) {
-                recetaIngredientes = [];
-            }
-        }
+        // Los ingredientes ya vienen como array (verificado con browser debug)
+        const recetaIngredientes = Array.isArray(receta.ingredientes)
+            ? receta.ingredientes
+            : [];
 
-        if (recetaIngredientes && Array.isArray(recetaIngredientes)) {
-            recetaIngredientes.forEach(item => {
-                const ingId = item.ingredienteId || item.ingrediente_id;
-                const invItem = inventario.find(i => i.id === ingId);
-                const ing = ingredientes.find(i => i.id === ingId);
+        recetaIngredientes.forEach(item => {
+            const ingId = item.ingredienteId || item.ingrediente_id;
+            const invItem = inventario.find(i => i.id === ingId);
+            const ing = ingredientes.find(i => i.id === ingId);
 
-                const precio = invItem?.precio_medio
-                    ? parseFloat(invItem.precio_medio)
-                    : (ing?.precio ? parseFloat(ing.precio) : 0);
+            // Usar precio_medio del inventario o fallback al precio del ingrediente
+            const precio = invItem?.precio_medio
+                ? parseFloat(invItem.precio_medio)
+                : (ing?.precio ? parseFloat(ing.precio) : 0);
 
-                costeActual += precio * parseFloat(item.cantidad || 0);
-            });
-        }
+            costeActual += precio * parseFloat(item.cantidad || 0);
+        });
 
-        // Acceder a precio_venta - puede venir como precio_venta o precioVenta
-        const precioVenta = parseFloat(receta.precio_venta || receta.precioVenta || 0);
+        // precio_venta viene como string "20.00"
+        const precioVenta = parseFloat(receta.precio_venta) || 0;
         const foodCost = precioVenta > 0 ? (costeActual / precioVenta) * 100 : 100;
         const beneficio = precioVenta - costeActual;
+        const numIngredientes = recetaIngredientes.length;
 
         return {
-            ...receta,
-            ingredientesArray: recetaIngredientes,
+            id: receta.id,
+            nombre: receta.nombre,
+            categoria: receta.categoria,
             costeActual,
             precioVenta,
             foodCost,
-            beneficio
+            beneficio,
+            numIngredientes
         };
     }).sort((a, b) => b.foodCost - a.foodCost);
 
@@ -241,7 +238,7 @@ function actualizarDatosCostTracker() {
             <tr style="transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
                 <td style="padding: 16px; color: white; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     ${receta.nombre || 'Sin nombre'}
-                    <br><small style="color: #64748b; font-weight: 400;">${(receta.ingredientesArray || []).length} ingredientes</small>
+                    <br><small style="color: #94a3b8; font-weight: 400;">${receta.numIngredientes} ingredientes</small>
                 </td>
                 <td style="padding: 16px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <span style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;">
