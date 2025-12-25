@@ -7,6 +7,7 @@ const API_AUTH_URL = 'https://lacaleta-api.mindloop.cloud/api/auth';
 
 /**
  * Verifica si el usuario está autenticado
+ * Si la sesión es válida, carga los datos iniciales
  */
 export async function checkAuth() {
     const token = localStorage.getItem('token');
@@ -23,6 +24,18 @@ export async function checkAuth() {
             mostrarLogin();
             return false;
         }
+
+        // ✅ Sesión válida: mostrar app y cargar datos
+        const loginScreen = document.getElementById('login-screen');
+        const appContainer = document.getElementById('app-container');
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (appContainer) appContainer.style.display = 'block';
+
+        // ✅ Importante: cargar datos cuando ya hay sesión activa
+        if (typeof window.cargarDatos === 'function') {
+            await window.cargarDatos();
+        }
+
         return true;
     } catch {
         mostrarLogin();

@@ -273,3 +273,15 @@ if (import.meta.env?.DEV || window.location.hostname === 'localhost') {
     console.log('🚀 Todos los módulos cargados');
     console.log('');
 }
+
+// ============================================
+// INICIALIZACIÓN AUTOMÁTICA
+// ============================================
+// Verificar autenticación y cargar datos al iniciar
+(async () => {
+    try {
+        await Auth.checkAuth();
+    } catch (e) {
+        console.error('Error en inicialización:', e);
+    }
+})();
