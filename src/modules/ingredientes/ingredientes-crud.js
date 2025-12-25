@@ -134,7 +134,7 @@ export function editarIngrediente(id) {
  * Elimina un ingrediente
  */
 export async function eliminarIngrediente(id) {
-    console.log('eliminarIngrediente llamado con id:', id);
+    // Debug: eliminarIngrediente llamado con id
 
     // Usar setTimeout para que el confirm no sea bloqueado por Chrome
     setTimeout(async () => {

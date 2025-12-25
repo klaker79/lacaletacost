@@ -1958,7 +1958,7 @@
           if (tab === 'analisis') {
             window.renderizarAnalisis();
             // Llama al análisis avanzado si está disponible
-            api.getMenuEngineering().then(data => window.renderMenuEngineeringUI(data)).catch(e => console.log('Error bcg', e));
+            api.getMenuEngineering().then(data => window.renderMenuEngineeringUI(data)).catch(e => console.error('Error bcg', e));
           }
           if (tab === 'pedidos') renderizarPedidos();
           if (tab === 'inventario') window.renderizarInventario();
@@ -3221,7 +3221,7 @@
             const tabPedidos = document.getElementById('tab-pedidos');
             const btnPedidos = document.getElementById('tab-btn-pedidos');
             if (tabPedidos && !tabPedidos.classList.contains('active')) {
-              console.log('🔧 Forzando tab de pedidos a estar activo');
+              // Forzando tab de pedidos a estar activo
               document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
               document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
               tabPedidos.classList.add('active');

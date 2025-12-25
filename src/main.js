@@ -187,20 +187,22 @@ if (document.readyState === 'loading') {
 window.clearChatHistory = clearChatHistory;
 
 // ============================================
-// LOG DE INICIALIZACIÓN
+// LOG DE INICIALIZACIÓN (solo en desarrollo)
 // ============================================
-console.log('');
-console.log('🚀 MindLoop CostOS v2.0.0');
-console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-console.log('✅ Módulo Ingredientes - ACTIVO');
-console.log('✅ Módulo Recetas - ACTIVO');
-console.log('✅ Módulo Proveedores - ACTIVO');
-console.log('✅ Módulo Pedidos - ACTIVO');
-console.log('✅ Módulo Ventas - ACTIVO');
-console.log('✅ Módulo Dashboard - ACTIVO');
-console.log('✅ Módulo Export PDF - ACTIVO');
-console.log('✅ Módulo Chat IA - ACTIVO');
-console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-console.log('🚀 Todos los módulos cargados');
-console.log('');
+if (import.meta.env?.DEV || window.location.hostname === 'localhost') {
+    console.log('');
+    console.log('🚀 MindLoop CostOS v2.0.0');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('✅ Módulo Ingredientes - ACTIVO');
+    console.log('✅ Módulo Recetas - ACTIVO');
+    console.log('✅ Módulo Proveedores - ACTIVO');
+    console.log('✅ Módulo Pedidos - ACTIVO');
+    console.log('✅ Módulo Ventas - ACTIVO');
+    console.log('✅ Módulo Dashboard - ACTIVO');
+    console.log('✅ Módulo Export PDF - ACTIVO');
+    console.log('✅ Módulo Chat IA - ACTIVO');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🚀 Todos los módulos cargados');
+    console.log('');
+}
 

@@ -486,7 +486,7 @@
         if (!decoded?.exp) return;
         const expiresIn = decoded.exp * 1000 - Date.now();
         if (expiresIn < 5 * 60 * 1000 && expiresIn > 0) {
-          console.log("🔄 Renovando token...");
+          // Renovando token
           const response = await fetch(API_BASE + "/api/auth/refresh", {
             method: "POST",
             headers: { "Authorization": "Bearer " + token }
@@ -497,7 +497,7 @@
             window.showToast("Sesión renovada", "info");
           }
         }
-      } catch (e) { console.log("ℹ️ Auto-refresh no disponible"); }
+      } catch (e) { /* Auto-refresh no disponible */ }
     }, 4 * 60 * 1000);
 
     // Limpiar campos de búsqueda al cargar (combate autocompletado de Chrome)

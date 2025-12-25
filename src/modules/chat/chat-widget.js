@@ -38,7 +38,7 @@ export function initChatWidget() {
         renderChatHistory();
     }
 
-    console.log('💬 Chat Widget inicializado');
+    // Chat Widget inicializado
 }
 
 /**
@@ -802,7 +802,7 @@ async function executeAction(actionData) {
         const field = parts[3];  // campo a modificar
         const value = parts[4];  // nuevo valor
 
-        console.log('🔧 Ejecutando acción:', { action, entity, name, field, value });
+        // Ejecutando acción
 
         if (action === 'update' && entity === 'ingrediente') {
             // Buscar ingrediente por nombre
@@ -854,7 +854,7 @@ async function executeAction(actionData) {
             const ingredienteNombre = parts[3];
             const nuevaCantidad = parseFloat(parts[5]);  // El valor está en parts[5]
 
-            console.log('📝 Actualizando receta_ingrediente:', { recetaNombre, ingredienteNombre, nuevaCantidad });
+            // Actualizando receta_ingrediente
 
             if (isNaN(nuevaCantidad)) {
                 console.error('Cantidad inválida:', parts[5]);
