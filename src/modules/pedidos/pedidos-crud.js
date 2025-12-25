@@ -259,51 +259,72 @@ export function cerrarModalRecibirPedido() {
 }
 
 /**
- * Confirma la recepción del pedido (actualiza stock)
+ * Confirma la recepción del pedido (actualiza stock y guarda precioReal)
  */
 export async function confirmarRecepcionPedido() {
   if (window.pedidoRecibiendoId === null) return;
 
-  const inputs = document.querySelectorAll('.cantidad-recibida');
   const ped = window.pedidos.find(p => p.id === window.pedidoRecibiendoId);
+  if (!ped || !ped.itemsRecepcion) return;
 
   window.showLoading();
 
   try {
     let totalRecibido = 0;
 
-    // Actualizar stock de cada ingrediente
-    for (const input of inputs) {
-      const ingId = parseInt(input.dataset.ingId);
-      const cantidadRecibida = parseFloat(input.value) || 0;
-      const precio = parseFloat(input.dataset.precio) || 0;
+    // Preparar ingredientes con precioReal actualizado
+    const ingredientesActualizados = ped.itemsRecepcion.map(item => {
+      const cantRecibida = item.estado === 'no-entregado' ? 0 : parseFloat(item.cantidadRecibida || 0);
+      const precioReal = parseFloat(item.precioReal || item.precioUnitario || 0);
 
-      totalRecibido += cantidadRecibida * precio;
+      if (item.estado !== 'no-entregado') {
+        totalRecibido += cantRecibida * precioReal;
+      }
 
-      const ing = window.ingredientes.find(i => i.id === ingId);
+      return {
+        ingredienteId: item.ingredienteId,
+        ingrediente_id: item.ingredienteId,
+        cantidad: parseFloat(item.cantidad || 0),
+        cantidadRecibida: cantRecibida,
+        precioUnitario: parseFloat(item.precioUnitario || 0),
+        precioReal: precioReal,
+        precio_unitario: parseFloat(item.precioUnitario || 0),
+        estado: item.estado || 'consolidado'
+      };
+    });
+
+    // Actualizar stock de cada ingrediente recibido
+    for (const item of ingredientesActualizados) {
+      if (item.estado === 'no-entregado') continue;
+
+      const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
       if (ing) {
-        const nuevoStock = (ing.stockActual || 0) + cantidadRecibida;
-        await window.api.updateIngrediente(ingId, {
+        const nuevoStock = parseFloat(ing.stockActual || ing.stock_actual || 0) + item.cantidadRecibida;
+        await window.api.updateIngrediente(item.ingredienteId, {
           ...ing,
           stockActual: nuevoStock,
+          stock_actual: nuevoStock
         });
       }
     }
 
-    // Marcar pedido como recibido
+    // Marcar pedido como recibido CON LOS PRECIOS REALES
     await window.api.updatePedido(window.pedidoRecibiendoId, {
       ...ped,
       estado: 'recibido',
+      ingredientes: ingredientesActualizados, // ← IMPORTANTE: Esto guarda precioReal
       fecha_recepcion: new Date().toISOString(),
       total_recibido: totalRecibido,
+      totalRecibido: totalRecibido
     });
 
     await window.cargarDatos();
     window.renderizarPedidos();
     window.renderizarIngredientes();
+    window.renderizarInventario?.();
     window.hideLoading();
     cerrarModalRecibirPedido();
-    window.showToast('Pedido recibido, stock actualizado', 'success');
+    window.showToast('Pedido recibido, stock y precios actualizados', 'success');
   } catch (error) {
     window.hideLoading();
     console.error('Error:', error);
