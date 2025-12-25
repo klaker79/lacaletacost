@@ -235,10 +235,10 @@ function actualizarDatosCostTracker() {
         const barWidth = Math.min(foodCost, 100);
 
         html += `
-            <tr style="transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
-                <td style="padding: 16px; color: white; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    ${receta.nombre || 'Sin nombre'}
-                    <br><small style="color: #94a3b8; font-weight: 400;">${receta.numIngredientes} ingredientes</small>
+            <tr style="transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'">
+                <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-size: 15px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">${receta.nombre || 'Sin nombre'}</div>
+                    <div style="font-size: 12px; color: #94a3b8;">${receta.numIngredientes} ingredientes</div>
                 </td>
                 <td style="padding: 16px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <span style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;">
