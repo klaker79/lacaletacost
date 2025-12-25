@@ -77,20 +77,29 @@ export function agregarIngredienteReceta() {
 
 /**
  * Calcula el coste total de la receta desde ingredientes seleccionados
+ * 💰 ACTUALIZADO: Usa precio_medio del inventario (basado en compras)
  */
 export function calcularCosteReceta() {
     const items = document.querySelectorAll('#lista-ingredientes-receta .ingrediente-item');
     let costeTotal = 0;
     const ingredientes = Array.isArray(window.ingredientes) ? window.ingredientes : [];
+    const inventario = Array.isArray(window.inventarioCompleto) ? window.inventarioCompleto : [];
 
     items.forEach(item => {
         const select = item.querySelector('select');
         const input = item.querySelector('input');
         if (select.value && input.value) {
-            const ing = ingredientes.find(i => i.id === parseInt(select.value));
-            if (ing) {
-                costeTotal += parseFloat(ing.precio || 0) * parseFloat(input.value || 0);
-            }
+            const ingId = parseInt(select.value);
+            // Buscar precio_medio en inventario (basado en compras)
+            const invItem = inventario.find(i => i.id === ingId);
+            const ing = ingredientes.find(i => i.id === ingId);
+
+            // Prioridad: precio_medio del inventario > precio fijo
+            const precio = invItem?.precio_medio
+                ? parseFloat(invItem.precio_medio)
+                : parseFloat(ing?.precio || 0);
+
+            costeTotal += precio * parseFloat(input.value || 0);
         }
     });
 
@@ -169,8 +178,8 @@ export function renderizarRecetas() {
                 foodCost <= 33
                     ? 'badge-success'
                     : foodCost <= 38
-                      ? 'badge-warning'
-                      : 'badge-danger';
+                        ? 'badge-warning'
+                        : 'badge-danger';
 
             html += '<tr>';
             html += `<td><span style="color:#666;font-size:12px;">${rec.codigo || '-'}</span></td>`;
@@ -246,7 +255,7 @@ export function exportarRecetas() {
                 const margen =
                     rec.precio_venta > 0
                         ? ((parseFloat(rec.precio_venta) - coste) / parseFloat(rec.precio_venta)) *
-                          100
+                        100
                         : 0;
                 return margen.toFixed(1) + '%';
             },

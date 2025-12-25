@@ -119,14 +119,23 @@ export async function eliminarReceta(id) {
 
 /**
  * Calcula el coste completo de una receta
+ * 💰 ACTUALIZADO: Usa precio_medio del inventario (basado en compras)
  * @param {Object} receta - Objeto receta
  * @returns {number} Coste total
  */
 export function calcularCosteRecetaCompleto(receta) {
     if (!receta || !receta.ingredientes) return 0;
     return receta.ingredientes.reduce((total, item) => {
-        const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-        const precio = ing ? parseFloat(ing.precio) : 0;
+        // Buscar en inventario completo (tiene precio_medio de compras)
+        const invItem = window.inventarioCompleto?.find(i => i.id === item.ingredienteId);
+        // Fallback a ingredientes si no está en inventario
+        const ing = window.ingredientes?.find(i => i.id === item.ingredienteId);
+
+        // Prioridad: precio_medio del inventario > precio fijo del ingrediente
+        const precio = invItem?.precio_medio
+            ? parseFloat(invItem.precio_medio)
+            : (ing?.precio ? parseFloat(ing.precio) : 0);
+
         return total + precio * item.cantidad;
     }, 0);
 }
