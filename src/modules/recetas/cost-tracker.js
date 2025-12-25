@@ -203,7 +203,12 @@ function actualizarDatosCostTracker() {
         };
     }).sort((a, b) => b.foodCost - a.foodCost);
 
-    recetasConCoste.forEach(receta => {
+    recetasConCoste.forEach((receta, idx) => {
+        // Debug: log first 3 recipes to see their data
+        if (idx < 3) {
+            console.log(`📊 Receta ${idx}:`, receta.nombre, '| precio:', receta.precioVenta, '| coste:', receta.costeActual);
+        }
+
         const { costeActual, precioVenta, foodCost, beneficio } = receta;
 
         // Determinar estado y colores
@@ -234,11 +239,14 @@ function actualizarDatosCostTracker() {
         const barColor = foodCost <= 33 ? '#10B981' : foodCost <= 38 ? '#F59E0B' : '#EF4444';
         const barWidth = Math.min(foodCost, 100);
 
+        // Build recipe name HTML - use simple string to avoid CSS conflicts
+        const nombreHtml = '<b style="color:#FFF;font-size:15px">' + (receta.nombre || 'SIN NOMBRE') + '</b>';
+        const ingHtml = '<br><small style="color:#9CA3AF">' + receta.numIngredientes + ' ingredientes</small>';
+
         html += `
-            <tr style="transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='transparent'">
-                <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div style="font-size: 15px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">${receta.nombre || 'Sin nombre'}</div>
-                    <div style="font-size: 12px; color: #94a3b8;">${receta.numIngredientes} ingredientes</div>
+            <tr style="background:transparent">
+                <td style="padding:16px;border-bottom:1px solid rgba(255,255,255,0.08)">
+                    ${nombreHtml}${ingHtml}
                 </td>
                 <td style="padding: 16px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <span style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;">
