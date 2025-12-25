@@ -7,6 +7,8 @@
  * 2. O copiar el contenido dentro de <script> en index.html
  */
 
+import { logger } from '../utils/logger.js';
+
 // API Base URL - configurable via environment variables
 // Fallback a URL de producción si no está configurada
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://lacaleta-api.mindloop.cloud';
@@ -37,7 +39,7 @@ async function initAuth() {
             return true;
         }
     } catch (e) {
-        console.warn('Token inválido o expirado, limpiando sesión...');
+        logger.warn('Token inválido o expirado, limpiando sesión...');
         logout();
     }
     return false;
@@ -83,7 +85,7 @@ async function fetchAPI(endpoint, options = {}) {
 
         // Manejar errores de autenticación
         if (response.status === 401) {
-            console.warn(`Auth error en ${endpoint}:`, data.error || 'Token inválido');
+            logger.warn(`Auth error en ${endpoint}:`, data.error || 'Token inválido');
             AppState.lastError = {
                 code: data.code || 'AUTH_ERROR',
                 message: data.error || 'Error de autenticación'
@@ -369,8 +371,8 @@ async function generateAPIToken(nombre = 'n8n Integration', duracionDias = 365) 
     });
 
     if (result.apiToken) {
-        console.log('✅ Token generado exitosamente');
-        console.log('📋 Copia este token para n8n:', result.apiToken);
+        logger.info('✅ Token generado exitosamente');
+        logger.info('📋 Copia este token para n8n:', result.apiToken);
         return result;
     }
 
