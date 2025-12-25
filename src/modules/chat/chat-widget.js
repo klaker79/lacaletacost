@@ -824,6 +824,20 @@ async function executeAction(actionData) {
             await window.api.updateIngrediente(ing.id, updates);
             await window.cargarDatos();
             window.renderizarIngredientes?.();
+
+            // 🔥 FIX: Si el formulario de edición está abierto para este ingrediente, actualizarlo
+            if (window.editandoIngredienteId === ing.id) {
+                const ingredienteActualizado = window.ingredientes?.find(i => i.id === ing.id);
+                if (ingredienteActualizado) {
+                    if (field === 'precio') {
+                        document.getElementById('ing-precio').value = ingredienteActualizado.precio;
+                    }
+                    if (field === 'stock') {
+                        document.getElementById('ing-stock').value = ingredienteActualizado.stock_actual;
+                    }
+                }
+            }
+
             window.showToast?.(`${ing.nombre} actualizado: ${field} = ${value}`, 'success');
             return true;
 
@@ -845,6 +859,19 @@ async function executeAction(actionData) {
             await window.api.updateReceta(rec.id, updates);
             await window.cargarDatos();
             window.renderizarRecetas?.();
+
+            // 🔥 FIX: Si el formulario de edición está abierto para esta receta, actualizarlo
+            if (window.editandoRecetaId === rec.id) {
+                const recetaActualizada = window.recetas?.find(r => r.id === rec.id);
+                if (recetaActualizada) {
+                    if (field === 'precio' || field === 'precio_venta') {
+                        document.getElementById('rec-precio_venta').value = recetaActualizada.precio_venta;
+                    }
+                    // Recalcular coste y márgenes
+                    window.calcularCosteReceta?.();
+                }
+            }
+
             window.showToast?.(`${rec.nombre} actualizado: precio = ${value}€`, 'success');
             return true;
 
