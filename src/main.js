@@ -30,7 +30,7 @@ import './vendors.js';
 // ============================================
 // API CLIENT - Cliente de API para backend
 // ============================================
-import './api-client.js';
+import './services/api.js';
 
 // ============================================
 // UTILIDADES CORE
