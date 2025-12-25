@@ -380,14 +380,35 @@ function renderizarBeneficioNetoDiario() {
         }
 
         const color = acumulado >= 0 ? '#10b981' : '#ef4444';
-        const icono = beneficioNeto >= 0 ? '✅' : '❌';
+
+        // Determinar icono y estilo según el estado del día
+        let icono, estiloFecha, beneficioTexto;
+        const tieneActividad = ingresos > 0 || costos > 0;
+
+        if (!tieneActividad) {
+            // Día sin actividad (cerrado o sin datos)
+            icono = '🔘';
+            estiloFecha = 'color: #9ca3af; font-size: 13px;'; // Gris
+            beneficioTexto = `<span style="color: #9ca3af; font-size: 11px; margin-left: 8px;">sin datos</span>`;
+        } else if (beneficioNeto >= 0) {
+            // Día con beneficio positivo
+            icono = '✅';
+            estiloFecha = 'color: #10b981; font-size: 13px;'; // Verde
+            beneficioTexto = `<span style="color: #10b981; font-size: 11px; margin-left: 8px;">+${beneficioNeto.toFixed(2)}€</span>`;
+        } else {
+            // Día con pérdida
+            icono = '❌';
+            estiloFecha = 'color: #ef4444; font-size: 13px;'; // Rojo
+            beneficioTexto = `<span style="color: #ef4444; font-size: 11px; margin-left: 8px;">${beneficioNeto.toFixed(2)}€</span>`;
+        }
+
         const fechaFormateada = `${diaNum}/${mes}`;
 
         html += `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f1f5f9;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #f1f5f9; ${!tieneActividad ? 'opacity: 0.6;' : ''}">
             <div>
-              <span style="color: #64748B; font-size: 13px;">${icono} ${fechaFormateada}</span>
-              <span style="color: #94a3b8; font-size: 11px; margin-left: 8px;">${beneficioNeto >= 0 ? '+' : ''}${beneficioNeto.toFixed(2)}€</span>
+              <span style="${estiloFecha}">${icono} ${fechaFormateada}</span>
+              ${beneficioTexto}
             </div>
             <span style="color: ${color}; font-weight: 700; font-size: 14px;">${acumulado.toFixed(2)} €</span>
           </div>
@@ -444,14 +465,13 @@ function renderizarBeneficioNetoDiario() {
               <span><strong style="color: white;">${ventasMes}</strong> / ${puntoEquilibrio} platos</span>
               <span>Margen/plato: <strong style="color: #10b981;">${margenPromedio.toFixed(2)}€</strong></span>
             </div>
-            ${
-                faltantes > 0
-                    ? `
+            ${faltantes > 0
+                ? `
               <div style="margin-top: 10px; padding: 8px; background: rgba(239, 68, 68, 0.2); border-radius: 6px; text-align: center;">
                 <span style="color: #fca5a5; font-size: 12px;">Te faltan <strong style="color: white;">${faltantes} platos</strong> (~${ventasFaltantes.toFixed(0)}€ en ventas)</span>
               </div>
             `
-                    : `
+                : `
               <div style="margin-top: 10px; padding: 8px; background: rgba(16, 185, 129, 0.2); border-radius: 6px; text-align: center;">
                 <span style="color: #6ee7b7; font-size: 12px;">✅ ¡Gastos fijos cubiertos! Todo desde aquí es beneficio</span>
               </div>
