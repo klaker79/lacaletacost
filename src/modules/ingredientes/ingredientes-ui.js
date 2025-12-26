@@ -331,10 +331,11 @@ function actualizarSelectProveedores() {
     if (!select) return;
 
     const proveedores = window.proveedores || [];
-    select.innerHTML = '<option value="">Sin proveedor</option>';
-    proveedores.forEach(prov => {
-        select.innerHTML += `<option value="${prov.id}">${prov.nombre}</option>`;
-    });
+    // ⚡ OPTIMIZACIÓN: Una sola operación DOM con map+join
+    const options = proveedores.map(prov =>
+        `<option value="${prov.id}">${prov.nombre}</option>`
+    ).join('');
+    select.innerHTML = '<option value="">Sin proveedor</option>' + options;
 }
 
 /**

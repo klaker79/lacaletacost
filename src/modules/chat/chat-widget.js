@@ -28,6 +28,30 @@ localStorage.setItem('chatSessionId', chatSessionId);
 let chatMessages = JSON.parse(localStorage.getItem('chatHistory') || '[]');
 let isChatOpen = false;
 let isWaitingResponse = false;
+let ttsEnabled = localStorage.getItem('ttsEnabled') === 'true'; // Text-to-Speech toggle
+
+/**
+ * Text-to-Speech: Lee respuestas en voz alta
+ */
+function speakResponse(text) {
+    if (!ttsEnabled || !('speechSynthesis' in window)) return;
+
+    // Cancelar cualquier audio previo
+    speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'es-ES';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // Buscar voz en español si está disponible
+    const voices = speechSynthesis.getVoices();
+    const spanishVoice = voices.find(v => v.lang.startsWith('es'));
+    if (spanishVoice) utterance.voice = spanishVoice;
+
+    speechSynthesis.speak(utterance);
+}
 
 /**
  * Inicializa el widget de chat
@@ -552,6 +576,11 @@ function createChatHTML() {
                         <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                     </svg>
                 </button>
+                <button class="chat-tts-btn" id="chat-tts" title="Activar/Desactivar voz" style="background:none;border:none;cursor:pointer;padding:8px;margin-right:4px;opacity:${ttsEnabled ? '1' : '0.5'}">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="white">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                </button>
                 <button class="chat-close-btn" id="chat-close">
                     <svg viewBox="0 0 24 24">
                         <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
@@ -609,6 +638,17 @@ function bindChatEvents() {
     // Clear chat
     const clearBtn = document.getElementById('chat-clear');
     clearBtn.addEventListener('click', () => clearChat());
+
+    // TTS Toggle
+    const ttsBtn = document.getElementById('chat-tts');
+    ttsBtn.addEventListener('click', () => {
+        ttsEnabled = !ttsEnabled;
+        localStorage.setItem('ttsEnabled', ttsEnabled);
+        ttsBtn.style.opacity = ttsEnabled ? '1' : '0.5';
+        ttsBtn.title = ttsEnabled ? 'Voz activada (clic para desactivar)' : 'Voz desactivada (clic para activar)';
+        window.showToast?.(ttsEnabled ? '🔊 Respuestas por voz activadas' : '🔇 Respuestas por voz desactivadas', 'info');
+        if (ttsEnabled) speakResponse('Respuestas por voz activadas');
+    });
 
     // Send message
     sendBtn.addEventListener('click', () => sendMessage());
@@ -946,6 +986,130 @@ async function executeAction(actionData) {
             return true;
         }
 
+        // ========== NUEVAS ACCIONES DE VOZ ==========
+
+        // ADD INGREDIENTE: add|ingrediente|NOMBRE|precio|VALOR|unidad|UNIDAD
+        if (action === 'add' && entity === 'ingrediente') {
+            const nombre = parts[2];
+            const precio = parseFloat(parts[4]) || 0;
+            const unidad = parts[6] || 'kg';
+
+            const nuevoIng = await window.api.createIngrediente({
+                nombre: nombre.toUpperCase(),
+                precio: precio,
+                unidad: unidad,
+                stock_actual: 0,
+                stock_minimo: 0,
+                proveedor_id: null
+            });
+
+            await window.cargarDatos();
+            window.renderizarIngredientes?.();
+            window.showToast?.(`✅ Ingrediente ${nombre} creado a ${precio}€/${unidad}`, 'success');
+            speakResponse(`Ingrediente ${nombre} añadido correctamente`);
+            return true;
+        }
+
+        // REGISTRAR MERMA: merma|ingrediente|NOMBRE|cantidad|VALOR
+        if (action === 'merma' && entity === 'ingrediente') {
+            const nombre = parts[2];
+            const cantidad = parseFloat(parts[4]) || 0;
+
+            const ing = window.ingredientes?.find(i =>
+                i.nombre.toLowerCase().includes(nombre.toLowerCase())
+            );
+            if (!ing) {
+                logger.error('Ingrediente no encontrado:', nombre);
+                window.showToast?.(`Ingrediente ${nombre} no encontrado`, 'error');
+                return false;
+            }
+
+            const nuevoStock = Math.max(0, (parseFloat(ing.stock_actual) || 0) - cantidad);
+            await window.api.updateIngrediente(ing.id, {
+                ...ing,
+                stock_actual: nuevoStock
+            });
+
+            await window.cargarDatos();
+            window.renderizarIngredientes?.();
+            window.showToast?.(`📉 Merma registrada: -${cantidad} ${ing.unidad} de ${ing.nombre}`, 'success');
+            speakResponse(`Merma de ${cantidad} ${ing.unidad} de ${ing.nombre} registrada`);
+            return true;
+        }
+
+        // ADD PEDIDO: add|pedido|PROVEEDOR|ingrediente|NOMBRE|cantidad|VALOR|precio|PRECIO
+        if (action === 'add' && entity === 'pedido') {
+            const proveedorNombre = parts[2];
+            const ingredienteNombre = parts[4];
+            const cantidad = parseFloat(parts[6]) || 0;
+            const precio = parseFloat(parts[8]) || 0;
+
+            // Buscar proveedor
+            const proveedor = window.proveedores?.find(p =>
+                p.nombre.toLowerCase().includes(proveedorNombre.toLowerCase())
+            );
+
+            // Buscar ingrediente
+            const ing = window.ingredientes?.find(i =>
+                i.nombre.toLowerCase().includes(ingredienteNombre.toLowerCase())
+            );
+            if (!ing) {
+                window.showToast?.(`Ingrediente ${ingredienteNombre} no encontrado`, 'error');
+                return false;
+            }
+
+            await window.api.createPedido({
+                proveedor_id: proveedor?.id || null,
+                fecha: new Date().toISOString().split('T')[0],
+                estado: 'pendiente',
+                items: [{
+                    ingrediente_id: ing.id,
+                    cantidad: cantidad,
+                    precio_unitario: precio || ing.precio
+                }],
+                total: cantidad * (precio || ing.precio)
+            });
+
+            await window.cargarDatos();
+            window.renderizarPedidos?.();
+            window.showToast?.(`📦 Pedido creado: ${cantidad} ${ing.unidad} de ${ing.nombre}`, 'success');
+            speakResponse(`Pedido de ${cantidad} ${ing.unidad} de ${ing.nombre} creado`);
+            return true;
+        }
+
+        // ADD VENTA: add|venta|RECETA|cantidad|VALOR
+        if (action === 'add' && entity === 'venta') {
+            const recetaNombre = parts[2];
+            const cantidad = parseInt(parts[4]) || 1;
+
+            const rec = window.recetas?.find(r =>
+                r.nombre.toLowerCase().includes(recetaNombre.toLowerCase())
+            );
+            if (!rec) {
+                window.showToast?.(`Receta ${recetaNombre} no encontrada`, 'error');
+                return false;
+            }
+
+            const precioVenta = parseFloat(rec.precio_venta) || 0;
+            const total = cantidad * precioVenta;
+
+            await window.api.createSale({
+                receta_id: rec.id,
+                fecha: new Date().toISOString().split('T')[0],
+                cantidad: cantidad,
+                precio_unitario: precioVenta,
+                total: total
+            });
+
+            await window.cargarDatos();
+            window.renderizarVentas?.();
+            window.showToast?.(`💰 Venta registrada: ${cantidad}x ${rec.nombre} = ${total.toFixed(2)}€`, 'success');
+            speakResponse(`Venta de ${cantidad} ${rec.nombre} registrada por ${total.toFixed(2)} euros`);
+            return true;
+        }
+
+        // ========== FIN NUEVAS ACCIONES ==========
+
         logger.warn('Acción no reconocida:', actionData);
         return false;
     } catch (error) {
@@ -1110,10 +1274,26 @@ export function clearChatHistory() {
 
 /**
  * Limpia el chat (wrapper para el botón)
+ * Usa doble clic como confirmación para evitar borrado accidental
  */
+let clearClickCount = 0;
+let clearClickTimer = null;
+
 function clearChat() {
-    if (confirm('¿Borrar toda la conversación?')) {
+    clearClickCount++;
+
+    if (clearClickCount === 1) {
+        // Primer clic - mostrar aviso
+        window.showToast?.('🗑️ Clic de nuevo para borrar el chat', 'warning');
+        clearClickTimer = setTimeout(() => {
+            clearClickCount = 0; // Reset después de 2 segundos
+        }, 2000);
+    } else if (clearClickCount >= 2) {
+        // Segundo clic - borrar
+        clearTimeout(clearClickTimer);
+        clearClickCount = 0;
         clearChatHistory();
+        window.showToast?.('✅ Conversación borrada', 'success');
     }
 }
 

@@ -16,10 +16,11 @@ export function mostrarFormularioPedido() {
     // Cargar select de proveedores
     const select = document.getElementById('ped-proveedor');
     if (select) {
-        select.innerHTML = '<option value="">Seleccionar proveedor...</option>';
-        window.proveedores.forEach(prov => {
-            select.innerHTML += `<option value="${prov.id}">${prov.nombre}</option>`;
-        });
+        // ⚡ OPTIMIZACIÓN: Una sola operación DOM con map+join
+        const options = window.proveedores.map(prov =>
+            `<option value="${prov.id}">${prov.nombre}</option>`
+        ).join('');
+        select.innerHTML = '<option value="">Seleccionar proveedor...</option>' + options;
     }
 
     document.getElementById('formulario-pedido').style.display = 'block';

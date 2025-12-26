@@ -123,15 +123,41 @@ export async function eliminarReceta(id) {
  * @param {Object} receta - Objeto receta
  * @returns {number} Coste total
  */
+// ⚡ CACHE: Maps para búsquedas O(1) - se actualizan cuando cambian los datos
+let _invMapCache = null;
+let _ingMapCache = null;
+let _lastInvLength = 0;
+let _lastIngLength = 0;
+
+function getInvMap() {
+    const inv = window.inventarioCompleto || [];
+    if (!_invMapCache || inv.length !== _lastInvLength) {
+        _invMapCache = new Map(inv.map(i => [i.id, i]));
+        _lastInvLength = inv.length;
+    }
+    return _invMapCache;
+}
+
+function getIngMap() {
+    const ing = window.ingredientes || [];
+    if (!_ingMapCache || ing.length !== _lastIngLength) {
+        _ingMapCache = new Map(ing.map(i => [i.id, i]));
+        _lastIngLength = ing.length;
+    }
+    return _ingMapCache;
+}
+
 export function calcularCosteRecetaCompleto(receta) {
     if (!receta || !receta.ingredientes) return 0;
-    return receta.ingredientes.reduce((total, item) => {
-        // Buscar en inventario completo (tiene precio_medio de compras)
-        const invItem = window.inventarioCompleto?.find(i => i.id === item.ingredienteId);
-        // Fallback a ingredientes si no está en inventario
-        const ing = window.ingredientes?.find(i => i.id === item.ingredienteId);
 
-        // Prioridad: precio_medio del inventario > precio fijo del ingrediente
+    // ⚡ OPTIMIZACIÓN: Usar Maps O(1) en lugar de .find() O(n)
+    const invMap = getInvMap();
+    const ingMap = getIngMap();
+
+    return receta.ingredientes.reduce((total, item) => {
+        const invItem = invMap.get(item.ingredienteId);
+        const ing = ingMap.get(item.ingredienteId);
+
         const precio = invItem?.precio_medio
             ? parseFloat(invItem.precio_medio)
             : (ing?.precio ? parseFloat(ing.precio) : 0);
@@ -206,16 +232,19 @@ export async function confirmarProduccion() {
     window.showLoading();
 
     try {
-        for (const item of rec.ingredientes) {
+        // ⚡ OPTIMIZACIÓN: Llamadas API en paralelo con Promise.all
+        const updatePromises = rec.ingredientes.map(item => {
             const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
             if (ing) {
                 const nuevoStock = Math.max(0, ing.stockActual - item.cantidad * cant);
-                await window.api.updateIngrediente(ing.id, {
+                return window.api.updateIngrediente(ing.id, {
                     ...ing,
                     stockActual: nuevoStock,
                 });
             }
-        }
+            return Promise.resolve();
+        });
+        await Promise.all(updatePromises);
 
         await window.cargarDatos();
         window.renderizarIngredientes();

@@ -12,11 +12,12 @@ export async function renderizarVentas() {
         const select = document.getElementById('venta-receta');
         const recetas = window.recetas || [];
         if (select) {
-            select.innerHTML = '<option value="">Selecciona un plato...</option>';
-            recetas.forEach(r => {
+            // ⚡ OPTIMIZACIÓN: Una sola operación DOM con map+join
+            const options = recetas.map(r => {
                 const precio = parseFloat(r.precio_venta) || 0;
-                select.innerHTML += `<option value="${r.id}">${r.nombre} - ${precio.toFixed(2)}€</option>`;
-            });
+                return `<option value="${r.id}">${r.nombre} - ${precio.toFixed(2)}€</option>`;
+            }).join('');
+            select.innerHTML = '<option value="">Selecciona un plato...</option>' + options;
         }
 
         const ventas = await window.api.getSales();

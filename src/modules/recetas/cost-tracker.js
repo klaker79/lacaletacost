@@ -170,6 +170,10 @@ function actualizarDatosCostTracker() {
     let html = '';
 
     // Ordenar por food cost (de más a menos problemático)
+    // ⚡ OPTIMIZACIÓN: Crear Maps O(1) en lugar de .find() O(n) 
+    const inventarioMap = new Map(inventario.map(i => [i.id, i]));
+    const ingredientesMap = new Map(ingredientes.map(i => [i.id, i]));
+
     const recetasConCoste = recetas.map(receta => {
         let costeActual = 0;
 
@@ -180,8 +184,9 @@ function actualizarDatosCostTracker() {
 
         recetaIngredientes.forEach(item => {
             const ingId = item.ingredienteId || item.ingrediente_id;
-            const invItem = inventario.find(i => i.id === ingId);
-            const ing = ingredientes.find(i => i.id === ingId);
+            // ⚡ Búsqueda O(1) con Map
+            const invItem = inventarioMap.get(ingId);
+            const ing = ingredientesMap.get(ingId);
 
             // Usar precio_medio del inventario o fallback al precio del ingrediente
             const precio = invItem?.precio_medio
