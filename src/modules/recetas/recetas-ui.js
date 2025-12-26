@@ -78,6 +78,7 @@ export function agregarIngredienteReceta() {
 /**
  * Calcula el coste total de la receta desde ingredientes seleccionados
  * 💰 ACTUALIZADO: Usa precio_medio del inventario (basado en compras)
+ * ⚡ OPTIMIZADO: Usa Maps para búsquedas O(1)
  */
 export function calcularCosteReceta() {
     const items = document.querySelectorAll('#lista-ingredientes-receta .ingrediente-item');
@@ -85,14 +86,18 @@ export function calcularCosteReceta() {
     const ingredientes = Array.isArray(window.ingredientes) ? window.ingredientes : [];
     const inventario = Array.isArray(window.inventarioCompleto) ? window.inventarioCompleto : [];
 
+    // ⚡ OPTIMIZACIÓN: Crear Maps para búsquedas O(1) en lugar de O(n)
+    const inventarioMap = new Map(inventario.map(i => [i.id, i]));
+    const ingredientesMap = new Map(ingredientes.map(i => [i.id, i]));
+
     items.forEach(item => {
         const select = item.querySelector('select');
         const input = item.querySelector('input');
         if (select.value && input.value) {
             const ingId = parseInt(select.value);
-            // Buscar precio_medio en inventario (basado en compras)
-            const invItem = inventario.find(i => i.id === ingId);
-            const ing = ingredientes.find(i => i.id === ingId);
+            // ⚡ OPTIMIZACIÓN: O(1) lookup con Map en lugar de O(n) con .find()
+            const invItem = inventarioMap.get(ingId);
+            const ing = ingredientesMap.get(ingId);
 
             // Prioridad: precio_medio del inventario > precio fijo
             const precio = invItem?.precio_medio
@@ -216,10 +221,24 @@ export function renderizarRecetas() {
 
 /**
  * Exporta recetas a Excel
+ * ⚡ OPTIMIZADO: Pre-calcula costes una sola vez en lugar de 3 veces por receta
  */
 export function exportarRecetas() {
     const recetas = Array.isArray(window.recetas) ? window.recetas : [];
     const ingredientes = Array.isArray(window.ingredientes) ? window.ingredientes : [];
+
+    // ⚡ OPTIMIZACIÓN 1: Crear Map para búsquedas O(1)
+    const ingredientesMap = new Map(ingredientes.map(i => [i.id, i]));
+
+    // ⚡ OPTIMIZACIÓN 2: Pre-calcular costes UNA VEZ para todas las recetas
+    const costesCalculados = new Map();
+    recetas.forEach(rec => {
+        const coste = (rec.ingredientes || []).reduce((sum, item) => {
+            const ing = ingredientesMap.get(item.ingredienteId);
+            return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
+        }, 0);
+        costesCalculados.set(rec.id, coste);
+    });
 
     const columnas = [
         { header: 'ID', key: 'id' },
@@ -229,32 +248,22 @@ export function exportarRecetas() {
         { header: 'Precio Venta (€)', value: rec => parseFloat(rec.precio_venta || 0).toFixed(2) },
         {
             header: 'Coste (€)',
-            value: rec => {
-                return (rec.ingredientes || [])
-                    .reduce((sum, item) => {
-                        const ing = ingredientes.find(i => i.id === item.ingredienteId);
-                        return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
-                    }, 0)
-                    .toFixed(2);
-            },
+            // ⚡ Reutilizar coste pre-calculado
+            value: rec => costesCalculados.get(rec.id).toFixed(2),
         },
         {
             header: 'Margen (€)',
+            // ⚡ Reutilizar coste pre-calculado
             value: rec => {
-                const coste = (rec.ingredientes || []).reduce((sum, item) => {
-                    const ing = ingredientes.find(i => i.id === item.ingredienteId);
-                    return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
-                }, 0);
+                const coste = costesCalculados.get(rec.id);
                 return (parseFloat(rec.precio_venta || 0) - coste).toFixed(2);
             },
         },
         {
             header: 'Margen (%)',
+            // ⚡ Reutilizar coste pre-calculado
             value: rec => {
-                const coste = (rec.ingredientes || []).reduce((sum, item) => {
-                    const ing = ingredientes.find(i => i.id === item.ingredienteId);
-                    return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
-                }, 0);
+                const coste = costesCalculados.get(rec.id);
                 const margen =
                     rec.precio_venta > 0
                         ? ((parseFloat(rec.precio_venta) - coste) / parseFloat(rec.precio_venta)) *

@@ -5,6 +5,7 @@
 
 /**
  * Muestra el formulario de nuevo pedido
+ * ⚡ OPTIMIZADO: Usa map+join en lugar de innerHTML +=
  */
 export function mostrarFormularioPedido() {
     if (window.proveedores.length === 0) {
@@ -13,13 +14,14 @@ export function mostrarFormularioPedido() {
         return;
     }
 
-    // Cargar select de proveedores
+    // ⚡ OPTIMIZACIÓN: Cargar select de proveedores con map+join
     const select = document.getElementById('ped-proveedor');
     if (select) {
-        select.innerHTML = '<option value="">Seleccionar proveedor...</option>';
-        window.proveedores.forEach(prov => {
-            select.innerHTML += `<option value="${prov.id}">${prov.nombre}</option>`;
-        });
+        const options = ['<option value="">Seleccionar proveedor...</option>'];
+        options.push(...window.proveedores.map(prov =>
+            `<option value="${prov.id}">${prov.nombre}</option>`
+        ));
+        select.innerHTML = options.join('');
     }
 
     document.getElementById('formulario-pedido').style.display = 'block';
@@ -134,6 +136,7 @@ export function calcularTotalPedido() {
 
 /**
  * Renderiza la tabla de pedidos
+ * ⚡ OPTIMIZADO: Usa map+join en lugar de concatenación con +=
  */
 export function renderizarPedidos() {
     const container = document.getElementById('tabla-pedidos');
@@ -154,38 +157,38 @@ export function renderizarPedidos() {
         return;
     }
 
-    let html = '<table><thead><tr>';
-    html +=
-        '<th>ID</th><th>Fecha</th><th>Proveedor</th><th>Items</th><th>Total</th><th>Estado</th><th>Acciones</th>';
-    html += '</tr></thead><tbody>';
+    // ⚡ OPTIMIZACIÓN: Crear Map para búsquedas O(1)
+    const proveedoresMap = new Map((window.proveedores || []).map(p => [p.id, p]));
 
-    pedidosFiltrados.forEach(ped => {
-        const prov = window.proveedores.find(p => p.id === ped.proveedorId);
+    // ⚡ OPTIMIZACIÓN: Construir filas con map+join en lugar de concatenación
+    const rows = pedidosFiltrados.map(ped => {
+        const prov = proveedoresMap.get(ped.proveedorId);
         const fecha = new Date(ped.fecha).toLocaleDateString('es-ES');
-
-        html += '<tr>';
-        html += `<td>#${ped.id}</td>`;
-        html += `<td>${fecha}</td>`;
-        html += `<td>${prov ? prov.nombre : 'Sin proveedor'}</td>`;
-        html += `<td>${ped.ingredientes?.length || 0}</td>`;
-        html += `<td>${parseFloat(ped.total || 0).toFixed(2)}€</td>`;
-
         const estadoClass = ped.estado === 'recibido' ? 'badge-success' : 'badge-warning';
-        html += `<td><span class="badge ${estadoClass}">${ped.estado}</span></td>`;
 
-        html += `<td><div class="actions">`;
-        html += `<button type="button" class="icon-btn view" onclick="window.verDetallesPedido(${ped.id})" title="Ver detalles">👁️</button>`;
+        const botonRecibir = ped.estado === 'pendiente'
+            ? `<button type="button" class="icon-btn success" onclick="window.marcarPedidoRecibido(${ped.id})" title="Recibir">➡️</button>`
+            : '';
 
-        if (ped.estado === 'pendiente') {
-            html += `<button type="button" class="icon-btn success" onclick="window.marcarPedidoRecibido(${ped.id})" title="Recibir">➡️</button>`;
-        }
-
-        html += `<button type="button" class="icon-btn delete" onclick="window.eliminarPedido(${ped.id})">🗑️</button>`;
-        html += '</div></td>';
-        html += '</tr>';
+        return `<tr>
+            <td>#${ped.id}</td>
+            <td>${fecha}</td>
+            <td>${prov ? prov.nombre : 'Sin proveedor'}</td>
+            <td>${ped.ingredientes?.length || 0}</td>
+            <td>${parseFloat(ped.total || 0).toFixed(2)}€</td>
+            <td><span class="badge ${estadoClass}">${ped.estado}</span></td>
+            <td><div class="actions">
+                <button type="button" class="icon-btn view" onclick="window.verDetallesPedido(${ped.id})" title="Ver detalles">👁️</button>
+                ${botonRecibir}
+                <button type="button" class="icon-btn delete" onclick="window.eliminarPedido(${ped.id})">🗑️</button>
+            </div></td>
+        </tr>`;
     });
 
-    html += '</tbody></table>';
+    const html = `<table><thead><tr>
+        <th>ID</th><th>Fecha</th><th>Proveedor</th><th>Items</th><th>Total</th><th>Estado</th><th>Acciones</th>
+    </tr></thead><tbody>${rows.join('')}</tbody></table>`;
+
     container.innerHTML = html;
 }
 

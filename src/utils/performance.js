@@ -88,6 +88,7 @@ export class DataMaps {
         this.proveedoresMap = new Map();
         this.ingredientesMap = new Map();
         this.recetasMap = new Map();
+        this.inventarioMap = new Map();
         this.lastUpdate = null;
     }
 
@@ -98,6 +99,7 @@ export class DataMaps {
         this.proveedoresMap = createLookupMap(window.proveedores || []);
         this.ingredientesMap = createLookupMap(window.ingredientes || []);
         this.recetasMap = createLookupMap(window.recetas || []);
+        this.inventarioMap = createLookupMap(window.inventarioCompleto || []);
         this.lastUpdate = Date.now();
     }
 
@@ -128,6 +130,13 @@ export class DataMaps {
      */
     getReceta(id) {
         return this.recetasMap.get(id);
+    }
+
+    /**
+     * Obtiene un item del inventario por ID (O(1))
+     */
+    getInventarioItem(id) {
+        return this.inventarioMap.get(id);
     }
 
     /**

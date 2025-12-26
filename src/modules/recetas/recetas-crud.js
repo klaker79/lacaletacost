@@ -117,19 +117,54 @@ export async function eliminarReceta(id) {
     }
 }
 
+// ⚡ Cache para Maps de ingredientes/inventario (evita crear Maps en cada llamada)
+let _cachedInventarioMap = null;
+let _cachedIngredientesMap = null;
+let _lastInventarioLength = 0;
+let _lastIngredientesLength = 0;
+
+/**
+ * Obtiene o crea el Map de inventario con cache
+ */
+function getInventarioMap() {
+    const inv = window.inventarioCompleto || [];
+    if (!_cachedInventarioMap || inv.length !== _lastInventarioLength) {
+        _cachedInventarioMap = new Map(inv.map(i => [i.id, i]));
+        _lastInventarioLength = inv.length;
+    }
+    return _cachedInventarioMap;
+}
+
+/**
+ * Obtiene o crea el Map de ingredientes con cache
+ */
+function getIngredientesMap() {
+    const ing = window.ingredientes || [];
+    if (!_cachedIngredientesMap || ing.length !== _lastIngredientesLength) {
+        _cachedIngredientesMap = new Map(ing.map(i => [i.id, i]));
+        _lastIngredientesLength = ing.length;
+    }
+    return _cachedIngredientesMap;
+}
+
 /**
  * Calcula el coste completo de una receta
  * 💰 ACTUALIZADO: Usa precio_medio del inventario (basado en compras)
+ * ⚡ OPTIMIZADO: Usa Maps cacheados para búsquedas O(1)
  * @param {Object} receta - Objeto receta
  * @returns {number} Coste total
  */
 export function calcularCosteRecetaCompleto(receta) {
     if (!receta || !receta.ingredientes) return 0;
+
+    // ⚡ OPTIMIZACIÓN: Usar Maps cacheados en lugar de .find() O(n)
+    const inventarioMap = getInventarioMap();
+    const ingredientesMap = getIngredientesMap();
+
     return receta.ingredientes.reduce((total, item) => {
-        // Buscar en inventario completo (tiene precio_medio de compras)
-        const invItem = window.inventarioCompleto?.find(i => i.id === item.ingredienteId);
-        // Fallback a ingredientes si no está en inventario
-        const ing = window.ingredientes?.find(i => i.id === item.ingredienteId);
+        // ⚡ O(1) lookup con Map en lugar de O(n) con .find()
+        const invItem = inventarioMap.get(item.ingredienteId);
+        const ing = ingredientesMap.get(item.ingredienteId);
 
         // Prioridad: precio_medio del inventario > precio fijo del ingrediente
         const precio = invItem?.precio_medio
@@ -179,16 +214,20 @@ export function actualizarDetalleDescuento() {
 
 /**
  * Confirma y ejecuta la producción de platos (descuenta stock)
+ * ⚡ OPTIMIZADO: Usa Promise.all() para actualizar ingredientes en paralelo
  */
 export async function confirmarProduccion() {
     if (window.recetaProduciendo === null) return;
     const cant = parseInt(document.getElementById('modal-cantidad').value) || 1;
     const rec = window.recetas.find(r => r.id === window.recetaProduciendo);
 
+    // ⚡ OPTIMIZACIÓN: Usar Map cacheado en lugar de .find() repetido
+    const ingredientesMap = getIngredientesMap();
+
     let falta = false;
     let msg = 'Stock insuficiente:\n';
     rec.ingredientes.forEach(item => {
-        const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
+        const ing = ingredientesMap.get(item.ingredienteId);
         if (ing) {
             const necesario = item.cantidad * cant;
             if (ing.stockActual < necesario) {
@@ -206,16 +245,22 @@ export async function confirmarProduccion() {
     window.showLoading();
 
     try {
-        for (const item of rec.ingredientes) {
-            const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
+        // ⚡ OPTIMIZACIÓN: Ejecutar todas las actualizaciones en PARALELO con Promise.all()
+        // En lugar de secuencial (await en loop), ahora todas se ejecutan simultáneamente
+        const updatePromises = rec.ingredientes.map(item => {
+            const ing = ingredientesMap.get(item.ingredienteId);
             if (ing) {
                 const nuevoStock = Math.max(0, ing.stockActual - item.cantidad * cant);
-                await window.api.updateIngrediente(ing.id, {
+                return window.api.updateIngrediente(ing.id, {
                     ...ing,
                     stockActual: nuevoStock,
                 });
             }
-        }
+            return null;
+        }).filter(promise => promise !== null);
+
+        // Esperar a que TODAS las actualizaciones terminen en paralelo
+        await Promise.all(updatePromises);
 
         await window.cargarDatos();
         window.renderizarIngredientes();
