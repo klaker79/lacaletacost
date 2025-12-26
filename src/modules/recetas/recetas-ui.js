@@ -85,14 +85,18 @@ export function calcularCosteReceta() {
     const ingredientes = Array.isArray(window.ingredientes) ? window.ingredientes : [];
     const inventario = Array.isArray(window.inventarioCompleto) ? window.inventarioCompleto : [];
 
+    // ⚡ OPTIMIZACIÓN: Crear Maps O(1) una vez, no .find() O(n) por cada item
+    const inventarioMap = new Map(inventario.map(i => [i.id, i]));
+    const ingredientesMap = new Map(ingredientes.map(i => [i.id, i]));
+
     items.forEach(item => {
         const select = item.querySelector('select');
         const input = item.querySelector('input');
         if (select.value && input.value) {
             const ingId = parseInt(select.value);
-            // Buscar precio_medio en inventario (basado en compras)
-            const invItem = inventario.find(i => i.id === ingId);
-            const ing = ingredientes.find(i => i.id === ingId);
+            // ⚡ Búsqueda O(1) con Maps
+            const invItem = inventarioMap.get(ingId);
+            const ing = ingredientesMap.get(ingId);
 
             // Prioridad: precio_medio del inventario > precio fijo
             const precio = invItem?.precio_medio
@@ -221,6 +225,19 @@ export function exportarRecetas() {
     const recetas = Array.isArray(window.recetas) ? window.recetas : [];
     const ingredientes = Array.isArray(window.ingredientes) ? window.ingredientes : [];
 
+    // ⚡ OPTIMIZACIÓN: Crear Map O(1) una vez, pre-calcular costes
+    const ingredientesMap = new Map(ingredientes.map(i => [i.id, i]));
+
+    // Pre-calcular coste de cada receta UNA SOLA VEZ
+    const costesCalculados = new Map();
+    recetas.forEach(rec => {
+        const coste = (rec.ingredientes || []).reduce((sum, item) => {
+            const ing = ingredientesMap.get(item.ingredienteId);
+            return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
+        }, 0);
+        costesCalculados.set(rec.id, coste);
+    });
+
     const columnas = [
         { header: 'ID', key: 'id' },
         { header: 'Código', value: rec => rec.codigo || `REC-${String(rec.id).padStart(4, '0')}` },
@@ -229,32 +246,19 @@ export function exportarRecetas() {
         { header: 'Precio Venta (€)', value: rec => parseFloat(rec.precio_venta || 0).toFixed(2) },
         {
             header: 'Coste (€)',
-            value: rec => {
-                return (rec.ingredientes || [])
-                    .reduce((sum, item) => {
-                        const ing = ingredientes.find(i => i.id === item.ingredienteId);
-                        return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
-                    }, 0)
-                    .toFixed(2);
-            },
+            value: rec => costesCalculados.get(rec.id).toFixed(2),
         },
         {
             header: 'Margen (€)',
             value: rec => {
-                const coste = (rec.ingredientes || []).reduce((sum, item) => {
-                    const ing = ingredientes.find(i => i.id === item.ingredienteId);
-                    return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
-                }, 0);
+                const coste = costesCalculados.get(rec.id);
                 return (parseFloat(rec.precio_venta || 0) - coste).toFixed(2);
             },
         },
         {
             header: 'Margen (%)',
             value: rec => {
-                const coste = (rec.ingredientes || []).reduce((sum, item) => {
-                    const ing = ingredientes.find(i => i.id === item.ingredienteId);
-                    return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
-                }, 0);
+                const coste = costesCalculados.get(rec.id);
                 const margen =
                     rec.precio_venta > 0
                         ? ((parseFloat(rec.precio_venta) - coste) / parseFloat(rec.precio_venta)) *
