@@ -90,10 +90,10 @@ async function validarDatosInventario(data) {
             error: !ing
                 ? 'Ingrediente no encontrado'
                 : isNaN(item.stockReal)
-                  ? 'Stock inválido'
-                  : item.stockReal < 0
-                    ? 'Stock no puede ser negativo'
-                    : null,
+                    ? 'Stock inválido'
+                    : item.stockReal < 0
+                        ? 'Stock no puede ser negativo'
+                        : null,
         };
     });
 }
@@ -636,8 +636,8 @@ function validarDatosVentas(data) {
             error: !valido
                 ? 'Cantidad inválida'
                 : !recetaEncontrada
-                  ? '⚠️ No vinculado (se registrará como genérico)'
-                  : null,
+                    ? '⚠️ No vinculado (se registrará como genérico)'
+                    : null,
         };
     });
 }
@@ -847,8 +847,8 @@ function validarDatosPedidos(data) {
             error: !valido
                 ? 'Datos incompletos'
                 : !ingredienteEncontrado
-                  ? '⚠️ Nuevo ingrediente (se creará)'
-                  : null,
+                    ? '⚠️ Nuevo ingrediente (se creará)'
+                    : null,
         };
     });
 }
@@ -1054,7 +1054,8 @@ window.cargarResumenMensual = async function () {
         window.showToast('Cargando datos...', 'info');
 
         const response = await fetch(
-            `https://lacaleta-api.mindloop.cloud/api/monthly/summary?mes=${mes}&ano=${ano}`,
+            // ⚡ Multi-tenant: usa config global si existe
+            `${window.API_CONFIG?.baseUrl || 'https://lacaleta-api.mindloop.cloud'}/api/monthly/summary?mes=${mes}&ano=${ano}`,
             {
                 headers: { Authorization: `Bearer ${token}` },
             }
@@ -1274,7 +1275,7 @@ function renderizarTablaPLDiario() {
     // Obtener gastos fijos mensuales
     const opexData = JSON.parse(
         localStorage.getItem('opex_inputs') ||
-            '{"alquiler":0,"personal":0,"suministros":0,"otros":0}'
+        '{"alquiler":0,"personal":0,"suministros":0,"otros":0}'
     );
     const gastosFijosMes =
         parseFloat(opexData.alquiler || 0) +

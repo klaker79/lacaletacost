@@ -3,7 +3,9 @@
  * Funciones centrales de la aplicación: carga de datos, navegación por tabs
  */
 
-const API_BASE = 'https://lacaleta-api.mindloop.cloud/api';
+import { getApiUrl } from '../../config/app-config.js';
+
+const API_BASE = getApiUrl();
 
 function getAuthHeaders() {
     const token = localStorage.getItem('token');

@@ -862,7 +862,8 @@
     };
 
     // ========== AUTENTICACIÓN ==========
-    const API_AUTH_URL = 'https://lacaleta-api.mindloop.cloud/api/auth';
+    // ⚡ Multi-tenant: usa config global si existe
+    const API_AUTH_URL = (window.API_CONFIG?.baseUrl || 'https://lacaleta-api.mindloop.cloud') + '/api/auth';
 
     function checkAuth() {
         const token = localStorage.getItem('token');
@@ -1646,7 +1647,8 @@
         }, 2000); // Esperar 2s para que la tabla se renderice
     }
     // API helper para balance
-    const API_BASE = 'https://lacaleta-api.mindloop.cloud/api';
+    // ⚡ Multi-tenant: usa config global si existe
+    const API_BASE = (window.API_CONFIG?.baseUrl || 'https://lacaleta-api.mindloop.cloud') + '/api';
 
     function getAuthHeaders() {
         const token = localStorage.getItem('token');

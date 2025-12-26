@@ -170,3 +170,31 @@ export function setConfig(path, value) {
 export function exportConfig() {
     return JSON.parse(JSON.stringify(appConfig));
 }
+
+/**
+ * Obtiene la URL base de la API
+ * @returns {string} URL base de la API
+ * 
+ * @example
+ * getApiBaseUrl() // 'https://lacaleta-api.mindloop.cloud'
+ * getApiBaseUrl() + '/api/ingredientes'
+ */
+export function getApiBaseUrl() {
+    return appConfig.api.baseUrl;
+}
+
+/**
+ * Obtiene la URL base de la API con /api
+ * @returns {string} URL base con /api
+ */
+export function getApiUrl() {
+    return appConfig.api.baseUrl + '/api';
+}
+
+/**
+ * Obtiene la URL de autenticación
+ * @returns {string} URL de auth
+ */
+export function getAuthUrl() {
+    return appConfig.api.baseUrl + '/api/auth';
+}

@@ -28,6 +28,18 @@
 import './vendors.js';
 
 // ============================================
+// CONFIGURACIÓN GLOBAL - Multi-tenant
+// ⚡ Exponer ANTES de cualquier código legacy
+// ============================================
+import { appConfig, getApiUrl, getAuthUrl, getApiBaseUrl } from './config/app-config.js';
+
+// Exponer para legacy files que no usan ES modules
+window.API_CONFIG = appConfig.api;
+window.getApiUrl = getApiUrl;
+window.getAuthUrl = getAuthUrl;
+window.getApiBaseUrl = getApiBaseUrl;
+
+// ============================================
 // API CLIENT - Cliente de API para backend
 // ============================================
 import './services/api.js';

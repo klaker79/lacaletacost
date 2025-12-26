@@ -3,7 +3,9 @@
  * Maneja login, logout, y verificación de sesión
  */
 
-const API_AUTH_URL = 'https://lacaleta-api.mindloop.cloud/api/auth';
+import { getAuthUrl } from '../../config/app-config.js';
+
+const API_AUTH_URL = getAuthUrl();
 
 /**
  * Verifica si el usuario está autenticado
