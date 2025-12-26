@@ -44,6 +44,15 @@
     function hideLoading() {
         removeElementClass('loading-overlay', 'active');
     }
+
+    // === SEGURIDAD: Escape HTML para prevenir XSS ===
+    function escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
     // === EXPORT A EXCEL ===
     function exportarAExcel(datos, nombreArchivo, columnas) {
         // Preparar datos para Excel
@@ -950,8 +959,8 @@
 
                 html += `
             <tr style="border-bottom:1px solid #f0f0f0;">
-              <td style="padding:12px;"><strong>${user.nombre}</strong> ${isMe ? '(Tú)' : ''}</td>
-              <td style="padding:12px; color:#666;">${user.email}</td>
+              <td style="padding:12px;"><strong>${escapeHTML(user.nombre)}</strong> ${isMe ? '(Tú)' : ''}</td>
+              <td style="padding:12px; color:#666;">${escapeHTML(user.email)}</td>
               <td style="padding:12px;">${roleBadge}</td>
               <td style="padding:12px; color:#999;">${fechaAlta}</td>
               <td style="padding:12px; text-align:right;">
@@ -966,7 +975,7 @@
             tbody.innerHTML = html;
         } catch (error) {
             console.error('Error renderizando equipo:', error);
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red; padding:20px;">Error: ${error.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red; padding:20px;">Error: ${escapeHTML(error.message)}</td></tr>`;
         }
     };
 
