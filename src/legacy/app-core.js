@@ -1240,7 +1240,10 @@
                   <li><a href="#dashboard">8. Dashboard y KPIs</a></li>
                   <li><a href="#menu">9. Ingeniería de Menú (Matriz BCG)</a></li>
                   <li><a href="#alertas">10. Sistema de Alertas</a></li>
-                  <li><a href="#faq">11. Preguntas Frecuentes</a></li>
+                  <li><a href="#escandallo">11. Escandallo Visual</a></li>
+                  <li><a href="#mermas">12. Control de Mermas</a></li>
+                  <li><a href="#novedades">13. Novedades v2.1</a></li>
+                  <li><a href="#faq">14. Preguntas Frecuentes</a></li>
                 </ul>
               </div>
 
@@ -1518,8 +1521,89 @@
                 <tr><td>🔵 Pedido Pendiente</td><td>Más de 3 días</td><td>Contactar proveedor</td></tr>
               </table>
 
-              <!-- 11. FAQ -->
-              <h2 id="faq">11. ❓ Preguntas Frecuentes</h2>
+              <!-- 11. ESCANDALLO VISUAL -->
+              <h2 id="escandallo">11. 📊 Escandallo Visual</h2>
+              <div class="section-intro">
+                <p>El <strong>Escandallo Visual</strong> muestra el desglose de costes de cada receta con un gráfico circular interactivo. Permite identificar rápidamente qué ingredientes representan mayor coste.</p>
+              </div>
+              
+              <h3>¿Cómo acceder al Escandallo?</h3>
+              <p>En la pestaña <strong>Recetas</strong>, cada plato tiene un botón <strong>📊</strong> que abre el escandallo visual.</p>
+              
+              <h3>Información del Escandallo</h3>
+              <table>
+                <tr><th>Elemento</th><th>Descripción</th></tr>
+                <tr><td><strong>Gráfico Circular</strong></td><td>Proporción visual del coste de cada ingrediente</td></tr>
+                <tr><td><strong>Tabla de Desglose</strong></td><td>Detalle ordenado de mayor a menor coste</td></tr>
+                <tr><td><strong>KPIs Summary</strong></td><td>Coste total, PVP, Margen y Food Cost</td></tr>
+              </table>
+              
+              <div class="formula">
+                <span class="formula-name">Porcentaje de cada ingrediente</span>
+                % Ingrediente = (Coste Ingrediente ÷ Coste Total) × 100
+              </div>
+              
+              <h3>Exportar PDF Profesional</h3>
+              <p>Desde el escandallo puedes generar una <strong>Ficha Técnica en PDF</strong> con:</p>
+              <ul>
+                <li>Cabecera con nombre del plato y restaurante</li>
+                <li>Resumen de KPIs (Coste, PVP, Margen, Food Cost)</li>
+                <li>Tabla completa de ingredientes con precios</li>
+                <li>Análisis automático del ingrediente más costoso</li>
+              </ul>
+
+              <!-- 12. MERMAS -->
+              <h2 id="mermas">12. 🗑️ Control de Mermas</h2>
+              <div class="section-intro">
+                <p>El sistema permite registrar <strong>mermas</strong> (pérdidas de producto) de forma rápida y sencilla, descontando automáticamente del stock y calculando el impacto económico.</p>
+              </div>
+              
+              <h3>Merma Rápida</h3>
+              <p>En la pestaña <strong>Inventario</strong>, el botón <strong>🗑️ Merma Rápida</strong> permite registrar pérdidas sin necesidad de hacer un inventario completo.</p>
+              
+              <table>
+                <tr><th>Campo</th><th>Descripción</th></tr>
+                <tr><td><strong>Ingrediente</strong></td><td>Producto que se ha perdido</td></tr>
+                <tr><td><strong>Cantidad</strong></td><td>Unidades a descontar del stock</td></tr>
+                <tr><td><strong>Motivo</strong></td><td>Caducado, Mal estado, Accidente, Merma natural, Otro</td></tr>
+                <tr><td><strong>Nota</strong></td><td>Comentario opcional para contexto</td></tr>
+              </table>
+              
+              <div class="formula">
+                <span class="formula-name">Impacto económico de la merma</span>
+                Pérdida (€) = Cantidad × Precio Unitario
+              </div>
+              
+              <div class="example">
+                <div class="example-title">📌 Ejemplo:</div>
+                <p>Se detecta que 0.5 kg de PULPO está en mal estado.</p>
+                <p>Precio: 41.90 €/kg</p>
+                <p><strong>Pérdida registrada: 0.5 × 41.90 = 20.95€</strong></p>
+              </div>
+
+              <!-- 13. NOVEDADES -->
+              <h2 id="novedades">13. 🆕 Novedades v2.1</h2>
+              <div class="section-intro">
+                <p>Últimas mejoras implementadas en MindLoop CostOS para optimizar la gestión de tu restaurante.</p>
+              </div>
+              
+              <table>
+                <tr><th>Novedad</th><th>Descripción</th></tr>
+                <tr><td>📊 Escandallo Visual</td><td>Gráfico circular de desglose de costes por receta</td></tr>
+                <tr><td>📄 PDF Profesional</td><td>Exporta fichas técnicas de recetas en PDF</td></tr>
+                <tr><td>🗑️ Merma Rápida</td><td>Registro rápido de pérdidas de producto</td></tr>
+                <tr><td>🔢 3 Decimales</td><td>Precisión de gramos en cantidades de recetas (0.001 kg = 1g)</td></tr>
+                <tr><td>🔗 Sync Bidireccional</td><td>Ingredientes y proveedores sincronizados automáticamente</td></tr>
+                <tr><td>📈 Dashboard Compacto</td><td>KPIs en fila horizontal + cuadrícula 2x2</td></tr>
+              </table>
+              
+              <div class="tip">
+                <div class="tip-title">💡 Consejo</div>
+                <p>Usa el <strong>Escandallo Visual</strong> para identificar ingredientes que representan más del 40% del coste de un plato. Considera negociar precios o buscar alternativas para optimizar tu margen.</p>
+              </div>
+
+              <!-- 14. FAQ -->
+              <h2 id="faq">14. ❓ Preguntas Frecuentes</h2>
               
               <h3>¿Cómo calcula el sistema el punto de equilibrio en tiempo real?</h3>
               <p>El sistema analiza tu <strong>mix de ventas actual</strong> (qué platos vendes y con qué margen) y proyecta cuánto necesitas facturar para cubrir tus costes fijos. Si vendes platos más rentables, el punto de equilibrio baja automáticamente.</p>
