@@ -78,6 +78,11 @@ initEventBindings();
 // Inicializar optimizaciones de búsqueda con debouncing
 initSearchOptimizations();
 
+// Inicializar búsqueda global (Cmd+K)
+import { initGlobalSearch } from './modules/search/global-search.js';
+// Wait for DOM and data to be ready
+setTimeout(() => initGlobalSearch(), 2000);
+
 // Utilidades adicionales
 window.showLoading = Helpers.showLoading;
 window.hideLoading = Helpers.hideLoading;
