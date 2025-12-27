@@ -40,7 +40,7 @@
   <!-- Chart.js, XLSX, jsPDF ahora se cargan desde node_modules -->
   <!-- Esto mejora seguridad y control de versiones -->
 
-  <script type="module" crossorigin src="/assets/main-BDsM8gzw.js"></script>
+  <script type="module" crossorigin src="/assets/main-K6w_Ac42.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/main-MQsyKeRU.css">
 </head>
 
@@ -115,7 +115,7 @@
         </div>
       </div>
       <div style="display: flex; gap: 8px;">
-        <button data-action="cambiar-periodo" data-periodo="hoy" class="periodo-btn" data-periodo="hoy" style="
+        <button onclick="window.cambiarPeriodoVista('hoy')" class="periodo-btn" data-periodo="hoy" style="
           padding: 6px 12px;
           border-radius: 6px;
           border: 1px solid #0ea5e9;
@@ -126,8 +126,7 @@
           cursor: pointer;
           transition: all 0.2s;
         ">Hoy</button>
-        <button data-action="cambiar-periodo" data-periodo="semana" class="periodo-btn active" data-periodo="semana"
-          style="
+        <button onclick="window.cambiarPeriodoVista('semana')" class="periodo-btn active" data-periodo="semana" style="
           padding: 6px 12px;
           border-radius: 6px;
           border: 1px solid #0ea5e9;
@@ -138,7 +137,7 @@
           cursor: pointer;
           transition: all 0.2s;
         ">Semana</button>
-        <button data-action="cambiar-periodo" data-periodo="mes" class="periodo-btn" data-periodo="mes" style="
+        <button onclick="window.cambiarPeriodoVista('mes')" class="periodo-btn" data-periodo="mes" style="
           padding: 6px 12px;
           border-radius: 6px;
           border: 1px solid #0ea5e9;
