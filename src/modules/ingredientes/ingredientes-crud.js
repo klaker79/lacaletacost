@@ -54,10 +54,32 @@ export async function guardarIngrediente(event) {
             ingredienteId = nuevoIng.id;
         }
 
-        // Si se seleccionó un proveedor, añadir ingrediente a su lista
-        if (ingrediente.proveedorId) {
-            const proveedores = window.proveedores || [];
-            const proveedor = proveedores.find(p => p.id === parseInt(ingrediente.proveedorId));
+        // Sync bidireccional: Actualizar relación ingrediente-proveedor
+        const nuevoProveedorId = ingrediente.proveedorId ? parseInt(ingrediente.proveedorId) : null;
+
+        // Si estamos editando, buscar el ingrediente anterior para ver si tenía otro proveedor
+        if (editandoId !== null) {
+            const ingredienteAnterior = (window.ingredientes || []).find(i => i.id === editandoId);
+            const proveedorAnteriorId = ingredienteAnterior?.proveedor_id || ingredienteAnterior?.proveedorId;
+
+            // Si cambió de proveedor, quitar del anterior
+            if (proveedorAnteriorId && proveedorAnteriorId !== nuevoProveedorId) {
+                const proveedorAnterior = (window.proveedores || []).find(p => p.id === proveedorAnteriorId);
+                if (proveedorAnterior && proveedorAnterior.ingredientes) {
+                    const nuevaLista = proveedorAnterior.ingredientes.filter(id => id !== editandoId);
+                    if (nuevaLista.length !== proveedorAnterior.ingredientes.length) {
+                        await window.api.updateProveedor(proveedorAnterior.id, {
+                            ...proveedorAnterior,
+                            ingredientes: nuevaLista,
+                        });
+                    }
+                }
+            }
+        }
+
+        // Si se seleccionó un nuevo proveedor, añadir ingrediente a su lista
+        if (nuevoProveedorId) {
+            const proveedor = (window.proveedores || []).find(p => p.id === nuevoProveedorId);
             if (proveedor) {
                 const ingredientesDelProveedor = proveedor.ingredientes || [];
                 if (!ingredientesDelProveedor.includes(ingredienteId)) {
@@ -69,6 +91,9 @@ export async function guardarIngrediente(event) {
                 }
             }
         }
+
+        // Recargar proveedores para tener datos actualizados
+        window.proveedores = await window.api.getProveedores();
 
         // ⚡ OPTIMIZACIÓN: Actualización optimista - Solo recargamos ingredientes, no todo
         window.ingredientes = await window.api.getIngredientes();

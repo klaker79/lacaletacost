@@ -27,10 +27,40 @@ export async function guardarProveedor(event) {
     window.showLoading();
 
     try {
-        if (window.editandoProveedorId !== null) {
-            await window.api.updateProveedor(window.editandoProveedorId, proveedor);
+        let proveedorId = window.editandoProveedorId;
+
+        if (proveedorId !== null) {
+            await window.api.updateProveedor(proveedorId, proveedor);
         } else {
-            await window.api.createProveedor(proveedor);
+            const nuevoProveedor = await window.api.createProveedor(proveedor);
+            proveedorId = nuevoProveedor.id;
+        }
+
+        // Sync bidireccional: Actualizar proveedor_id en cada ingrediente
+        // 1. Para ingredientes marcados: asignar este proveedor
+        // 2. Para ingredientes desmarcados que antes tenían este proveedor: quitar
+
+        const proveedorAnterior = window.editandoProveedorId
+            ? (window.proveedores || []).find(p => p.id === window.editandoProveedorId)
+            : null;
+        const ingredientesAnteriores = proveedorAnterior?.ingredientes || [];
+
+        // Ingredientes que se añadieron (marcar con este proveedor)
+        const ingredientesNuevos = ingredientesIds.filter(id => !ingredientesAnteriores.includes(id));
+        for (const ingId of ingredientesNuevos) {
+            const ing = (window.ingredientes || []).find(i => i.id === ingId);
+            if (ing) {
+                await window.api.updateIngrediente(ingId, { ...ing, proveedorId: proveedorId });
+            }
+        }
+
+        // Ingredientes que se quitaron (limpiar proveedor_id)
+        const ingredientesQuitados = ingredientesAnteriores.filter(id => !ingredientesIds.includes(id));
+        for (const ingId of ingredientesQuitados) {
+            const ing = (window.ingredientes || []).find(i => i.id === ingId);
+            if (ing && (ing.proveedor_id === proveedorId || ing.proveedorId === proveedorId)) {
+                await window.api.updateIngrediente(ingId, { ...ing, proveedorId: null });
+            }
         }
 
         await window.cargarDatos();
