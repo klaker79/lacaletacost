@@ -13,29 +13,32 @@ export function initGlobalSearch() {
     let searchContainer = document.getElementById('global-search-container');
     if (searchContainer) return; // Already initialized
 
-    // Find the header to insert search
-    const header = document.querySelector('.header .logo');
-    if (!header) return;
+    // Find the header flex container (the one with the logo)
+    const headerFlexContainer = document.querySelector('.header > div:first-child');
+    if (!headerFlexContainer) {
+        console.warn('Global search: Header not found');
+        return;
+    }
 
     // Create search HTML
     searchContainer = document.createElement('div');
     searchContainer.id = 'global-search-container';
-    searchContainer.style.cssText = 'position: relative; margin-left: auto; margin-right: 20px;';
+    searchContainer.style.cssText = 'position: relative; flex: 1; max-width: 350px;';
     searchContainer.innerHTML = `
         <div style="position: relative;">
             <input type="text" id="global-search-input" 
-                placeholder="🔍 Buscar ingredientes, recetas, pedidos..." 
-                style="width: 300px; padding: 10px 40px 10px 15px; border: 1px solid #e2e8f0; border-radius: 25px; font-size: 14px; background: #f8fafc; transition: all 0.2s;"
-                onfocus="this.style.width='350px'; this.style.borderColor='#667eea'; this.style.background='white';"
-                onblur="if(!this.value) { this.style.width='300px'; this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc'; }"
+                placeholder="🔍 Buscar..." 
+                style="width: 100%; padding: 10px 40px 10px 15px; border: none; border-radius: 25px; font-size: 14px; background: rgba(255,255,255,0.2); color: white; transition: all 0.2s;"
+                onfocus="this.style.background='rgba(255,255,255,0.3)'; this.placeholder='Buscar ingredientes, recetas, pedidos...'"
+                onblur="if(!this.value) { this.style.background='rgba(255,255,255,0.2)'; this.placeholder='🔍 Buscar...'; }"
             >
-            <span style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;">⌘K</span>
+            <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.6); font-size: 11px; background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 4px;">⌘K</span>
         </div>
         <div id="global-search-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); margin-top: 8px; max-height: 400px; overflow-y: auto; z-index: 9999;"></div>
     `;
 
-    // Insert after logo
-    header.parentNode.insertBefore(searchContainer, header.nextSibling);
+    // Append to the header flex container
+    headerFlexContainer.appendChild(searchContainer);
 
     // Add event listeners
     const input = document.getElementById('global-search-input');
