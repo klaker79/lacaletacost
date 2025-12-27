@@ -216,6 +216,14 @@ import * as Dashboard from './modules/dashboard/dashboard.js';
 window.actualizarKPIs = Dashboard.actualizarKPIs;
 
 // ============================================
+// MÓDULO: MERMA RÁPIDA 🗑️
+// ============================================
+import * as MermaRapida from './modules/inventario/merma-rapida.js';
+
+window.mostrarModalMermaRapida = MermaRapida.mostrarModalMermaRapida;
+window.confirmarMermaRapida = MermaRapida.confirmarMermaRapida;
+
+// ============================================
 // MÓDULO: EXPORT PDF
 // ============================================
 import * as PDFGenerator from './modules/export/pdf-generator.js';

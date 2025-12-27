@@ -40,7 +40,7 @@
   <!-- Chart.js, XLSX, jsPDF ahora se cargan desde node_modules -->
   <!-- Esto mejora seguridad y control de versiones -->
 
-  <script type="module" crossorigin src="/assets/main-BWpj2qmz.js"></script>
+  <script type="module" crossorigin src="/assets/main-CVGPtQKG.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/main-MQsyKeRU.css">
 </head>
 
@@ -1037,6 +1037,8 @@
         <button class="btn btn-secondary" data-action="mostrar-modal-inventario-masivo">📊 ACTUALIZAR INVENTARIO
           MASIVO</button>
         <button class="btn btn-primary" data-action="guardar-cambios-stock">💾 Guardar Stock</button>
+        <button class="btn" style="background: linear-gradient(135deg, #EF4444, #DC2626); color: white;"
+          data-action="mostrar-modal-merma-rapida">🗑️ Merma Rápida</button>
       </div>
 
       <div id="resumen-inventario" style="display: none; gap: 20px;"></div>
@@ -1503,6 +1505,62 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal: Merma Rápida -->
+  <div id="modal-merma-rapida" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <span class="close" data-action="cerrar-modal-merma-rapida">&times;</span>
+      <h2 style="color: #ef4444; display: flex; align-items: center; gap: 10px;">🗑️ Registrar Merma</h2>
+      <p style="color: #64748b; margin-bottom: 20px;">Registra rápidamente una merma o pérdida de producto.</p>
+
+      <div class="form-group">
+        <label>Ingrediente:</label>
+        <select id="merma-ingrediente" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+          <option value="">Selecciona ingrediente...</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Cantidad a descontar:</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="number" id="merma-cantidad" step="0.001" min="0" placeholder="0.00"
+            style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+          <span id="merma-unidad" style="color: #64748b; min-width: 40px;">kg</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Motivo:</label>
+        <select id="merma-motivo" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+          <option value="caduco">📅 Caducado / Vencido</option>
+          <option value="mal_estado">🦠 Mal estado</option>
+          <option value="accidente">💥 Accidente / Derrame</option>
+          <option value="merma_natural">📉 Merma natural</option>
+          <option value="otro">📝 Otro</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Nota (opcional):</label>
+        <input type="text" id="merma-nota" placeholder="Añade un comentario..."
+          style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+      </div>
+
+      <div id="merma-preview"
+        style="display: none; padding: 15px; background: #fef3c7; border-radius: 8px; margin: 15px 0;">
+        <div style="font-weight: 600; color: #92400e;">📊 Resultado del ajuste:</div>
+        <div id="merma-preview-text" style="margin-top: 8px; color: #78350f;"></div>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn btn-secondary" data-action="cerrar-modal-merma-rapida">Cancelar</button>
+        <button class="btn" style="background: #ef4444; color: white;" data-action="confirmar-merma-rapida">
+          🗑️ Registrar Merma
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Actualizar Inventario Masivo -->
   <div id="modal-inventario-masivo" class="modal">
     <div class="modal-content" style="max-width: 900px;">

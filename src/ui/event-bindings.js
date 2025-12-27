@@ -86,6 +86,11 @@ const actionHandlers = {
     'confirmar-mermas': () => window.confirmarMermasFinal?.(),
     'cerrar-modal-mermas': () => closeModal('modal-confirmar-mermas'),
 
+    // Merma Rápida
+    'mostrar-modal-merma-rapida': () => window.mostrarModalMermaRapida?.(),
+    'cerrar-modal-merma-rapida': () => closeModal('modal-merma-rapida'),
+    'confirmar-merma-rapida': () => window.confirmarMermaRapida?.(),
+
     // Configuración
     'abrir-manual-formulas': () => window.abrirManualFormulas?.(),
     'mostrar-modal-invitar': () => window.mostrarModalInvitar?.(),
