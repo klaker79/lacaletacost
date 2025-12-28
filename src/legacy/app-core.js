@@ -1243,9 +1243,10 @@
                   <li><a href="#escandallo">11. Escandallo Visual</a></li>
                   <li><a href="#mermas">12. Control de Mermas</a></li>
                   <li><a href="#forecast">13. Proyección de Ventas (Forecast)</a></li>
-                  <li><a href="#n8n">14. Email Automático con IA</a></li>
-                  <li><a href="#novedades">15. Novedades v2.3</a></li>
-                  <li><a href="#faq">16. Preguntas Frecuentes</a></li>
+                  <li><a href="#beneficio-diario">14. Beneficio Neto por Día (P&L)</a></li>
+                  <li><a href="#n8n">15. Email Automático con IA</a></li>
+                  <li><a href="#novedades">16. Novedades v2.3</a></li>
+                  <li><a href="#faq">17. Preguntas Frecuentes</a></li>
                 </ul>
               </div>
 
@@ -1623,8 +1624,50 @@
                 <p>Cuantos más datos de ventas tengas, más precisas serán las predicciones. El sistema necesita al menos <strong>30 días</strong> de datos para patrones semanales fiables.</p>
               </div>
 
-              <!-- 14. N8N EMAIL -->
-              <h2 id="n8n">14. 📧 Email Automático con IA</h2>
+              <!-- 14. BENEFICIO NETO POR DÍA -->
+              <h2 id="beneficio-diario">14. 💰 Beneficio Neto por Día (P&L Diario)</h2>
+              <div class="section-intro">
+                <p>El sistema calcula el <strong>beneficio neto real</strong> de cada día, considerando ingresos, costes de materia prima y la parte proporcional de gastos fijos.</p>
+              </div>
+              
+              <h3>Fórmula del Beneficio Neto Diario</h3>
+              <div class="formula">
+                <span class="formula-name">Beneficio Neto del Día</span>
+                Beneficio Neto = Ingresos día − Costes día − (Gastos Fijos Mes ÷ Días del Mes)
+              </div>
+              
+              <div class="formula">
+                <span class="formula-name">Prorrateo de Gastos Fijos</span>
+                Gasto Fijo Diario = (Alquiler + Personal + Suministros + Otros) ÷ Días calendario del mes<br>
+                Ejemplo: 1000€ ÷ 31 días = <strong>32.26€/día</strong>
+              </div>
+              
+              <h3>Estados de los Días</h3>
+              <table>
+                <tr><th>Icono</th><th>Estado</th><th>Significado</th></tr>
+                <tr><td>✅</td><td>Día rentable</td><td>Ingresos - Costes > Gastos Fijos Diarios</td></tr>
+                <tr><td>❌</td><td>Día con pérdida</td><td>Ventas insuficientes para cubrir costes + gastos fijos</td></tr>
+                <tr><td>🔘</td><td>Día cerrado</td><td>Sin actividad, pero los gastos fijos se siguen restando</td></tr>
+              </table>
+              
+              <div class="example">
+                <div class="example-title">📌 Ejemplo:</div>
+                <p><strong>Día con ventas:</strong></p>
+                <p>Ingresos: 224€ | Costes materia prima: 45€ | Gastos fijos: 32.26€</p>
+                <p>Beneficio Neto = 224 - 45 - 32.26 = <strong>+146.74€</strong> ✅</p>
+                <br>
+                <p><strong>Día cerrado:</strong></p>
+                <p>Ingresos: 0€ | Costes: 0€ | Gastos fijos: 32.26€</p>
+                <p>Beneficio Neto = 0 - 0 - 32.26 = <strong>-32.26€</strong> 🔘</p>
+              </div>
+              
+              <div class="tip">
+                <div class="tip-title">⚠️ Importante</div>
+                <p>Los gastos fijos se restan <strong>todos los días</strong>, incluso los que el restaurante está cerrado. Esto refleja la realidad contable: el alquiler se paga igual trabajes o no.</p>
+              </div>
+
+              <!-- 15. N8N EMAIL -->
+              <h2 id="n8n">15. 📧 Email Automático con IA</h2>
               <div class="section-intro">
                 <p>MindLoop CostOS se integra con <strong>n8n</strong> para enviar informes automáticos diarios y mensuales analizados por inteligencia artificial.</p>
               </div>
@@ -1663,8 +1706,8 @@
                 <p>Los emails incluyen análisis generados por <strong>GPT-4</strong> que valoran el rendimiento del día y sugieren acciones concretas basadas en los datos.</p>
               </div>
 
-              <!-- 15. NOVEDADES -->
-              <h2 id="novedades">15. 🆕 Novedades v2.3 Premium</h2>
+              <!-- 16. NOVEDADES -->
+              <h2 id="novedades">16. 🆕 Novedades v2.3 Premium</h2>
               <div class="section-intro">
                 <p>Últimas mejoras implementadas en MindLoop CostOS para optimizar la gestión de tu restaurante.</p>
               </div>
@@ -1688,8 +1731,8 @@
                 <p>Usa el <strong>Forecast</strong> para planificar compras de la semana y el <strong>Email IA</strong> para tener contexto diario sin entrar a la aplicación.</p>
               </div>
 
-              <!-- 16. FAQ -->
-              <h2 id="faq">16. ❓ Preguntas Frecuentes</h2>
+              <!-- 17. FAQ -->
+              <h2 id="faq">17. ❓ Preguntas Frecuentes</h2>
               
               <h3>¿Cómo calcula el sistema el punto de equilibrio en tiempo real?</h3>
               <p>El sistema analiza tu <strong>mix de ventas actual</strong> (qué platos vendes y con qué margen) y proyecta cuánto necesitas facturar para cubrir tus costes fijos. Si vendes platos más rentables, el punto de equilibrio baja automáticamente.</p>
