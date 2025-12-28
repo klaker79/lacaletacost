@@ -1665,6 +1665,18 @@
                 <div class="tip-title">⚠️ Importante</div>
                 <p>Los gastos fijos se restan <strong>todos los días</strong>, incluso los que el restaurante está cerrado. Esto refleja la realidad contable: el alquiler se paga igual trabajes o no.</p>
               </div>
+              
+              <div class="tip" style="background: #eff6ff; border-left-color: #3b82f6;">
+                <div class="tip-title">💡 ¿Qué significa el número en verde?</div>
+                <p>El número que ves (ej: <strong>+145.34€</strong>) <strong>NO es el total de ventas</strong>. Es el <strong>beneficio neto</strong> = lo que te quedó en el bolsillo después de pagar productos y gastos fijos.</p>
+                <table style="margin-top: 10px; font-size: 13px;">
+                  <tr style="background: #f8fafc;"><th>Concepto</th><th style="text-align: right;">Cantidad</th></tr>
+                  <tr><td>Ventas del día</td><td style="text-align: right;">224.00€</td></tr>
+                  <tr><td>− Coste ingredientes</td><td style="text-align: right; color: #ef4444;">-46.40€</td></tr>
+                  <tr><td>− Gastos fijos/día</td><td style="text-align: right; color: #ef4444;">-32.26€</td></tr>
+                  <tr style="background: #ecfdf5; font-weight: bold;"><td>= Beneficio neto</td><td style="text-align: right; color: #10b981;">+145.34€</td></tr>
+                </table>
+              </div>
 
               <!-- 15. N8N EMAIL -->
               <h2 id="n8n">15. 📧 Email Automático con IA</h2>
