@@ -83,6 +83,10 @@ import { initGlobalSearch } from './modules/search/global-search.js';
 // Wait for DOM and data to be ready
 setTimeout(() => initGlobalSearch(), 2000);
 
+// Evolución de precios de ingredientes
+import { verEvolucionPrecio } from './modules/ingredientes/evolucion-precio.js';
+window.verEvolucionPrecio = verEvolucionPrecio;
+
 // Utilidades adicionales
 window.showLoading = Helpers.showLoading;
 window.hideLoading = Helpers.hideLoading;

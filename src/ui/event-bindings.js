@@ -91,6 +91,9 @@ const actionHandlers = {
     'cerrar-modal-merma-rapida': () => closeModal('modal-merma-rapida'),
     'confirmar-merma-rapida': () => window.confirmarMermaRapida?.(),
 
+    // Evolución de Precios
+    'cerrar-modal-evolucion-precio': () => closeModal('modal-evolucion-precio'),
+
     // Configuración
     'abrir-manual-formulas': () => window.abrirManualFormulas?.(),
     'mostrar-modal-invitar': () => window.mostrarModalInvitar?.(),

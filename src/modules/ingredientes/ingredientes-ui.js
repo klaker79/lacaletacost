@@ -240,6 +240,7 @@ export function renderizarIngredientes() {
                 </td>
                 <td>${ing.stock_minimo ? parseFloat(ing.stock_minimo) + ' ' + ing.unidad : '-'}</td>
                 <td>
+                    <button class="icon-btn" onclick="window.verEvolucionPrecio(${ing.id})" title="Ver evolución de precio" style="color: #3b82f6;">📈</button>
                     <button class="icon-btn edit" onclick="window.editarIngrediente(${ing.id})" title="Editar">✏️</button>
                     <button class="icon-btn delete" onclick="window.eliminarIngrediente(${ing.id})" title="Eliminar">🗑️</button>
                 </td>

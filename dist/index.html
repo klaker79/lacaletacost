@@ -42,7 +42,7 @@
   <!-- Chart.js, XLSX, jsPDF ahora se cargan desde node_modules -->
   <!-- Esto mejora seguridad y control de versiones -->
 
-  <script type="module" crossorigin src="/assets/main-cDKQ3Mfz.js"></script>
+  <script type="module" crossorigin src="/assets/main-CIqxUTVZ.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/main-MQsyKeRU.css">
 </head>
 
@@ -1470,6 +1470,30 @@
   <!-- Loading Overlay -->
   <div class="loading-overlay" id="loading-overlay">
     <div class="spinner"></div>
+  </div>
+
+  <!-- Modal: Evolución de Precios -->
+  <div id="modal-evolucion-precio" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+      <span class="close" data-action="cerrar-modal-evolucion-precio">&times;</span>
+      <h2 style="color: #3b82f6; display: flex; align-items: center; gap: 10px;">📈 Evolución del Precio</h2>
+      <p id="evolucion-ingrediente-nombre" style="color: #64748b; margin-bottom: 20px;"></p>
+
+      <div id="evolucion-summary"
+        style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+      </div>
+
+      <div style="height: 300px; background: #f8fafc; border-radius: 12px; padding: 20px;">
+        <canvas id="chart-evolucion-precio"></canvas>
+      </div>
+
+      <div id="evolucion-tabla" style="margin-top: 20px; max-height: 200px; overflow-y: auto;">
+      </div>
+
+      <div style="margin-top: 20px; text-align: right;">
+        <button class="btn btn-secondary" data-action="cerrar-modal-evolucion-precio">Cerrar</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal: Confirmar Mermas Avanzado -->
