@@ -10,6 +10,12 @@ import {
     compararConSemanaAnterior,
 } from '../../utils/helpers.js';
 
+import {
+    animateCounter,
+    renderSparkline,
+    getHistoricalData
+} from '../ui/visual-effects.js';
+
 // Variable para recordar el período actual (default: semana)
 let periodoVistaActual = 'semana';
 
@@ -161,8 +167,23 @@ export async function actualizarKPIs() {
             }, 0);
             const margenPromedio = margenTotal / recetasConMargen.length;
             const margenEl = document.getElementById('kpi-margen');
-            if (margenEl) margenEl.textContent = Math.round(margenPromedio) + '%';
+            if (margenEl) {
+                const oldValue = parseInt(margenEl.textContent) || 0;
+                margenEl.textContent = Math.round(margenPromedio) + '%';
+                // Animate if value changed significantly
+                if (Math.abs(oldValue - margenPromedio) > 1) {
+                    animateCounter(margenEl, Math.round(margenPromedio), '%', 1000);
+                }
+            }
         }
+
+        // Render sparklines
+        const sparklineIngresos = document.getElementById('sparkline-ingresos');
+        if (sparklineIngresos) {
+            const historicalData = getHistoricalData('ingresos');
+            renderSparkline(sparklineIngresos, historicalData);
+        }
+
     } catch (error) {
         console.error('Error actualizando KPIs:', error);
     }
