@@ -261,24 +261,29 @@ function initForecastTabs() {
 }
 
 /**
- * Update forecast for a specific period (7, 30, or 90 days)
+ * Update forecast for a specific period (7 or 30 days)
  */
 function updateForecastPeriod(dias) {
     const ventas = window.ventas || [];
-    if (!ventas.length || typeof window.calcularForecast !== 'function') return;
+
+    if (typeof window.calcularForecast !== 'function') {
+        console.warn('calcularForecast not available');
+        return;
+    }
 
     const forecast = window.calcularForecast(ventas, dias);
 
     // Update total with period label
     const forecastTotalEl = document.getElementById('forecast-total');
     if (forecastTotalEl) {
-        forecastTotalEl.textContent = forecast.totalPrediccion.toLocaleString('es-ES') + '€';
+        const total = forecast.totalPrediccion || 0;
+        forecastTotalEl.textContent = total.toLocaleString('es-ES') + '€';
     }
 
     // Update confidence text with period info
     const confianzaEl = document.getElementById('forecast-confianza');
     if (confianzaEl) {
-        const periodoTexto = dias === 7 ? '7 días' : dias === 30 ? 'mes' : 'trimestre';
+        const periodoTexto = dias === 7 ? 'semanal' : 'mensual';
         const confianzaTextos = {
             'alta': `📊 Proyección ${periodoTexto} · Alta confianza`,
             'media': `📊 Proyección ${periodoTexto} · Confianza media`,
@@ -290,7 +295,7 @@ function updateForecastPeriod(dias) {
     }
 
     // Re-render chart with new data
-    if (typeof window.renderForecastChart === 'function') {
+    if (typeof window.renderForecastChart === 'function' && forecast.chartData) {
         window.renderForecastChart('chart-forecast', forecast.chartData);
     }
 }
