@@ -138,25 +138,12 @@ function calcularConfianza(ventasPorDia) {
 
 /**
  * Prepares data for Chart.js
- * - 7 days: Line chart with daily data
- * - 30 days: Bar chart with 4 weekly bars
- * - 90 days: Bar chart with 3 monthly bars
+ * Always shows 7-day view chart, period only affects total calculation
  */
 function prepararDatosChart(ventasPorDia, predicciones, dias = 7) {
-    const hoy = new Date();
-
-    // For 7 days: show daily line chart
-    if (dias <= 7) {
-        return prepararChartDiario(ventasPorDia, predicciones);
-    }
-
-    // For 30 days: show 4 weekly bars
-    if (dias <= 30) {
-        return prepararChartSemanal(predicciones);
-    }
-
-    // For 90 days: show 3 monthly bars
-    return prepararChartMensual(predicciones);
+    // Always show the first 7 days of predictions for consistent chart
+    const primeros7 = predicciones.slice(0, 7);
+    return prepararChartDiario(ventasPorDia, primeros7);
 }
 
 /**
