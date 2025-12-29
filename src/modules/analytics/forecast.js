@@ -138,17 +138,36 @@ function calcularConfianza(ventasPorDia) {
 
 /**
  * Prepares data for Chart.js
- * Fills in missing days with 0 to show continuous timeline
- * For longer periods, shows sampled data points
+ * - 7 days: Line chart with daily data
+ * - 30 days: Bar chart with 4 weekly bars
+ * - 90 days: Bar chart with 3 monthly bars
  */
 function prepararDatosChart(ventasPorDia, predicciones, dias = 7) {
     const hoy = new Date();
+
+    // For 7 days: show daily line chart
+    if (dias <= 7) {
+        return prepararChartDiario(ventasPorDia, predicciones);
+    }
+
+    // For 30 days: show 4 weekly bars
+    if (dias <= 30) {
+        return prepararChartSemanal(predicciones);
+    }
+
+    // For 90 days: show 3 monthly bars
+    return prepararChartMensual(predicciones);
+}
+
+/**
+ * Daily line chart (for 7-day view)
+ */
+function prepararChartDiario(ventasPorDia, predicciones) {
+    const hoy = new Date();
     const historicoCompleto = [];
 
-    // For longer periods, show fewer historical days
-    const diasHistoricos = dias <= 7 ? 7 : Math.min(14, dias);
-
-    for (let i = diasHistoricos - 1; i >= 0; i--) {
+    // Last 7 days of historical data
+    for (let i = 6; i >= 0; i--) {
         const fecha = new Date(hoy);
         fecha.setDate(hoy.getDate() - i);
         const fechaStr = fecha.toISOString().split('T')[0];
@@ -160,43 +179,85 @@ function prepararDatosChart(ventasPorDia, predicciones, dias = 7) {
         });
     }
 
-    // For month/quarter, sample forecast points (weekly)
-    let forecastMostrar = predicciones;
-    if (dias > 14) {
-        // Show every 7th day for month/quarter
-        forecastMostrar = predicciones.filter((_, i) => i === 0 || (i + 1) % 7 === 0 || i === predicciones.length - 1);
-    }
-
     const ultimoHistorico = historicoCompleto.length > 0
         ? historicoCompleto[historicoCompleto.length - 1].y
         : 0;
 
-    // Build forecast array with proper null padding
-    const forecastData = forecastMostrar.map(p => p.prediccion);
-
-    // Labels for x-axis
     const labels = [
         ...historicoCompleto.map(h => h.x),
-        ...forecastMostrar.map(p => p.fechaFormateada)
+        ...predicciones.map(p => p.fechaFormateada)
     ];
 
-    // Historical data + nulls for forecast portion
     const historico = [
         ...historicoCompleto.map(h => h.y),
-        ...Array(forecastMostrar.length).fill(null)
+        ...Array(predicciones.length).fill(null)
     ];
 
-    // Nulls for historical + connection point + forecast
     const forecast = [
         ...Array(historicoCompleto.length - 1).fill(null),
         ultimoHistorico,
-        ...forecastData
+        ...predicciones.map(p => p.prediccion)
     ];
 
+    return { labels, historico, forecast, chartType: 'line' };
+}
+
+/**
+ * Weekly bar chart (for 30-day view)
+ * Shows 4 bars: Sem 1, Sem 2, Sem 3, Sem 4
+ */
+function prepararChartSemanal(predicciones) {
+    const semanas = [
+        { label: 'Semana 1', total: 0 },
+        { label: 'Semana 2', total: 0 },
+        { label: 'Semana 3', total: 0 },
+        { label: 'Semana 4', total: 0 }
+    ];
+
+    // Group predictions by week
+    predicciones.forEach((p, i) => {
+        const semanaIdx = Math.floor(i / 7);
+        if (semanaIdx < 4) {
+            semanas[semanaIdx].total += p.prediccion;
+        }
+    });
+
     return {
-        labels,
-        historico,
-        forecast
+        labels: semanas.map(s => s.label),
+        historico: [],
+        forecast: semanas.map(s => s.total),
+        chartType: 'bar'
+    };
+}
+
+/**
+ * Monthly bar chart (for 90-day view)
+ * Shows 3 bars: Mes 1, Mes 2, Mes 3
+ */
+function prepararChartMensual(predicciones) {
+    const hoy = new Date();
+    const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+    const mesActual = hoy.getMonth();
+    const barras = [
+        { label: meses[(mesActual + 1) % 12], total: 0 },
+        { label: meses[(mesActual + 2) % 12], total: 0 },
+        { label: meses[(mesActual + 3) % 12], total: 0 }
+    ];
+
+    // Group predictions by month (approx 30 days each)
+    predicciones.forEach((p, i) => {
+        const mesIdx = Math.floor(i / 30);
+        if (mesIdx < 3) {
+            barras[mesIdx].total += p.prediccion;
+        }
+    });
+
+    return {
+        labels: barras.map(b => b.label),
+        historico: [],
+        forecast: barras.map(b => b.total),
+        chartType: 'bar'
     };
 }
 
@@ -251,6 +312,7 @@ function getDiaSemana(dia) {
 
 /**
  * Renders forecast chart using Chart.js
+ * Supports both line charts (7-day) and bar charts (30/90-day)
  */
 export function renderForecastChart(containerId, chartData) {
     const ctx = document.getElementById(containerId);
@@ -267,42 +329,58 @@ export function renderForecastChart(containerId, chartData) {
         window._forecastChart.destroy();
     }
 
+    const isBarChart = chartData.chartType === 'bar';
+
+    // Configure datasets based on chart type
+    const datasets = isBarChart
+        ? [
+            {
+                label: 'Proyección',
+                data: chartData.forecast,
+                backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                borderColor: '#8B5CF6',
+                borderWidth: 1,
+                borderRadius: 6
+            }
+        ]
+        : [
+            {
+                label: 'Ventas reales',
+                data: chartData.historico,
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#10B981'
+            },
+            {
+                label: 'Proyección',
+                data: chartData.forecast,
+                borderColor: '#8B5CF6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointBackgroundColor: '#8B5CF6'
+            }
+        ];
+
     window._forecastChart = new Chart(ctx, {
-        type: 'line',
+        type: isBarChart ? 'bar' : 'line',
         data: {
             labels: chartData.labels,
-            datasets: [
-                {
-                    label: 'Ventas reales',
-                    data: chartData.historico,
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#10B981'
-                },
-                {
-                    label: 'Proyección',
-                    data: chartData.forecast,
-                    borderColor: '#8B5CF6',
-                    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                    borderWidth: 2,
-                    borderDash: [5, 5],
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#8B5CF6'
-                }
-            ]
+            datasets: datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: true,
+                    display: !isBarChart,
                     position: 'top',
                     labels: {
                         usePointStyle: true,
@@ -314,7 +392,7 @@ export function renderForecastChart(containerId, chartData) {
                     padding: 10,
                     cornerRadius: 8,
                     callbacks: {
-                        label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}€`
+                        label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString('es-ES')}€`
                     }
                 }
             },
@@ -323,7 +401,7 @@ export function renderForecastChart(containerId, chartData) {
                     beginAtZero: true,
                     grid: { color: 'rgba(0,0,0,0.05)' },
                     ticks: {
-                        callback: (value) => value + '€'
+                        callback: (value) => value.toLocaleString('es-ES') + '€'
                     }
                 },
                 x: {
