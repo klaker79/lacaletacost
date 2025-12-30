@@ -205,10 +205,30 @@ function performSearch(query) {
 }
 
 /**
- * Highlights matching text in results
+ * Escapa caracteres especiales de regex para prevenir ReDoS
+ */
+function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Escapa HTML para prevenir XSS
+ */
+function escapeHTML(text) {
+    if (typeof text !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Highlights matching text in results (SEGURO contra XSS y ReDoS)
  */
 function highlightMatch(text, query) {
-    if (!text || !query) return text;
-    const regex = new RegExp(`(${query})`, 'gi');
-    return text.replace(regex, '<strong style="color: #667eea;">$1</strong>');
+    if (!text || !query) return escapeHTML(text);
+    // Escapar HTML primero, luego aplicar highlight de forma segura
+    const safeText = escapeHTML(text);
+    const safeQuery = escapeRegex(query);
+    const regex = new RegExp(`(${safeQuery})`, 'gi');
+    return safeText.replace(regex, '<strong style="color: #667eea;">$1</strong>');
 }

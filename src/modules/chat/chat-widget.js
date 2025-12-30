@@ -1525,7 +1525,11 @@ function parseMarkdown(text) {
 
             if (cells.length > 0) {
                 const tag = isHeader ? 'th' : 'td';
-                tableHtml += '<tr>' + cells.map(c => `<${tag}>${c}</${tag}>`).join('') + '</tr>';
+                // SEGURIDAD: Escapar HTML en celdas de tabla
+                tableHtml += '<tr>' + cells.map(c => {
+                    const safeCell = c.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    return `<${tag}>${safeCell}</${tag}>`;
+                }).join('') + '</tr>';
                 isHeader = false;
             }
         }

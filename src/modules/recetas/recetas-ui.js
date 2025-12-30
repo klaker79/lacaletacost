@@ -74,7 +74,7 @@ export function agregarIngredienteReceta() {
     ingredientesOrdenados.forEach(ing => {
         const precio = parseFloat(ing.precio || 0).toFixed(2);
         const unidad = ing.unidad || 'ud';
-        optionsHtml += `<option value="${ing.id}">${ing.nombre} (${precio}€/${unidad})</option>`;
+        optionsHtml += `<option value="${ing.id}">${escapeHTML(ing.nombre)} (${precio}€/${escapeHTML(unidad)})</option>`;
     });
 
     item.innerHTML = `
@@ -199,9 +199,9 @@ export function renderizarRecetas() {
                         : 'badge-danger';
 
             html += '<tr>';
-            html += `<td><span style="color:#666;font-size:12px;">${rec.codigo || '-'}</span></td>`;
-            html += `<td><strong>${rec.nombre}</strong></td>`;
-            html += `<td><span class="badge badge-success">${rec.categoria}</span></td>`;
+            html += `<td><span style="color:#666;font-size:12px;">${escapeHTML(rec.codigo || '-')}</span></td>`;
+            html += `<td><strong>${escapeHTML(rec.nombre)}</strong></td>`;
+            html += `<td><span class="badge badge-success">${escapeHTML(rec.categoria)}</span></td>`;
             html += `<td>${coste.toFixed(2)} €</td>`;
             html += `<td>${rec.precio_venta ? parseFloat(rec.precio_venta).toFixed(2) : '0.00'} €</td>`;
             html += `<td><span class="badge ${badgeClass}">${margen.toFixed(2)} € (${pct}%)</span></td>`;

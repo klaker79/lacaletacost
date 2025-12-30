@@ -102,7 +102,7 @@ export function agregarIngredientePedido() {
 
     let opciones = '<option value="">Seleccionar...</option>';
     ingredientesProveedor.forEach(ing => {
-        opciones += `<option value="${ing.id}">${ing.nombre} (${parseFloat(ing.precio || 0).toFixed(2)}€/${ing.unidad})</option>`;
+        opciones += `<option value="${ing.id}">${escapeHTML(ing.nombre)} (${parseFloat(ing.precio || 0).toFixed(2)}€/${escapeHTML(ing.unidad || 'ud')})</option>`;
     });
 
     div.innerHTML = `
@@ -180,7 +180,7 @@ export function renderizarPedidos() {
         html += '<tr>';
         html += `<td>#${ped.id}</td>`;
         html += `<td>${fecha}</td>`;
-        html += `<td>${prov ? prov.nombre : 'Sin proveedor'}</td>`;
+        html += `<td>${escapeHTML(prov ? prov.nombre : 'Sin proveedor')}</td>`;
         html += `<td>${ped.ingredientes?.length || 0}</td>`;
         html += `<td>${parseFloat(ped.total || 0).toFixed(2)}€</td>`;
 

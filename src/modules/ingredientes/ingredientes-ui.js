@@ -243,9 +243,9 @@ export function renderizarIngredientes() {
             }
 
             return `<tr>
-                <td><strong>${ing.nombre}</strong></td>
+                <td><strong>${escapeHTML(ing.nombre)}</strong></td>
                 <td><span class="badge ${familiaBadge}">${familiaLabel}</span></td>
-                <td>${nombreProv}</td>
+                <td>${escapeHTML(nombreProv)}</td>
                 <td>${precioHtml}</td>
                 <td>${ing.stock_actual
                     ? `<span class="stock-badge ${stockBajo ? 'stock-low' : 'stock-ok'}">${ing.stock_actual} ${ing.unidad}</span>${stockBajo && ing.stock_minimo ? ' ⚠️' : ''}`
