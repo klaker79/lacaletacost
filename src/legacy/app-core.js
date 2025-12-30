@@ -2503,76 +2503,10 @@
     }
 
     /* ========================================
-     * CÓDIGO LEGACY - renderizarIngredientes (COMENTADO)
+     * LEGACY renderizarIngredientes ELIMINADO
      * ✅ AHORA EN: src/modules/ingredientes/ingredientes-ui.js
-     * Fecha migración: 2025-12-30
-     * RAZÓN: Esta versión no tiene los filtros Alimentos/Bebidas/Suministros
-     * ========================================
-    window.renderizarIngredientes = function () {
-        const busqueda = document.getElementById('busqueda-ingredientes').value.toLowerCase();
-        const filtrados = ingredientes.filter(ing => {
-            const nombreProv = getNombreProveedor(ing.proveedorId).toLowerCase();
-            return ing.nombre.toLowerCase().includes(busqueda) || nombreProv.includes(busqueda);
-        });
-
-        const container = document.getElementById('tabla-ingredientes');
-
-        if (filtrados.length === 0) {
-            container.innerHTML = `
-    <div class="empty-state">
-      <div class="empty-state-icon">🥕</div>
-      <h3>${busqueda ? '¡No encontramos nada!' : '¡No hay ingredientes aún!'}</h3>
-      <p>${busqueda ? 'Intenta con otra búsqueda o añade tu primer ingrediente' : 'Añade tu primer ingrediente para empezar a gestionar tu inventario'}</p>
-    </div>
-  `;
-            document.getElementById('resumen-ingredientes').style.display = 'none';
-            return;
-        } else {
-            let html = '<table><thead><tr>';
-            html +=
-                '<th>Ingrediente</th><th>Familia</th><th>Proveedor</th><th>Precio</th><th>Stock</th><th>Stock Mínimo</th><th>Acciones</th>';
-            html += '</tr></thead><tbody>';
-
-            filtrados.forEach(ing => {
-                const stockActual = parseFloat(ing.stock_actual) || 0;
-                const stockMinimo = parseFloat(ing.stock_minimo) || 0;
-                const stockBajo = stockMinimo > 0 && stockActual <= stockMinimo;
-
-                html += '<tr>';
-                html += `<td><strong style="cursor: pointer;" onclick="window.editarIngrediente(${ing.id})">${escapeHTML(ing.nombre)}</strong></td>`;
-                html += `<td><span class="badge ${ing.familia === 'bebida' ? 'badge-info' : 'badge-success'}">${ing.familia || 'alimento'}</span></td>`;
-                html += `<td>${getNombreProveedor(ing.proveedor_id)}</td>`;
-                html += `<td>${ing.precio ? parseFloat(ing.precio).toFixed(2) + ' €/' + ing.unidad + ' -' : ''}</td>`;
-                html += `<td>`;
-                if (ing.stock_actual) {
-                    html += `<span class="stock-badge ${stockBajo ? 'stock-low' : 'stock-ok'}">${ing.stock_actual} ${ing.unidad}</span>`;
-                    if (stockBajo && ing.stock_minimo) html += ` ⚠️`;
-                } else {
-                    html += '-';
-                }
-                html += `</td>`;
-                html += '<td>' + parseFloat(ing.stock_minimo) + ' ' + ing.unidad + '-' + '</td>';
-                html +=
-                    '<td><button class="icon-btn edit" onclick="window.editarIngrediente(' +
-                    ing.id +
-                    ')">✏️</button> <button class="icon-btn delete" onclick="window.eliminarIngrediente(' +
-                    ing.id +
-                    ')">🗑️</button></td>';
-                html += '</tr>';
-            });
-
-            html += '</tbody></table>';
-            container.innerHTML = html;
-
-            document.getElementById('resumen-ingredientes').innerHTML = `
-            <div>Total: <strong>${ingredientes.length}</strong></div>
-            <div>Mostrando: <strong>${filtrados.length}</strong></div>
-          `;
-            document.getElementById('resumen-ingredientes').style.display = 'flex';
-        }
-    };
-    ======================================== */
-    /* ======================================== */
+     * Esta versión ES6 incluye filtros: Alimentos/Bebidas/Suministros
+     * ======================================== */
 
     // ========== RECETAS (resumido) ==========
 
