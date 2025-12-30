@@ -81,10 +81,10 @@ export function cerrarModalInvitar() {
  * Invita un nuevo usuario al equipo
  */
 export async function invitarUsuarioEquipo() {
-    const nombre = document.getElementById('inv-nombre')?.value;
-    const email = document.getElementById('inv-email')?.value;
-    const password = document.getElementById('inv-password')?.value;
-    const rol = document.getElementById('inv-rol')?.value || 'empleado';
+    const nombre = document.getElementById('team-nombre')?.value;
+    const email = document.getElementById('team-email')?.value;
+    const password = document.getElementById('team-password')?.value;
+    const rol = document.getElementById('team-rol')?.value || 'usuario';
 
     if (!nombre || !email || !password) {
         window.showToast?.('Completa todos los campos', 'error');
