@@ -101,7 +101,7 @@ function performSearch(query) {
                 type: 'ingrediente',
                 icon: '🥬',
                 title: ing.nombre,
-                subtitle: `${ing.categoria || 'Sin categoría'} • ${parseFloat(ing.precio || 0).toFixed(2)}€/${ing.unidad || 'ud'}`,
+                subtitle: `${escapeHTML(ing.categoria || 'Sin categoría')} • ${parseFloat(ing.precio || 0).toFixed(2)}€/${escapeHTML(ing.unidad || 'ud')}`,
                 action: () => {
                     window.cambiarTab?.('ingredientes');
                     document.getElementById('busqueda-ingredientes').value = ing.nombre;
@@ -118,7 +118,7 @@ function performSearch(query) {
                 type: 'receta',
                 icon: '🍽️',
                 title: rec.nombre,
-                subtitle: `${rec.categoria} • PVP: ${parseFloat(rec.precio_venta || 0).toFixed(2)}€`,
+                subtitle: `${escapeHTML(rec.categoria || 'Sin categoría')} • PVP: ${parseFloat(rec.precio_venta || 0).toFixed(2)}€`,
                 action: () => {
                     window.cambiarTab?.('recetas');
                     document.getElementById('busqueda-recetas').value = rec.nombre;
@@ -135,7 +135,7 @@ function performSearch(query) {
                 type: 'proveedor',
                 icon: '🚚',
                 title: prov.nombre,
-                subtitle: prov.telefono || prov.email || 'Sin contacto',
+                subtitle: escapeHTML(prov.telefono || prov.email || 'Sin contacto'),
                 action: () => {
                     window.cambiarTab?.('proveedores');
                     document.getElementById('busqueda-proveedores').value = prov.nombre;
@@ -153,8 +153,8 @@ function performSearch(query) {
             matches.push({
                 type: 'pedido',
                 icon: '📦',
-                title: `Pedido a ${provNombre}`,
-                subtitle: `${ped.estado} • ${parseFloat(ped.total || 0).toFixed(2)}€`,
+                title: `Pedido a ${escapeHTML(provNombre)}`,
+                subtitle: `${escapeHTML(ped.estado || 'pendiente')} • ${parseFloat(ped.total || 0).toFixed(2)}€`,
                 action: () => {
                     window.cambiarTab?.('pedidos');
                     window.renderizarPedidos?.();
@@ -168,7 +168,7 @@ function performSearch(query) {
         results.innerHTML = `
             <div style="padding: 30px; text-align: center; color: #94a3b8;">
                 <div style="font-size: 24px; margin-bottom: 10px;">🔍</div>
-                <div>No se encontraron resultados para "${query}"</div>
+                <div>No se encontraron resultados para "${escapeHTML(query)}"</div>
             </div>
         `;
     } else {
