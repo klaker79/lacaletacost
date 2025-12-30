@@ -2502,6 +2502,12 @@
         return prov ? prov.nombre : '-';
     }
 
+    /* ========================================
+     * CÓDIGO LEGACY - renderizarIngredientes (COMENTADO)
+     * ✅ AHORA EN: src/modules/ingredientes/ingredientes-ui.js
+     * Fecha migración: 2025-12-30
+     * RAZÓN: Esta versión no tiene los filtros Alimentos/Bebidas/Suministros
+     * ========================================
     window.renderizarIngredientes = function () {
         const busqueda = document.getElementById('busqueda-ingredientes').value.toLowerCase();
         const filtrados = ingredientes.filter(ing => {
@@ -2565,6 +2571,7 @@
             document.getElementById('resumen-ingredientes').style.display = 'flex';
         }
     };
+    ======================================== */
     /* ======================================== */
 
     // ========== RECETAS (resumido) ==========
