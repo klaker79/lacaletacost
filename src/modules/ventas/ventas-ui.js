@@ -1,8 +1,21 @@
 /**
  * Ventas UI Module
  * Funciones de interfaz de usuario para ventas
+ * 
+ * SEGURIDAD: Usa escapeHTML para prevenir XSS en datos de usuario
  */
 
+/**
+ * Escapa texto plano para uso en HTML (previene XSS)
+ * @param {string} text - Texto a escapar
+ * @returns {string} Texto seguro para HTML
+ */
+function escapeHTML(text) {
+    if (typeof text !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 /**
  * Renderiza la tabla de ventas
  */

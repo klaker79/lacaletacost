@@ -49,9 +49,10 @@ async function initAuth() {
  * Cliente API con manejo robusto de errores
  * @param {string} endpoint - Ruta del API (ej: '/api/ingredients')
  * @param {object} options - Opciones de fetch
+ * @param {number} retries - Número de reintentos (default: 2)
  * @returns {Promise<any>} - Datos de respuesta o array/objeto vacío en caso de error
  */
-async function fetchAPI(endpoint, options = {}) {
+async function fetchAPI(endpoint, options = {}, retries = 2) {
     const token = localStorage.getItem('token');
 
     const defaultHeaders = {
@@ -63,8 +64,13 @@ async function fetchAPI(endpoint, options = {}) {
         defaultHeaders['Authorization'] = `Bearer ${token}`;
     }
 
+    // MEJORA: Timeout de 15 segundos para evitar requests colgados
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
     const config = {
         ...options,
+        signal: controller.signal,
         headers: {
             ...defaultHeaders,
             ...options.headers,
@@ -73,6 +79,7 @@ async function fetchAPI(endpoint, options = {}) {
 
     try {
         const response = await fetch(`${API_BASE}${endpoint}`, config);
+        clearTimeout(timeout);
 
         // Intentar parsear JSON
         let data;
@@ -124,11 +131,28 @@ async function fetchAPI(endpoint, options = {}) {
 
         return data;
     } catch (networkError) {
-        console.error(`Error de red en ${endpoint}:`, networkError);
-        AppState.lastError = {
-            code: 'NETWORK_ERROR',
-            message: 'Error de conexión. Verifica tu internet.',
-        };
+        clearTimeout(timeout);
+
+        // MEJORA: Retry logic con backoff exponencial para errores de red
+        if (networkError.name === 'AbortError') {
+            console.error(`Timeout en ${endpoint} (15s)`);
+            AppState.lastError = {
+                code: 'TIMEOUT',
+                message: 'La solicitud tardó demasiado. Intenta de nuevo.',
+            };
+        } else if (retries > 0) {
+            // Reintentar con backoff exponencial
+            const delay = (3 - retries) * 1000; // 1s, 2s
+            console.warn(`Reintentando ${endpoint} en ${delay}ms... (${retries} intentos restantes)`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return fetchAPI(endpoint, options, retries - 1);
+        } else {
+            console.error(`Error de red en ${endpoint}:`, networkError);
+            AppState.lastError = {
+                code: 'NETWORK_ERROR',
+                message: 'Error de conexión. Verifica tu internet.',
+            };
+        }
 
         showToast('Error de conexión con el servidor', 'error');
 

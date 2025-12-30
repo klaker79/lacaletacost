@@ -1,9 +1,12 @@
 /**
  * Módulo de Equipo (Team Management) - MindLoop CostOS
  * Gestión de usuarios del restaurante
+ * 
+ * SEGURIDAD: Usa sanitizeHTML para prevenir XSS
  */
 
 import { getApiUrl } from '../../config/app-config.js';
+import { sanitizeHTML } from '../../utils/sanitize.js';
 
 const API_BASE = getApiUrl();
 
@@ -13,6 +16,18 @@ function getAuthHeaders() {
         'Content-Type': 'application/json',
         Authorization: token ? `Bearer ${token}` : '',
     };
+}
+
+/**
+ * Escapa texto plano para uso en HTML (previene XSS)
+ * @param {string} text - Texto a escapar
+ * @returns {string} Texto seguro para HTML
+ */
+function escapeHTML(text) {
+    if (typeof text !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 /**
@@ -35,23 +50,31 @@ export async function renderizarEquipo() {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const isAdmin = user.rol === 'admin';
 
+        // SEGURIDAD: Sanitizar todos los datos de usuario antes de renderizar
         container.innerHTML = team
             .map(
-                (m) => `
+                (m) => {
+                    const nombreSafe = escapeHTML(m.nombre || '');
+                    const emailSafe = escapeHTML(m.email || '');
+                    const rolSafe = escapeHTML(m.rol || 'usuario');
+                    const memberId = parseInt(m.id, 10);
+
+                    return `
       <div class="equipo-card" style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <div>
-          <strong style="font-size: 16px;">${m.nombre}</strong>
-          <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">${m.email}</p>
+          <strong style="font-size: 16px;">${nombreSafe}</strong>
+          <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">${emailSafe}</p>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="background: ${m.rol === 'admin' ? '#667eea' : '#10b981'}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; text-transform: uppercase;">${m.rol}</span>
-          ${isAdmin && m.id !== user.id
-                        ? `<button onclick="window.eliminarUsuarioEquipo(${m.id})" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">🗑️</button>`
-                        : ''
-                    }
+          <span style="background: ${rolSafe === 'admin' ? '#667eea' : '#10b981'}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; text-transform: uppercase;">${rolSafe}</span>
+          ${isAdmin && memberId !== user.id
+                            ? `<button onclick="window.eliminarUsuarioEquipo(${memberId})" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">🗑️</button>`
+                            : ''
+                        }
         </div>
       </div>
-    `
+    `;
+                }
             )
             .join('');
     } catch (error) {

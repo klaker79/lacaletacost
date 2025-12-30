@@ -34,7 +34,10 @@ export default defineConfig({
         // Opciones de Rollup
         rollupOptions: {
             input: {
-                main: './index.html'
+                main: './index.html',
+                landing: './landing.html',
+                register: './register.html',
+                verify: './verify.html'
             }
         },
 

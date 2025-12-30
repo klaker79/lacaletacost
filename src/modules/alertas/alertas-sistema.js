@@ -1,8 +1,21 @@
 /**
  * Sistema de Alertas Inteligentes
  * Detecta condiciones críticas y genera alertas proactivas
+ * 
+ * SEGURIDAD: Usa escapeHTML para prevenir XSS en datos de usuario
  */
 
+/**
+ * Escapa texto plano para uso en HTML (previene XSS)
+ * @param {string} text - Texto a escapar
+ * @returns {string} Texto seguro para HTML
+ */
+function escapeHTML(text) {
+    if (typeof text !== 'string') return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 /**
  * Detecta ingredientes con stock bajo crítico
  * @returns {Array} Lista de alertas de stock bajo
@@ -217,8 +230,8 @@ export function renderizarAlertas() {
                 alerta.criticidad === 'critico'
                     ? 'danger'
                     : alerta.criticidad === 'bajo'
-                      ? 'warning'
-                      : 'info';
+                        ? 'warning'
+                        : 'info';
             html += `
                 <li class="alerta-item ${alerta.criticidad}" onclick="window.cambiarTab('ingredientes')">
                     <span class="alerta-indicator ${iconClass}"></span>
