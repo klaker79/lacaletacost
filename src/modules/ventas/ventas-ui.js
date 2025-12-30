@@ -25,10 +25,9 @@ export async function renderizarVentas() {
         const select = document.getElementById('venta-receta');
         const recetas = window.recetas || [];
         if (select) {
-            // ⚡ OPTIMIZACIÓN: Una sola operación DOM con map+join
             const options = recetas.map(r => {
                 const precio = parseFloat(r.precio_venta) || 0;
-                return `<option value="${r.id}">${r.nombre} - ${precio.toFixed(2)}€</option>`;
+                return `<option value="${r.id}">${escapeHTML(r.nombre)} - ${precio.toFixed(2)}€</option>`;
             }).join('');
             select.innerHTML = '<option value="">Selecciona un plato...</option>' + options;
         }
@@ -69,7 +68,7 @@ export async function renderizarVentas() {
                         hour: '2-digit',
                         minute: '2-digit',
                     });
-                    html += `<tr><td style="padding:8px 16px 8px 32px;color:#64748B;">${fecha}</td><td style="padding:8px 16px;color:#64748B;">${hora}</td><td style="padding:8px 16px;color:#1E293B;">${v.receta_nombre}</td><td style="padding:8px 16px;text-align:center;color:#64748B;">${v.cantidad}</td><td style="padding:8px 16px;text-align:right;"><strong style="color:#1E293B;">${parseFloat(v.total).toFixed(2)}€</strong></td><td style="padding:8px 16px;text-align:center;"><button class="icon-btn delete" onclick="window.eliminarVenta(${v.id})" title="Eliminar">🗑️</button></td></tr>`;
+                    html += `<tr><td style="padding:8px 16px 8px 32px;color:#64748B;">${fecha}</td><td style="padding:8px 16px;color:#64748B;">${hora}</td><td style="padding:8px 16px;color:#1E293B;">${escapeHTML(v.receta_nombre || '')}</td><td style="padding:8px 16px;text-align:center;color:#64748B;">${v.cantidad}</td><td style="padding:8px 16px;text-align:right;"><strong style="color:#1E293B;">${parseFloat(v.total).toFixed(2)}€</strong></td><td style="padding:8px 16px;text-align:center;"><button class="icon-btn delete" onclick="window.eliminarVenta(${v.id})" title="Eliminar">🗑️</button></td></tr>`;
                 });
             });
 

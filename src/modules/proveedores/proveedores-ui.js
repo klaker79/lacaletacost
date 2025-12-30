@@ -56,7 +56,7 @@ export function cargarIngredientesProveedor(seleccionados = []) {
         html += `
       <div class="ing-check-item">
         <input type="checkbox" id="prov-ing-${ing.id}" value="${ing.id}" ${checked}>
-        <label for="prov-ing-${ing.id}">${ing.nombre}</label>
+        <label for="prov-ing-${ing.id}">${escapeHTML(ing.nombre)}</label>
       </div>
     `;
     });
