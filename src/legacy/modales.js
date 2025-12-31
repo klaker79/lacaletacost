@@ -7,9 +7,9 @@ window.confirmarEliminacion = function (config) {
 
         titulo.textContent = config.titulo || 'Confirmar Eliminación';
         mensaje.innerHTML = `
-      ¿Estás seguro de eliminar <strong>${config.tipo || 'este elemento'}</strong>?
+      ¿Estás seguro de eliminar <strong>${escapeHTML(config.tipo || 'este elemento')}</strong>?
       <br><br>
-      <strong style="font-size: 1.15rem;">"${config.nombre}"</strong>
+      <strong style="font-size: 1.15rem;">"${escapeHTML(config.nombre)}"</strong>
       <br><br>
       <span style="font-size: 0.95rem; color: #6c757d;">Esta acción no se puede deshacer.</span>
     `;
@@ -63,12 +63,12 @@ function renderizarGastosFijos() {
         .map(g => {
             const costeDiario = (parseFloat(g.monto_mensual) / 30).toFixed(2);
             return `<tr>
-            <td><strong>${g.concepto}</strong></td>
+            <td><strong>${escapeHTML(g.concepto)}</strong></td>
             <td>${parseFloat(g.monto_mensual).toFixed(2)}€</td>
             <td>${costeDiario}€</td>
             <td>
                 <button class="btn-icon" onclick="editarGastoFijo(${g.id})">✏️</button>
-                <button class="btn-icon" onclick="confirmarEliminarGastoFijo(${g.id}, '${g.concepto}')">🗑️</button>
+                <button class="btn-icon" onclick="confirmarEliminarGastoFijo(${g.id}, '${escapeHTML(g.concepto)}')">🗑️</button>
             </td>
         </tr>`;
         })
