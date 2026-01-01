@@ -14,12 +14,16 @@ export async function guardarPedido(event) {
   const items = document.querySelectorAll('#lista-ingredientes-pedido .ingrediente-item');
   const ingredientesPedido = [];
 
+  // ⚡ OPTIMIZACIÓN: Usar dataMaps para O(1) lookups
+  window.dataMaps?.updateIfStale();
+
   items.forEach(item => {
     const select = item.querySelector('select');
     const input = item.querySelector('input[type="number"]');
     if (select && select.value && input && input.value) {
       const ingId = parseInt(select.value);
-      const ing = window.ingredientes.find(i => i.id === ingId);
+      const ing = window.dataMaps?.getIngrediente(ingId) ||
+        window.ingredientes.find(i => i.id === ingId);
       ingredientesPedido.push({
         ingredienteId: ingId,
         ingrediente_id: ingId,
@@ -92,12 +96,13 @@ export async function eliminarPedido(id) {
  */
 export function marcarPedidoRecibido(id) {
   window.pedidoRecibiendoId = id;
-  const ped = window.pedidos.find(p => p.id === id);
+  // ⚡ OPTIMIZACIÓN: O(1) lookups
+  window.dataMaps?.updateIfStale();
+  const ped = window.dataMaps?.getPedido(id) || window.pedidos.find(p => p.id === id);
   if (!ped) return;
 
-  const prov = window.proveedores.find(
-    p => p.id === ped.proveedorId || p.id === ped.proveedor_id
-  );
+  const prov = window.dataMaps?.getProveedor(ped.proveedorId || ped.proveedor_id) ||
+    window.proveedores.find(p => p.id === ped.proveedorId || p.id === ped.proveedor_id);
 
   // Llenar info del modal
   const provSpan = document.getElementById('modal-rec-proveedor');
@@ -144,7 +149,9 @@ function renderItemsRecepcionModal(ped) {
 
   ped.itemsRecepcion.forEach((item, idx) => {
     const ingId = item.ingredienteId || item.ingrediente_id;
-    const ing = window.ingredientes.find(i => i.id === ingId);
+    // ⚡ OPTIMIZACIÓN: O(1) lookup
+    const ing = window.dataMaps?.getIngrediente(ingId) ||
+      window.ingredientes.find(i => i.id === ingId);
     const nombre = ing ? ing.nombre : 'Ingrediente';
     const unidad = ing ? ing.unidad : '';
 

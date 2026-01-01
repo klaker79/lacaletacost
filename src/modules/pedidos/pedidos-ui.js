@@ -88,9 +88,9 @@ export function agregarIngredientePedido() {
     const proveedor = window.proveedores.find(p => p.id === proveedorId);
     if (!proveedor || !proveedor.ingredientes) return;
 
-    const ingredientesProveedor = window.ingredientes.filter(ing =>
-        proveedor.ingredientes.includes(ing.id)
-    );
+    // ⚡ OPTIMIZACIÓN: Set para O(1) includes check (antes era O(n²))
+    const provIngSet = new Set(proveedor.ingredientes);
+    const ingredientesProveedor = window.ingredientes.filter(ing => provIngSet.has(ing.id));
 
     const container = document.getElementById('lista-ingredientes-pedido');
     if (!container) return;
@@ -121,11 +121,15 @@ export function calcularTotalPedido() {
     const items = document.querySelectorAll('#lista-ingredientes-pedido .ingrediente-item');
     let total = 0;
 
+    // ⚡ OPTIMIZACIÓN: Usar dataMaps para O(1) lookups (antes era O(n) por item)
+    window.dataMaps?.updateIfStale();
+
     items.forEach(item => {
         const select = item.querySelector('select');
         const input = item.querySelector('input[type="number"]');
         if (select && select.value && input && input.value) {
-            const ing = window.ingredientes.find(i => i.id === parseInt(select.value));
+            const ing = window.dataMaps?.getIngrediente(parseInt(select.value)) ||
+                window.ingredientes.find(i => i.id === parseInt(select.value));
             if (ing) {
                 total += parseFloat(ing.precio || 0) * parseFloat(input.value || 0);
             }
@@ -173,8 +177,12 @@ export function renderizarPedidos() {
         '<th>ID</th><th>Fecha</th><th>Proveedor</th><th>Items</th><th>Total</th><th>Estado</th><th>Acciones</th>';
     html += '</tr></thead><tbody>';
 
+    // ⚡ OPTIMIZACIÓN: Usar dataMaps para O(1) provider lookups
+    window.dataMaps?.updateIfStale();
+
     pedidosFiltrados.forEach(ped => {
-        const prov = window.proveedores.find(p => p.id === ped.proveedorId);
+        const prov = window.dataMaps?.getProveedor(ped.proveedorId) ||
+            window.proveedores.find(p => p.id === ped.proveedorId);
         const fecha = new Date(ped.fecha).toLocaleDateString('es-ES');
 
         html += '<tr>';
@@ -213,7 +221,8 @@ export function exportarPedidos() {
         {
             header: 'Proveedor',
             value: p => {
-                const prov = window.proveedores.find(pr => pr.id === p.proveedorId);
+                // ⚡ OPTIMIZACIÓN: O(1) lookup
+                const prov = window.dataMaps?.getProveedor(p.proveedorId);
                 return prov ? prov.nombre : 'Sin proveedor';
             },
         },

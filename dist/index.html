@@ -42,8 +42,8 @@
   <!-- Chart.js, XLSX, jsPDF ahora se cargan desde node_modules -->
   <!-- Esto mejora seguridad y control de versiones -->
 
-  <script type="module" crossorigin src="/assets/main-D4suZUL1.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/main-MQsyKeRU.css">
+  <script type="module" crossorigin src="/assets/main-CvtBvz8E.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/main-BHMS0opm.css">
 </head>
 
 <body>
@@ -271,10 +271,10 @@
           </h3>
           <span id="forecast-total" style="font-size: 18px; font-weight: 700; color: #8B5CF6;">-€</span>
         </div>
-        
+
         <!-- Tabs de período -->
         <div id="forecast-tabs" style="display: flex; gap: 4px; margin-bottom: 12px;">
-          <button class="forecast-period-tab active" data-period="7" 
+          <button class="forecast-period-tab active" data-period="7"
             style="flex: 1; padding: 6px 0; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; background: #8B5CF6; color: white; transition: all 0.2s;">
             7 días
           </button>
@@ -282,17 +282,19 @@
             style="flex: 1; padding: 6px 0; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 500; background: #f1f5f9; color: #64748b; transition: all 0.2s;">
             Mes
           </button>
-          <button class="forecast-period-tab" data-period="90"
-            style="flex: 1; padding: 6px 0; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 500; background: #f1f5f9; color: #64748b; transition: all 0.2s;">
-            Trimestre
-          </button>
         </div>
-        
-        <div style="height: 120px;">
+
+        <div style="height: 100px;">
           <canvas id="chart-forecast"></canvas>
         </div>
-        <div id="forecast-confianza" style="font-size: 10px; color: #94a3b8; text-align: right; margin-top: 8px;">
-          Basado en historial de ventas
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+          <div id="forecast-comparativa"
+            style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 4px;">
+            <!-- Comparativa semana vs anterior -->
+          </div>
+          <div id="forecast-confianza" style="font-size: 10px; color: #94a3b8;">
+            Basado en historial
+          </div>
         </div>
       </div>
     </div>

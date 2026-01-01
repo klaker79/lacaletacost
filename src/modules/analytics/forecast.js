@@ -27,6 +27,9 @@ export function calcularForecast(ventas, dias = 7) {
     // Calculate moving average (last 14 days)
     const mediaMovil = calcularMediaMovil(ventasPorDia, 14);
 
+    // Calculate week comparison (this week vs last week)
+    const comparativaSemana = calcularComparativaSemana(ventasPorDia);
+
     // Generate forecast
     const predicciones = [];
     const hoy = new Date();
@@ -61,7 +64,65 @@ export function calcularForecast(ventas, dias = 7) {
         chartData,
         totalPrediccion,
         mediaMovil,
-        confianza: calcularConfianza(ventasPorDia)
+        confianza: calcularConfianza(ventasPorDia),
+        comparativaSemana
+    };
+}
+
+/**
+ * Calculates current week vs previous week comparison
+ */
+function calcularComparativaSemana(ventasPorDia) {
+    const hoy = new Date();
+    const diaSemana = hoy.getDay();
+
+    // Calculate start of current week (Monday)
+    const inicioSemanaActual = new Date(hoy);
+    inicioSemanaActual.setDate(hoy.getDate() - (diaSemana === 0 ? 6 : diaSemana - 1));
+    inicioSemanaActual.setHours(0, 0, 0, 0);
+
+    // Previous week
+    const inicioSemanaAnterior = new Date(inicioSemanaActual);
+    inicioSemanaAnterior.setDate(inicioSemanaActual.getDate() - 7);
+
+    let totalSemanaActual = 0;
+    let totalSemanaAnterior = 0;
+
+    // Sum sales for each week (up to today's day of week)
+    Object.entries(ventasPorDia).forEach(([fecha, total]) => {
+        const fechaVenta = new Date(fecha);
+
+        // Current week (from Monday to today)
+        if (fechaVenta >= inicioSemanaActual && fechaVenta <= hoy) {
+            totalSemanaActual += total;
+        }
+
+        // Previous week (same days for fair comparison)
+        const finSemanaAnterior = new Date(inicioSemanaAnterior);
+        finSemanaAnterior.setDate(inicioSemanaAnterior.getDate() + (diaSemana === 0 ? 6 : diaSemana - 1));
+
+        if (fechaVenta >= inicioSemanaAnterior && fechaVenta <= finSemanaAnterior) {
+            totalSemanaAnterior += total;
+        }
+    });
+
+    // Calculate percentage change
+    let porcentaje = 0;
+    let tendencia = 'igual';
+
+    if (totalSemanaAnterior > 0) {
+        porcentaje = Math.round(((totalSemanaActual - totalSemanaAnterior) / totalSemanaAnterior) * 100);
+        tendencia = porcentaje > 0 ? 'up' : porcentaje < 0 ? 'down' : 'igual';
+    } else if (totalSemanaActual > 0) {
+        porcentaje = 100;
+        tendencia = 'up';
+    }
+
+    return {
+        actual: Math.round(totalSemanaActual),
+        anterior: Math.round(totalSemanaAnterior),
+        porcentaje: Math.abs(porcentaje),
+        tendencia
     };
 }
 
@@ -138,66 +199,62 @@ function calcularConfianza(ventasPorDia) {
 
 /**
  * Prepares data for Chart.js
- * Fills in missing days with 0 to show continuous timeline
- * For longer periods, shows sampled data points
+ * For 7 days: shows daily view
+ * For 30 days: shows weekly summary
  */
 function prepararDatosChart(ventasPorDia, predicciones, dias = 7) {
     const hoy = new Date();
-    const historicoCompleto = [];
 
-    // For longer periods, show fewer historical days
-    const diasHistoricos = dias <= 7 ? 7 : Math.min(14, dias);
+    if (dias <= 7) {
+        // DAILY VIEW for 7 days
+        const historicoCompleto = [];
+        for (let i = 6; i >= 0; i--) {
+            const fecha = new Date(hoy);
+            fecha.setDate(hoy.getDate() - i);
+            const fechaStr = fecha.toISOString().split('T')[0];
+            const valor = ventasPorDia[fechaStr] || 0;
+            historicoCompleto.push({
+                x: formatearFechaCorta(fechaStr),
+                y: Math.round(valor)
+            });
+        }
 
-    for (let i = diasHistoricos - 1; i >= 0; i--) {
-        const fecha = new Date(hoy);
-        fecha.setDate(hoy.getDate() - i);
-        const fechaStr = fecha.toISOString().split('T')[0];
-        const valor = ventasPorDia[fechaStr] || 0;
+        const ultimoHistorico = historicoCompleto[historicoCompleto.length - 1]?.y || 0;
 
-        historicoCompleto.push({
-            x: formatearFechaCorta(fechaStr),
-            y: Math.round(valor)
+        return {
+            labels: [...historicoCompleto.map(h => h.x), ...predicciones.map(p => p.fechaFormateada)],
+            historico: [...historicoCompleto.map(h => h.y), ...Array(predicciones.length).fill(null)],
+            forecast: [...Array(historicoCompleto.length - 1).fill(null), ultimoHistorico, ...predicciones.map(p => p.prediccion)]
+        };
+    } else {
+        // WEEKLY VIEW for month
+        const labels = ['Sem -2', 'Sem -1', 'Sem actual', 'Sem +1', 'Sem +2', 'Sem +3', 'Sem +4'];
+
+        // Calculate weekly totals for historical
+        const semanas = [0, 0, 0]; // -2, -1, actual
+        Object.entries(ventasPorDia).forEach(([fecha, total]) => {
+            const fechaVenta = new Date(fecha);
+            const diasAtras = Math.floor((hoy - fechaVenta) / (1000 * 60 * 60 * 24));
+            if (diasAtras < 7) semanas[2] += total;
+            else if (diasAtras < 14) semanas[1] += total;
+            else if (diasAtras < 21) semanas[0] += total;
         });
+
+        // Calculate weekly forecast totals
+        const forecastSemanas = [0, 0, 0, 0]; // +1, +2, +3, +4
+        predicciones.forEach((p, i) => {
+            const semana = Math.floor(i / 7);
+            if (semana < 4) forecastSemanas[semana] += p.prediccion;
+        });
+
+        const ultimoHistorico = Math.round(semanas[2]);
+
+        return {
+            labels,
+            historico: [...semanas.map(s => Math.round(s)), ...Array(4).fill(null)],
+            forecast: [null, null, ultimoHistorico, ...forecastSemanas.map(s => Math.round(s))]
+        };
     }
-
-    // For month/quarter, sample forecast points (weekly)
-    let forecastMostrar = predicciones;
-    if (dias > 14) {
-        // Show every 7th day for month/quarter
-        forecastMostrar = predicciones.filter((_, i) => i === 0 || (i + 1) % 7 === 0 || i === predicciones.length - 1);
-    }
-
-    const ultimoHistorico = historicoCompleto.length > 0
-        ? historicoCompleto[historicoCompleto.length - 1].y
-        : 0;
-
-    // Build forecast array with proper null padding
-    const forecastData = forecastMostrar.map(p => p.prediccion);
-
-    // Labels for x-axis
-    const labels = [
-        ...historicoCompleto.map(h => h.x),
-        ...forecastMostrar.map(p => p.fechaFormateada)
-    ];
-
-    // Historical data + nulls for forecast portion
-    const historico = [
-        ...historicoCompleto.map(h => h.y),
-        ...Array(forecastMostrar.length).fill(null)
-    ];
-
-    // Nulls for historical + connection point + forecast
-    const forecast = [
-        ...Array(historicoCompleto.length - 1).fill(null),
-        ultimoHistorico,
-        ...forecastData
-    ];
-
-    return {
-        labels,
-        historico,
-        forecast
-    };
 }
 
 /**

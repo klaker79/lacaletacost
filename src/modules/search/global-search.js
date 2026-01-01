@@ -145,9 +145,10 @@ function performSearch(query) {
         }
     });
 
-    // Search Orders
+    // Search Orders - ⚡ OPTIMIZACIÓN: Usar dataMaps para O(1) lookups
+    window.dataMaps?.updateIfStale();
     (window.pedidos || []).forEach(ped => {
-        const prov = (window.proveedores || []).find(p => p.id === ped.proveedorId);
+        const prov = window.dataMaps?.getProveedor(ped.proveedorId);
         const provNombre = prov?.nombre || 'Proveedor';
         if (provNombre.toLowerCase().includes(q) || ped.estado?.toLowerCase().includes(q)) {
             matches.push({
@@ -190,15 +191,16 @@ function performSearch(query) {
         // Store actions for click handling
         window._searchResults = limited;
 
-        // Add click handlers
-        results.querySelectorAll('.search-result-item').forEach(item => {
-            item.addEventListener('click', () => {
+        // ⚡ OPTIMIZACIÓN: Event delegation en lugar de listener por item
+        results.onclick = (e) => {
+            const item = e.target.closest('.search-result-item');
+            if (item) {
                 const index = parseInt(item.dataset.index);
-                window._searchResults[index].action();
+                window._searchResults[index]?.action();
                 results.style.display = 'none';
                 document.getElementById('global-search-input').value = '';
-            });
-        });
+            }
+        };
     }
 
     results.style.display = 'block';

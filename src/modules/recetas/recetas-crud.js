@@ -66,7 +66,9 @@ export async function guardarReceta(event) {
  * @param {number} id - ID de la receta
  */
 export function editarReceta(id) {
-    const rec = window.recetas.find(r => r.id === id);
+    // ⚡ OPTIMIZACIÓN: O(1) lookup
+    window.dataMaps?.updateIfStale();
+    const rec = window.dataMaps?.getReceta(id) || window.recetas.find(r => r.id === id);
     if (!rec) return;
 
     document.getElementById('rec-nombre').value = rec.nombre;
@@ -172,7 +174,8 @@ export function calcularCosteRecetaCompleto(receta) {
  */
 export function abrirModalProducir(id) {
     window.recetaProduciendo = id;
-    const rec = window.recetas.find(r => r.id === id);
+    // ⚡ OPTIMIZACIÓN: O(1) lookup
+    const rec = window.dataMaps?.getReceta(id) || window.recetas.find(r => r.id === id);
     document.getElementById('modal-plato-nombre').textContent = rec.nombre;
     document.getElementById('modal-cantidad').value = 1;
     window.actualizarDetalleDescuento();
@@ -193,10 +196,14 @@ export function cerrarModalProducir() {
 export function actualizarDetalleDescuento() {
     if (window.recetaProduciendo === null) return;
     const cant = parseInt(document.getElementById('modal-cantidad').value) || 1;
-    const rec = window.recetas.find(r => r.id === window.recetaProduciendo);
+    // ⚡ OPTIMIZACIÓN: O(1) lookups
+    window.dataMaps?.updateIfStale();
+    const rec = window.dataMaps?.getReceta(window.recetaProduciendo) ||
+        window.recetas.find(r => r.id === window.recetaProduciendo);
     let html = '<ul style="margin:0;padding-left:20px;">';
     rec.ingredientes.forEach(item => {
-        const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
+        const ing = window.dataMaps?.getIngrediente(item.ingredienteId) ||
+            window.ingredientes.find(i => i.id === item.ingredienteId);
         if (ing) html += `<li>${ing.nombre}: -${item.cantidad * cant} ${ing.unidad}</li>`;
     });
     html += '</ul>';
@@ -209,12 +216,16 @@ export function actualizarDetalleDescuento() {
 export async function confirmarProduccion() {
     if (window.recetaProduciendo === null) return;
     const cant = parseInt(document.getElementById('modal-cantidad').value) || 1;
-    const rec = window.recetas.find(r => r.id === window.recetaProduciendo);
+    // ⚡ OPTIMIZACIÓN: O(1) lookups
+    window.dataMaps?.updateIfStale();
+    const rec = window.dataMaps?.getReceta(window.recetaProduciendo) ||
+        window.recetas.find(r => r.id === window.recetaProduciendo);
 
     let falta = false;
     let msg = 'Stock insuficiente:\n';
     rec.ingredientes.forEach(item => {
-        const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
+        const ing = window.dataMaps?.getIngrediente(item.ingredienteId) ||
+            window.ingredientes.find(i => i.id === item.ingredienteId);
         if (ing) {
             const necesario = item.cantidad * cant;
             if (ing.stockActual < necesario) {
