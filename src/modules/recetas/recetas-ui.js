@@ -157,16 +157,51 @@ export function calcularCosteReceta() {
 /**
  * Renderiza la tabla de recetas
  */
+// Variable para almacenar el filtro de categoría activo
+let filtroRecetaCategoria = 'todas';
+
+// Función para filtrar recetas por categoría
+window.filtrarRecetasPorCategoria = function (categoria) {
+    filtroRecetaCategoria = categoria;
+
+    // Actualizar estilos de botones
+    const botones = document.querySelectorAll('#filtros-recetas .filter-btn');
+    botones.forEach(btn => {
+        const btnCategoria = btn.dataset.filter;
+        if (btnCategoria === categoria) {
+            btn.classList.add('active');
+            btn.style.background = btnCategoria === 'todas' ? '#f1f5f9' :
+                btnCategoria === 'alimentos' ? '#22c55e' : '#3b82f6';
+            btn.style.color = btnCategoria === 'todas' ? '#475569' : 'white';
+        } else {
+            btn.classList.remove('active');
+            btn.style.background = 'white';
+            btn.style.color = btnCategoria === 'alimentos' ? '#22c55e' :
+                btnCategoria === 'bebida' ? '#3b82f6' : '#475569';
+        }
+    });
+
+    renderizarRecetas();
+};
+
 export function renderizarRecetas() {
     const busquedaEl = document.getElementById('busqueda-recetas');
     const busqueda = busquedaEl?.value?.toLowerCase() || '';
     const recetas = Array.isArray(window.recetas) ? window.recetas : [];
 
-    const filtradas = recetas.filter(
-        r =>
-            r.nombre.toLowerCase().includes(busqueda) ||
-            (r.codigo && r.codigo.toString().includes(busqueda))
-    );
+    const filtradas = recetas.filter(r => {
+        // Filtro de búsqueda
+        const matchBusqueda = r.nombre.toLowerCase().includes(busqueda) ||
+            (r.codigo && r.codigo.toString().includes(busqueda));
+
+        // Filtro de categoría
+        const matchCategoria = filtroRecetaCategoria === 'todas' ||
+            r.categoria?.toLowerCase() === filtroRecetaCategoria.toLowerCase() ||
+            (filtroRecetaCategoria === 'bebida' && r.categoria?.toLowerCase() === 'bebidas') ||
+            (filtroRecetaCategoria === 'alimentos' && r.categoria?.toLowerCase() === 'alimentos');
+
+        return matchBusqueda && matchCategoria;
+    });
 
     const container = document.getElementById('tabla-recetas');
     if (!container) return;

@@ -426,6 +426,24 @@
         <input type="search" id="busqueda-recetas" name="busqueda_rec_nocache" placeholder="Buscar..."
           autocomplete="off" oninput="window.renderizarRecetas()">
       </div>
+
+      <!-- Filtros por categoría -->
+      <div id="filtros-recetas" style="display: flex; gap: 8px; margin: 0 0 16px 0; flex-wrap: wrap;">
+        <span
+          style="font-size: 14px; font-weight: 500; color: #64748b; display: flex; align-items: center;">Filtrar:</span>
+        <button class="filter-btn active" data-filter="todas" onclick="window.filtrarRecetasPorCategoria('todas')"
+          style="padding: 6px 14px; border-radius: 20px; border: 1px solid #e2e8f0; background: #f1f5f9; color: #475569; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+          🔄 Todas
+        </button>
+        <button class="filter-btn" data-filter="alimentos" onclick="window.filtrarRecetasPorCategoria('alimentos')"
+          style="padding: 6px 14px; border-radius: 20px; border: 1px solid #22c55e; background: white; color: #22c55e; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+          🥗 Alimentos
+        </button>
+        <button class="filter-btn" data-filter="bebida" onclick="window.filtrarRecetasPorCategoria('bebida')"
+          style="padding: 6px 14px; border-radius: 20px; border: 1px solid #3b82f6; background: white; color: #3b82f6; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;">
+          🍺 Bebidas
+        </button>
+      </div>
       <div id="formulario-receta" class="form-card" style="display: none;">
         <h3>
           <span id="form-title-receta">Nueva Receta</span>
