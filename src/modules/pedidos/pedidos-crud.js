@@ -133,10 +133,14 @@ export function marcarPedidoRecibido(id) {
 
 /**
  * Renderiza los items del modal de recepción con cálculo de varianza
+ * ⚡ OPTIMIZACIÓN: Pre-build Map de ingredientes
  */
 function renderItemsRecepcionModal(ped) {
   const tbody = document.getElementById('modal-rec-items');
   if (!tbody) return;
+
+  // ⚡ OPTIMIZACIÓN: Crear Map O(1) una vez, no .find() O(n) por cada item
+  const ingMap = new Map((window.ingredientes || []).map(i => [i.id, i]));
 
   let html = '';
   let totalOriginal = 0;
@@ -144,7 +148,7 @@ function renderItemsRecepcionModal(ped) {
 
   ped.itemsRecepcion.forEach((item, idx) => {
     const ingId = item.ingredienteId || item.ingrediente_id;
-    const ing = window.ingredientes.find(i => i.id === ingId);
+    const ing = ingMap.get(ingId);
     const nombre = ing ? ing.nombre : 'Ingrediente';
     const unidad = ing ? ing.unidad : '';
 

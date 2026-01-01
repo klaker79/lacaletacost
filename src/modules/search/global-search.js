@@ -83,6 +83,7 @@ function debounce(func, wait) {
 
 /**
  * Performs search across all data types
+ * ⚡ OPTIMIZACIÓN: Pre-build Map de proveedores para búsqueda de pedidos
  */
 function performSearch(query) {
     const results = document.getElementById('global-search-results');
@@ -145,9 +146,12 @@ function performSearch(query) {
         }
     });
 
+    // ⚡ OPTIMIZACIÓN: Crear Map de proveedores para búsqueda de pedidos O(1)
+    const provMap = new Map((window.proveedores || []).map(p => [p.id, p]));
+
     // Search Orders
     (window.pedidos || []).forEach(ped => {
-        const prov = (window.proveedores || []).find(p => p.id === ped.proveedorId);
+        const prov = provMap.get(ped.proveedorId);
         const provNombre = prov?.nombre || 'Proveedor';
         if (provNombre.toLowerCase().includes(q) || ped.estado?.toLowerCase().includes(q)) {
             matches.push({

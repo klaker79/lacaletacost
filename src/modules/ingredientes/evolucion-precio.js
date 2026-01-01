@@ -106,6 +106,7 @@ export async function verEvolucionPrecio(ingredienteId) {
 
 /**
  * Gets price history from orders for an ingredient
+ * ⚡ OPTIMIZACIÓN: Pre-build Map de proveedores
  */
 function obtenerHistorialPrecios(ingredienteId) {
     const pedidos = window.pedidos || [];
@@ -115,6 +116,9 @@ function obtenerHistorialPrecios(ingredienteId) {
     const pedidosRecibidos = pedidos
         .filter(p => p.estado === 'recibido' && p.items)
         .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    // ⚡ OPTIMIZACIÓN: Crear Map de proveedores O(1) una vez
+    const provMap = new Map((window.proveedores || []).map(p => [p.id, p]));
 
     pedidosRecibidos.forEach(pedido => {
         const items = Array.isArray(pedido.items) ? pedido.items : [];
@@ -126,7 +130,7 @@ function obtenerHistorialPrecios(ingredienteId) {
             const precioUnitario = cantidad > 0 ? precioTotal / cantidad : precioTotal;
 
             if (precioUnitario > 0) {
-                const proveedor = (window.proveedores || []).find(p => p.id === pedido.proveedorId);
+                const proveedor = provMap.get(pedido.proveedorId);
                 historial.push({
                     fecha: pedido.fecha,
                     precio: precioUnitario,

@@ -88,8 +88,10 @@ export function agregarIngredientePedido() {
     const proveedor = window.proveedores.find(p => p.id === proveedorId);
     if (!proveedor || !proveedor.ingredientes) return;
 
+    // ⚡ OPTIMIZACIÓN: Convertir array a Set para lookups O(1) en lugar de .includes() O(n)
+    const provIngSet = new Set(proveedor.ingredientes);
     const ingredientesProveedor = window.ingredientes.filter(ing =>
-        proveedor.ingredientes.includes(ing.id)
+        provIngSet.has(ing.id)
     );
 
     const container = document.getElementById('lista-ingredientes-pedido');
@@ -152,6 +154,7 @@ export function calcularTotalPedido() {
 
 /**
  * Renderiza la tabla de pedidos
+ * ⚡ OPTIMIZACIÓN: Pre-build Map de proveedores para lookups O(1)
  */
 export function renderizarPedidos() {
     const container = document.getElementById('tabla-pedidos');
@@ -172,13 +175,16 @@ export function renderizarPedidos() {
         return;
     }
 
+    // ⚡ OPTIMIZACIÓN: Crear Map O(1) una vez, no .find() O(n) por cada pedido
+    const provMap = new Map((window.proveedores || []).map(p => [p.id, p]));
+
     let html = '<table><thead><tr>';
     html +=
         '<th>ID</th><th>Fecha</th><th>Proveedor</th><th>Items</th><th>Total</th><th>Estado</th><th>Acciones</th>';
     html += '</tr></thead><tbody>';
 
     pedidosFiltrados.forEach(ped => {
-        const prov = window.proveedores.find(p => p.id === ped.proveedorId);
+        const prov = provMap.get(ped.proveedorId);
         const fecha = new Date(ped.fecha).toLocaleDateString('es-ES');
 
         html += '<tr>';
@@ -209,15 +215,19 @@ export function renderizarPedidos() {
 
 /**
  * Exporta pedidos a Excel
+ * ⚡ OPTIMIZACIÓN: Pre-build Map de proveedores para evitar N+1
  */
 export function exportarPedidos() {
+    // ⚡ OPTIMIZACIÓN: Crear Map una vez antes del loop
+    const provMap = new Map((window.proveedores || []).map(p => [p.id, p]));
+
     const columnas = [
         { header: 'ID', key: 'id' },
         { header: 'Fecha Pedido', value: p => new Date(p.fecha).toLocaleDateString('es-ES') },
         {
             header: 'Proveedor',
             value: p => {
-                const prov = window.proveedores.find(pr => pr.id === p.proveedorId);
+                const prov = provMap.get(p.proveedorId);
                 return prov ? prov.nombre : 'Sin proveedor';
             },
         },
