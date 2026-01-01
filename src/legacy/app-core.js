@@ -2494,14 +2494,43 @@
         return prov ? prov.nombre : '-';
     }
 
+    // Variable para la página actual de ingredientes
+    let paginaIngredientesActual = 1;
+
+    // Función para cambiar de página
+    window.cambiarPaginaIngredientes = function (delta) {
+        paginaIngredientesActual += delta;
+        window.renderizarIngredientes();
+        document.getElementById('tabla-ingredientes')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
     window.renderizarIngredientes = function () {
         const busqueda = document.getElementById('busqueda-ingredientes').value.toLowerCase();
+
+        // Obtener filtro de familia activo
+        const filtroFamilia = window.filtroIngredientesFamilia || 'todas';
+
         const filtrados = ingredientes.filter(ing => {
             const nombreProv = getNombreProveedor(ing.proveedorId).toLowerCase();
-            return ing.nombre.toLowerCase().includes(busqueda) || nombreProv.includes(busqueda);
+            const matchBusqueda = ing.nombre.toLowerCase().includes(busqueda) || nombreProv.includes(busqueda);
+            const matchFamilia = filtroFamilia === 'todas' || ing.familia === filtroFamilia;
+            return matchBusqueda && matchFamilia;
         });
 
         const container = document.getElementById('tabla-ingredientes');
+
+        // === PAGINACIÓN ===
+        const ITEMS_PER_PAGE = 25;
+        const totalItems = filtrados.length;
+        const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+
+        // Asegurar página válida
+        if (paginaIngredientesActual > totalPages) paginaIngredientesActual = totalPages;
+        if (paginaIngredientesActual < 1) paginaIngredientesActual = 1;
+
+        const startIndex = (paginaIngredientesActual - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        const ingredientesPagina = filtrados.slice(startIndex, endIndex);
 
         if (filtrados.length === 0) {
             container.innerHTML = `
@@ -2519,7 +2548,7 @@
                 '<th>Ingrediente</th><th>Familia</th><th>Proveedor</th><th>Precio</th><th>Stock</th><th>Stock Mínimo</th><th>Acciones</th>';
             html += '</tr></thead><tbody>';
 
-            filtrados.forEach(ing => {
+            ingredientesPagina.forEach(ing => {
                 const stockActual = parseFloat(ing.stock_actual) || 0;
                 const stockMinimo = parseFloat(ing.stock_minimo) || 0;
                 const stockBajo = stockMinimo > 0 && stockActual <= stockMinimo;
@@ -2548,11 +2577,31 @@
             });
 
             html += '</tbody></table>';
+
+            // === CONTROLES DE PAGINACIÓN ===
+            html += `
+            <div style="display: flex; justify-content: center; align-items: center; gap: 16px; padding: 20px 0; border-top: 1px solid #e2e8f0; margin-top: 16px;">
+                <button onclick="window.cambiarPaginaIngredientes(-1)" 
+                    ${paginaIngredientesActual === 1 ? 'disabled' : ''} 
+                    style="padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: ${paginaIngredientesActual === 1 ? '#f1f5f9' : 'white'}; color: ${paginaIngredientesActual === 1 ? '#94a3b8' : '#475569'}; cursor: ${paginaIngredientesActual === 1 ? 'not-allowed' : 'pointer'}; font-weight: 500;">
+                    ← Anterior
+                </button>
+                <span style="font-size: 14px; color: #475569;">
+                    Página <strong>${paginaIngredientesActual}</strong> de <strong>${totalPages}</strong>
+                </span>
+                <button onclick="window.cambiarPaginaIngredientes(1)" 
+                    ${paginaIngredientesActual === totalPages ? 'disabled' : ''} 
+                    style="padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 8px; background: ${paginaIngredientesActual === totalPages ? '#f1f5f9' : 'white'}; color: ${paginaIngredientesActual === totalPages ? '#94a3b8' : '#475569'}; cursor: ${paginaIngredientesActual === totalPages ? 'not-allowed' : 'pointer'}; font-weight: 500;">
+                    Siguiente →
+                </button>
+            </div>`;
+
             container.innerHTML = html;
 
             document.getElementById('resumen-ingredientes').innerHTML = `
             <div>Total: <strong>${ingredientes.length}</strong></div>
-            <div>Mostrando: <strong>${filtrados.length}</strong></div>
+            <div>Filtrados: <strong>${filtrados.length}</strong></div>
+            <div>Mostrando: <strong>${startIndex + 1}-${Math.min(endIndex, totalItems)}</strong></div>
           `;
             document.getElementById('resumen-ingredientes').style.display = 'flex';
         }
