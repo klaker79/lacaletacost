@@ -204,17 +204,15 @@ let gastosFijosCache = null;
 let gastosFijosCacheTime = 0;
 const CACHE_TTL = 5000; // 5 segundos
 
-// Helper para esperar a que window.API esté disponible
-async function waitForAPI(maxWait = 5000) {
-    const start = Date.now();
-    while (!window.API || !window.API.getGastosFijos) {
-        if (Date.now() - start > maxWait) {
-            console.warn('Timeout esperando window.API');
-            return false;
-        }
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    return true;
+// ⚡ API BASE URL - usar la misma que app-core.js
+const GASTOS_API_BASE = (window.API_CONFIG?.baseUrl || 'https://lacaleta-api.mindloop.cloud') + '/api';
+
+function getGastosAuthHeaders() {
+    const token = localStorage.getItem('token');
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? 'Bearer ' + token : '',
+    };
 }
 
 async function fetchGastosFijos() {
@@ -223,20 +221,17 @@ async function fetchGastosFijos() {
         return gastosFijosCache;
     }
     try {
-        // Esperar a que la API esté disponible
-        const apiReady = await waitForAPI();
-        if (!apiReady) {
-            console.warn('API no disponible, usando cache o vacío');
-            return gastosFijosCache || [];
-        }
-
-        const gastos = await window.API.getGastosFijos();
+        const res = await fetch(GASTOS_API_BASE + '/gastos-fijos', {
+            headers: getGastosAuthHeaders()
+        });
+        if (!res.ok) throw new Error('Error fetching gastos fijos');
+        const gastos = await res.json();
         gastosFijosCache = gastos;
         gastosFijosCacheTime = now;
         return gastos;
     } catch (error) {
         console.error('Error fetching gastos fijos:', error);
-        return [];
+        return gastosFijosCache || [];
     }
 }
 
@@ -254,8 +249,14 @@ window.guardarGastoFinanzas = async function (concepto, inputId) {
     }
 
     try {
-        // Actualizar en la base de datos
-        await window.API.updateGastoFijo(gastoInfo.id, gastoInfo.concepto, monto);
+        // Actualizar directamente via fetch
+        const res = await fetch(GASTOS_API_BASE + '/gastos-fijos/' + gastoInfo.id, {
+            method: 'PUT',
+            headers: getGastosAuthHeaders(),
+            body: JSON.stringify({ concepto: gastoInfo.concepto, monto_mensual: monto })
+        });
+
+        if (!res.ok) throw new Error('Error updating gasto fijo');
 
         // Invalidar cache
         gastosFijosCache = null;
@@ -266,7 +267,7 @@ window.guardarGastoFinanzas = async function (concepto, inputId) {
         console.log('Gasto fijo guardado:', gastoInfo.concepto, monto);
     } catch (error) {
         console.error('Error guardando gasto:', error);
-        showToast('Error guardando gasto fijo', 'error');
+        if (typeof showToast === 'function') showToast('Error guardando gasto fijo', 'error');
     }
 };
 
