@@ -2596,7 +2596,7 @@
           // Limpiar campos del formulario
           document.getElementById('rec-nombre').value = '';
           document.getElementById('rec-codigo').value = ''; // Reset código
-          document.getElementById('rec-categoria').value = 'entrante';
+          document.getElementById('rec-categoria').value = 'alimentos';
           document.getElementById('rec-precio_venta').value = '';
           document.getElementById('rec-porciones').value = '1';
           document.getElementById('lista-ingredientes-receta').innerHTML = '';
