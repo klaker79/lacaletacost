@@ -357,7 +357,7 @@ async function cargarValoresGastosFijos() {
 setTimeout(cargarValoresGastosFijos, 1000);
 
 // ✅ Renderizar beneficio neto ACUMULADO por día (VERSIÓN PRO con Punto de Equilibrio)
-function renderizarBeneficioNetoDiario() {
+async function renderizarBeneficioNetoDiario() {
     const container = document.getElementById('beneficio-neto-diario-lista');
     if (!container) return;
 
@@ -368,7 +368,7 @@ function renderizarBeneficioNetoDiario() {
     }
 
     const dias = window.datosResumenMensual.dias;
-    const gastosFijosMes = calcularTotalGastosFijos();
+    const gastosFijosMes = await calcularTotalGastosFijos();
     const mes = parseInt(document.getElementById('diario-mes')?.value || new Date().getMonth() + 1);
     const ano = parseInt(document.getElementById('diario-ano')?.value || new Date().getFullYear());
 
