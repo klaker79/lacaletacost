@@ -34,9 +34,12 @@ const CONFIG = {
         'thead',
         'tbody',
     ],
-    ALLOWED_ATTR: ['href', 'class', 'id', 'style', 'onclick'],
+    // ✅ SEGURIDAD: Removido 'onclick' y 'style' - previene XSS y CSS injection
+    ALLOWED_ATTR: ['href', 'class', 'id', 'target', 'rel'],
     KEEP_CONTENT: true,
     RETURN_TRUSTED_TYPE: false,
+    // ✅ Validar URLs en href - solo http(s), mailto, tel
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel):|[^a-z]|[a-z+.-]+(?:[^a-z+.\-:]|$))/i,
 };
 
 /**
