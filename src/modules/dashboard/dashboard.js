@@ -214,6 +214,20 @@ export async function actualizarKPIs() {
                 confianzaEl.textContent = confianzaTextos[forecast.confianza] || 'Basado en historial de ventas';
             }
 
+            // Update week comparison
+            const comparativaEl = document.getElementById('forecast-comparativa');
+            if (comparativaEl && forecast.comparativaSemana) {
+                const comp = forecast.comparativaSemana;
+                if (comp.anterior > 0 || comp.actual > 0) {
+                    const signo = comp.tendencia === 'up' ? '↑' : comp.tendencia === 'down' ? '↓' : '→';
+                    const color = comp.tendencia === 'up' ? '#10B981' : comp.tendencia === 'down' ? '#EF4444' : '#64748B';
+                    comparativaEl.innerHTML = `<span style="color: ${color}">${signo} ${comp.porcentaje}%</span> vs semana anterior`;
+                    comparativaEl.style.background = comp.tendencia === 'up' ? '#ECFDF5' : comp.tendencia === 'down' ? '#FEF2F2' : '#F8FAFC';
+                } else {
+                    comparativaEl.textContent = '';
+                }
+            }
+
             // Render chart
             if (typeof window.renderForecastChart === 'function') {
                 window.renderForecastChart('chart-forecast', forecast.chartData);

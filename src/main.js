@@ -327,6 +327,21 @@ if (import.meta.env?.DEV || window.location.hostname === 'localhost') {
 }
 
 // ============================================
+// PWA - SERVICE WORKER REGISTRATION
+// ============================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+                console.log('✅ Service Worker registrado:', registration.scope);
+            })
+            .catch((error) => {
+                console.warn('⚠️ Service Worker no registrado:', error);
+            });
+    });
+}
+
+// ============================================
 // INICIALIZACIÓN AUTOMÁTICA
 // ============================================
 // Verificar autenticación y cargar datos al iniciar

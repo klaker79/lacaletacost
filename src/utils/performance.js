@@ -88,6 +88,11 @@ export class DataMaps {
         this.proveedoresMap = new Map();
         this.ingredientesMap = new Map();
         this.recetasMap = new Map();
+        this.pedidosMap = new Map();
+        this.ventasMap = new Map();
+        // Index maps for faster lookups
+        this.ingredientesByNombre = new Map();
+        this.recetasByCodigo = new Map();
         this.lastUpdate = null;
     }
 
@@ -95,9 +100,21 @@ export class DataMaps {
      * Actualiza todos los mapas con los datos globales actuales
      */
     update() {
+        // Main ID maps
         this.proveedoresMap = createLookupMap(window.proveedores || []);
         this.ingredientesMap = createLookupMap(window.ingredientes || []);
         this.recetasMap = createLookupMap(window.recetas || []);
+        this.pedidosMap = createLookupMap(window.pedidos || []);
+        this.ventasMap = createLookupMap(window.ventas || []);
+        
+        // Secondary index maps for alternative lookups
+        this.ingredientesByNombre = new Map(
+            (window.ingredientes || []).map(i => [i.nombre?.toLowerCase(), i])
+        );
+        this.recetasByCodigo = new Map(
+            (window.recetas || []).filter(r => r.codigo).map(r => [r.codigo, r])
+        );
+        
         this.lastUpdate = Date.now();
     }
 
@@ -105,14 +122,14 @@ export class DataMaps {
      * Obtiene un proveedor por ID (O(1))
      */
     getProveedor(id) {
-        return this.proveedoresMap.get(id);
+        return this.proveedoresMap.get(parseInt(id));
     }
 
     /**
      * Obtiene nombre de proveedor (O(1))
      */
     getNombreProveedor(id) {
-        const prov = this.proveedoresMap.get(id);
+        const prov = this.proveedoresMap.get(parseInt(id));
         return prov ? prov.nombre : 'Sin proveedor';
     }
 
@@ -120,14 +137,42 @@ export class DataMaps {
      * Obtiene un ingrediente por ID (O(1))
      */
     getIngrediente(id) {
-        return this.ingredientesMap.get(id);
+        return this.ingredientesMap.get(parseInt(id));
+    }
+    
+    /**
+     * Obtiene ingrediente por nombre (O(1))
+     */
+    getIngredienteByNombre(nombre) {
+        return this.ingredientesByNombre.get(nombre?.toLowerCase());
     }
 
     /**
      * Obtiene una receta por ID (O(1))
      */
     getReceta(id) {
-        return this.recetasMap.get(id);
+        return this.recetasMap.get(parseInt(id));
+    }
+    
+    /**
+     * Obtiene receta por código TPV (O(1))
+     */
+    getRecetaByCodigo(codigo) {
+        return this.recetasByCodigo.get(codigo);
+    }
+    
+    /**
+     * Obtiene un pedido por ID (O(1))
+     */
+    getPedido(id) {
+        return this.pedidosMap.get(parseInt(id));
+    }
+    
+    /**
+     * Obtiene una venta por ID (O(1))
+     */
+    getVenta(id) {
+        return this.ventasMap.get(parseInt(id));
     }
 
     /**
