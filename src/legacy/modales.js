@@ -1,3 +1,4 @@
+// MindLoop CostOS - Modales v2.1.0 - Build 2026-01-01T20:18:00Z
 window.confirmarEliminacion = function (config) {
     return new Promise(resolve => {
         const modal = document.getElementById('modal-confirmacion');
