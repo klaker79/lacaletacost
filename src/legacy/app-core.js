@@ -2408,9 +2408,11 @@
 
         try {
             let ingredienteId;
-            if (editandoIngredienteId !== null) {
-                await api.updateIngrediente(editandoIngredienteId, ingrediente);
-                ingredienteId = editandoIngredienteId;
+            // Use window.editandoIngredienteId to sync with module (ingredientes-crud.js sets window.editandoIngredienteId)
+            const editingId = window.editandoIngredienteId ?? editandoIngredienteId;
+            if (editingId !== null) {
+                await api.updateIngrediente(editingId, ingrediente);
+                ingredienteId = editingId;
             } else {
                 const nuevoIng = await api.createIngrediente(ingrediente);
                 ingredienteId = nuevoIng.id;
