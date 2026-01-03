@@ -107,22 +107,33 @@ export async function verEvolucionPrecio(ingredienteId) {
 /**
  * Gets price history from orders for an ingredient
  * ⚡ OPTIMIZACIÓN: Pre-build Map de proveedores
+ * 🔧 FIX: Usar 'ingredientes' (no 'items') para coincidir con backend
  */
 function obtenerHistorialPrecios(ingredienteId) {
     const pedidos = window.pedidos || [];
     const historial = [];
 
     // Get received orders sorted by date
+    // 🔧 FIX: Backend uses 'ingredientes', not 'items'
     const pedidosRecibidos = pedidos
-        .filter(p => p.estado === 'recibido' && p.items)
+        .filter(p => p.estado === 'recibido' && (p.ingredientes || p.items))
         .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
     // ⚡ OPTIMIZACIÓN: Crear Map de proveedores O(1) una vez
     const provMap = new Map((window.proveedores || []).map(p => [p.id, p]));
 
     pedidosRecibidos.forEach(pedido => {
-        const items = Array.isArray(pedido.items) ? pedido.items : [];
-        const item = items.find(i => i.ingrediente_id === ingredienteId || i.ingredienteId === ingredienteId);
+        // 🔧 FIX: Soportar tanto 'ingredientes' (backend) como 'items' (legacy)
+        const items = Array.isArray(pedido.ingredientes)
+            ? pedido.ingredientes
+            : (Array.isArray(pedido.items) ? pedido.items : []);
+
+        const item = items.find(i =>
+            i.ingrediente_id === ingredienteId ||
+            i.ingredienteId === ingredienteId ||
+            parseInt(i.ingrediente_id) === ingredienteId ||
+            parseInt(i.ingredienteId) === ingredienteId
+        );
 
         if (item) {
             const cantidad = parseFloat(item.cantidadRecibida || item.cantidad) || 0;
@@ -130,9 +141,9 @@ function obtenerHistorialPrecios(ingredienteId) {
             const precioUnitario = cantidad > 0 ? precioTotal / cantidad : precioTotal;
 
             if (precioUnitario > 0) {
-                const proveedor = provMap.get(pedido.proveedorId);
+                const proveedor = provMap.get(pedido.proveedorId) || provMap.get(pedido.proveedor_id);
                 historial.push({
-                    fecha: pedido.fecha,
+                    fecha: pedido.fecha || pedido.fecha_recepcion,
                     precio: precioUnitario,
                     cantidad: cantidad,
                     proveedor: proveedor?.nombre || 'Proveedor'
