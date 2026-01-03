@@ -1,5 +1,17 @@
 // ========== INVENTARIO MASIVO ==========
 
+// Función anti-XSS: Sanitiza datos de usuario antes de insertarlos en HTML
+function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[char] || char);
+}
+
 let datosInventarioMasivo = [];
 
 window.mostrarModalInventarioMasivo = function () {
@@ -154,7 +166,7 @@ function mostrarPreviewInventario(datos) {
                         <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">
                             <span style="color: ${iconColor}; font-size: 18px;">${icon}</span>
                         </td>
-                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${item.ingrediente}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">${escapeHTML(item.ingrediente)}</td>
                         <td style="padding: 10px; text-align: right; border-bottom: 1px solid #e2e8f0;">
                             ${item.stockActual !== null ? item.stockActual : '-'}
                         </td>
@@ -162,7 +174,7 @@ function mostrarPreviewInventario(datos) {
                             ${item.stockReal}
                         </td>
                         <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; color: ${item.valido ? '#10b981' : '#ef4444'};">
-                            ${item.error || 'OK'}
+                            ${escapeHTML(item.error) || 'OK'}
                         </td>
                     </tr>
                 `;
@@ -353,11 +365,11 @@ function mostrarPreviewIngredientes(datos) {
         html += `
           <tr style="background: ${bgColor};">
             <td style="padding: 10px;"><span style="color: ${iconColor};">${icon}</span></td>
-            <td style="padding: 10px;">${item.nombre || '-'}</td>
+            <td style="padding: 10px;">${escapeHTML(item.nombre) || '-'}</td>
             <td style="padding: 10px; text-align: right;">${item.precio.toFixed(2)}€</td>
-            <td style="padding: 10px; text-align: center;">${item.unidad}</td>
+            <td style="padding: 10px; text-align: center;">${escapeHTML(item.unidad)}</td>
             <td style="padding: 10px; text-align: right;">${item.stockActual}</td>
-            <td style="padding: 10px; color: ${item.valido ? '#10b981' : '#ef4444'};">${item.error || 'OK'}</td>
+            <td style="padding: 10px; color: ${item.valido ? '#10b981' : '#ef4444'};">${escapeHTML(item.error) || 'OK'}</td>
           </tr>`;
     });
 
@@ -494,11 +506,11 @@ function mostrarPreviewRecetas(datos) {
         html += `
           <tr style="background: ${bgColor};">
             <td style="padding: 10px;"><span style="color: ${iconColor};">${icon}</span></td>
-            <td style="padding: 10px;">${item.nombre || '-'}</td>
-            <td style="padding: 10px; text-align: center;">${item.categoria}</td>
+            <td style="padding: 10px;">${escapeHTML(item.nombre) || '-'}</td>
+            <td style="padding: 10px; text-align: center;">${escapeHTML(item.categoria)}</td>
             <td style="padding: 10px; text-align: right;">${item.precioVenta.toFixed(2)}€</td>
             <td style="padding: 10px; text-align: center;">${item.porciones}</td>
-            <td style="padding: 10px; color: ${item.valido ? '#10b981' : '#ef4444'};">${item.error || 'OK'}</td>
+            <td style="padding: 10px; color: ${item.valido ? '#10b981' : '#ef4444'};">${escapeHTML(item.error) || 'OK'}</td>
           </tr>`;
     });
 
@@ -675,11 +687,11 @@ function mostrarPreviewVentas(datos) {
           <tr style="background: ${bgColor};">
             <td style="padding: 10px;"><span style="color: ${iconColor};">${icon}</span></td>
             <td style="padding: 10px;">
-              ${item.codigo ? `<span style="font-family:monospace; background:#eee; padding:2px 4px; border-radius:4px;">${item.codigo}</span> ` : ''}
-              ${item.nombre}
+              ${item.codigo ? `<span style="font-family:monospace; background:#eee; padding:2px 4px; border-radius:4px;">${escapeHTML(item.codigo)}</span> ` : ''}
+              ${escapeHTML(item.nombre)}
             </td>
             <td style="padding: 10px;">
-              ${item.recetaId ? `<strong>${item.recetaNombre}</strong>` : '<span style="color:#999; font-style:italic;">No encontrado</span>'}
+              ${item.recetaId ? `<strong>${escapeHTML(item.recetaNombre)}</strong>` : '<span style="color:#999; font-style:italic;">No encontrado</span>'}
             </td>
             <td style="padding: 10px; text-align: right;">${item.cantidad}</td>
             <td style="padding: 10px; text-align: right;">${item.total.toFixed(2)}€</td>
