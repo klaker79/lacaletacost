@@ -137,8 +137,27 @@ function obtenerHistorialPrecios(ingredienteId) {
 
         if (item) {
             const cantidad = parseFloat(item.cantidadRecibida || item.cantidad) || 0;
-            const precioTotal = parseFloat(item.precioReal || item.precio || item.total) || 0;
-            const precioUnitario = cantidad > 0 ? precioTotal / cantidad : precioTotal;
+
+            // 🔧 FIX: precioReal y precioUnitario YA SON precios unitarios - NO dividir
+            // Solo dividir si tenemos un precio total (item.total)
+            let precioUnitario;
+
+            if (item.precioReal !== undefined) {
+                // precioReal ya es unitario
+                precioUnitario = parseFloat(item.precioReal) || 0;
+            } else if (item.precioUnitario !== undefined) {
+                // precioUnitario ya es unitario
+                precioUnitario = parseFloat(item.precioUnitario) || 0;
+            } else if (item.precio_unitario !== undefined) {
+                // precio_unitario ya es unitario
+                precioUnitario = parseFloat(item.precio_unitario) || 0;
+            } else if (item.total !== undefined && cantidad > 0) {
+                // Si solo tenemos total, dividir entre cantidad
+                precioUnitario = parseFloat(item.total) / cantidad;
+            } else {
+                // Fallback a precio base
+                precioUnitario = parseFloat(item.precio) || 0;
+            }
 
             if (precioUnitario > 0) {
                 const proveedor = provMap.get(pedido.proveedorId) || provMap.get(pedido.proveedor_id);
