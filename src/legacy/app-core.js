@@ -4378,15 +4378,51 @@
                 .join('');
         }
 
-        // Poblar listas detalladas
-        data.forEach(item => {
-            const el = document.createElement('div');
-            el.className = 'bcg-item';
-            el.innerHTML = `<strong>${escapeHTML(item.nombre)}</strong><br><span style="font-size:11px">Mg: ${item.margen.toFixed(2)}€ | Ventas: ${item.popularidad}</span>`;
+        // Poblar listas detalladas CON PAGINACIÓN (10 items por página)
+        const ITEMS_PER_PAGE = 10;
+        const itemsByCategory = { estrella: [], caballo: [], puzzle: [], perro: [] };
 
-            if (containers[item.clasificacion]) {
-                containers[item.clasificacion].appendChild(el);
+        // Agrupar items por categoría
+        data.forEach(item => {
+            if (itemsByCategory[item.clasificacion]) {
+                itemsByCategory[item.clasificacion].push(item);
             }
+        });
+
+        // Estado de paginación global
+        window.bcgPagination = window.bcgPagination || { estrella: 1, caballo: 1, puzzle: 1, perro: 1 };
+
+        // Función para renderizar página de una categoría
+        window.renderBCGPage = function (categoria, page = 1) {
+            const items = itemsByCategory[categoria] || [];
+            const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+            page = Math.max(1, Math.min(page, totalPages || 1));
+            window.bcgPagination[categoria] = page;
+
+            const container = containers[categoria];
+            if (!container) return;
+
+            const start = (page - 1) * ITEMS_PER_PAGE;
+            const pageItems = items.slice(start, start + ITEMS_PER_PAGE);
+
+            container.innerHTML = pageItems.map(item =>
+                `<div class="bcg-item"><strong>${escapeHTML(item.nombre)}</strong><br><span style="font-size:11px">Mg: ${item.margen.toFixed(2)}€ | Ventas: ${item.popularidad}</span></div>`
+            ).join('');
+
+            // Añadir controles de paginación si hay más de una página
+            if (totalPages > 1) {
+                container.innerHTML += `
+                    <div style="display:flex; justify-content:center; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid #e2e8f0;">
+                        <button onclick="window.renderBCGPage('${categoria}', ${page - 1})" ${page <= 1 ? 'disabled' : ''} style="padding:4px 8px; border-radius:4px; border:1px solid #cbd5e1; cursor:pointer; background:${page <= 1 ? '#f1f5f9' : 'white'}">←</button>
+                        <span style="padding:4px 8px; font-size:12px;">${page} / ${totalPages}</span>
+                        <button onclick="window.renderBCGPage('${categoria}', ${page + 1})" ${page >= totalPages ? 'disabled' : ''} style="padding:4px 8px; border-radius:4px; border:1px solid #cbd5e1; cursor:pointer; background:${page >= totalPages ? '#f1f5f9' : 'white'}">→</button>
+                    </div>`;
+            }
+        };
+
+        // Renderizar primera página de cada categoría
+        ['estrella', 'caballo', 'puzzle', 'perro'].forEach(cat => {
+            window.renderBCGPage(cat, window.bcgPagination[cat] || 1);
         });
     };
 
