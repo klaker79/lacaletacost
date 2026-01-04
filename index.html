@@ -1,8 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 
-<!-- Sentry Error Monitoring - Captura errores automáticamente -->
-<script src="https://js-de.sentry-cdn.com/ac722e9d30983357b092ee766be13c5e.min.js" crossorigin="anonymous"></script>
+<!-- Sentry Error Monitoring - Full SDK -->
+<script src="https://browser.sentry-cdn.com/7.99.0/bundle.min.js" crossorigin="anonymous"></script>
+<script>
+  Sentry.init({
+    dsn: "https://ac722e9d30983357b092ee766be13c5e@o4508958420328448.ingest.de.sentry.io/4508958631550032",
+    tracesSampleRate: 0.1,
+    environment: window.location.hostname === 'localhost' ? 'development' : 'production'
+  });
+</script>
 
 <head>
   <meta charset="UTF-8">
