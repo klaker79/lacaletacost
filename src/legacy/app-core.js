@@ -2333,7 +2333,9 @@
     window.cerrarFormularioIngrediente = function () {
         document.getElementById('formulario-ingrediente').style.display = 'none';
         document.querySelector('#formulario-ingrediente form').reset();
+        // 🔧 FIX CRÍTICO: Resetear AMBAS variables (local Y global)
         editandoIngredienteId = null;
+        window.editandoIngredienteId = null;
         document.getElementById('form-title-ingrediente').textContent = 'Nuevo Ingrediente';
         document.getElementById('btn-text-ingrediente').textContent = 'Añadir';
     };

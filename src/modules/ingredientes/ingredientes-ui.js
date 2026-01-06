@@ -339,7 +339,11 @@ export function cerrarFormularioIngrediente() {
         if (formElement) formElement.reset();
     }
 
+    // 🔧 FIX CRÍTICO: Resetear AMBAS variables (local Y global)
+    // Bug: Si solo reseteamos la local, window.editandoIngredienteId queda con el ID anterior
+    // Esto causaba que crear un nuevo ingrediente sobrescribiera el ingrediente con ese ID
     editandoIngredienteId = null;
+    window.editandoIngredienteId = null;
 
     const title = getElement('form-title-ingrediente');
     if (title) title.textContent = 'Nuevo Ingrediente';

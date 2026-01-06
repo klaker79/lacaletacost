@@ -19,7 +19,12 @@ const actionHandlers = {
     'toggle-theme': () => toggleTheme(),
 
     // Ingredientes
-    'mostrar-form-ingrediente': () => window.mostrarFormularioIngrediente?.(),
+    'mostrar-form-ingrediente': () => {
+        // 🔧 FIX CRÍTICO: Resetear IDs antes de mostrar formulario para crear nuevo ingrediente
+        // Si no se resetea, el formulario queda en modo "editar" con el ID del ingrediente anterior
+        window.editandoIngredienteId = null;
+        window.mostrarFormularioIngrediente?.();
+    },
     'cerrar-form-ingrediente': () => window.cerrarFormularioIngrediente?.(),
     'importar-ingredientes': () => window.mostrarModalImportarIngredientes?.(),
     'exportar-ingredientes': () => window.exportarIngredientes?.(),
