@@ -265,6 +265,10 @@ export function renderizarRecetas() {
             html += `<td><span class="badge ${badgeClass}">${margen.toFixed(2)} € (${pct}%)</span></td>`;
             html += `<td><div class="actions">`;
             html += `<button class="icon-btn view" onclick="window.verEscandallo(${rec.id})" title="Ver Escandallo">📊</button>`;
+            // Botón de variantes solo para bebidas (botella/copa)
+            if (rec.categoria?.toLowerCase() === 'bebidas' || rec.categoria?.toLowerCase() === 'bebida') {
+                html += `<button class="icon-btn" onclick="window.gestionarVariantesReceta(${rec.id})" title="Variantes (Botella/Copa)" style="color: #7C3AED;">🍷</button>`;
+            }
             html += `<button class="icon-btn produce" onclick="window.abrirModalProducir(${rec.id})">⬇️</button>`;
             html += `<button class="icon-btn edit" onclick="window.editarReceta(${rec.id})">✏️</button>`;
             html += `<button class="icon-btn delete" onclick="window.eliminarReceta(${rec.id})">🗑️</button>`;

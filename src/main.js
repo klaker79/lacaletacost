@@ -176,6 +176,14 @@ import * as Escandallo from './modules/recetas/escandallo.js';
 window.verEscandallo = Escandallo.verEscandallo;
 window.exportarPDFEscandallo = Escandallo.exportarPDFEscandallo;
 
+// Variantes de receta (botella/copa para vinos)
+import * as RecetasVariantes from './modules/recetas/recetas-variantes.js';
+window.gestionarVariantesReceta = RecetasVariantes.gestionarVariantesReceta;
+window.agregarVarianteReceta = RecetasVariantes.agregarVarianteReceta;
+window.editarVariante = RecetasVariantes.editarVariante;
+window.eliminarVariante = RecetasVariantes.eliminarVariante;
+window.cerrarModalVariantes = RecetasVariantes.cerrarModalVariantes;
+
 // ============================================
 // MÓDULO: PROVEEDORES ✅ (Legacy comentado)
 // ============================================
