@@ -74,49 +74,71 @@ function renderizarProveedoresAsociados(proveedoresAsociados) {
 
     if (proveedoresAsociados.length === 0) {
         container.innerHTML = `
-            <div style="padding: 40px; text-align: center; color: #94A3B8;">
-                <div style="font-size: 48px; margin-bottom: 16px;">🏢</div>
-                <p>No hay proveedores asociados</p>
-                <p style="font-size: 14px;">Agrega un proveedor usando el selector de abajo</p>
+            <div style="padding: 60px 40px; text-align: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 16px; border: 2px dashed #cbd5e1;">
+                <div style="font-size: 72px; margin-bottom: 20px; filter: grayscale(0.3); opacity: 0.8;">🏢</div>
+                <h4 style="color: #475569; font-size: 18px; margin-bottom: 8px; font-weight: 600;">No hay proveedores asociados</h4>
+                <p style="font-size: 14px; color: #64748B; margin: 0;">Agrega un proveedor usando el formulario de abajo 👇</p>
             </div>
         `;
         return;
     }
 
-    let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+    let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
 
     proveedoresAsociados.forEach(pa => {
         const esPrincipal = pa.es_proveedor_principal;
+
+        // Badge y botón para marcar como principal - mucho más visual
         const badgePrincipal = esPrincipal
-            ? '<span style="background: #10B981; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">⭐ PRINCIPAL</span>'
+            ? '<div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); display: inline-flex; align-items: center; gap: 6px;"><span style="font-size: 16px;">⭐</span><span>PRINCIPAL</span></div>'
             : '<button class="btn-sm" onclick="window.marcarProveedorPrincipal(' +
               ingredienteActualId +
               ', ' +
               pa.proveedor_id +
-              ')" style="font-size: 11px; padding: 4px 8px;">Marcar como principal</button>';
+              ')" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; border: none; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); cursor: pointer; transition: all 0.2s;">⭐ Marcar como principal</button>';
+
+        // Gradiente y estilos según si es principal
+        const borderColor = esPrincipal ? '#10B981' : '#cbd5e1';
+        const bgGradient = esPrincipal
+            ? 'linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%)'
+            : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)';
+        const shadowColor = esPrincipal
+            ? 'rgba(16, 185, 129, 0.15)'
+            : 'rgba(0, 0, 0, 0.05)';
 
         html += `
-            <div style="border: 2px solid ${esPrincipal ? '#10B981' : '#E2E8F0'}; border-radius: 12px; padding: 16px; background: ${esPrincipal ? '#F0FDF4' : 'white'};">
-                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                    <div>
-                        <h4 style="margin: 0; color: #1E293B; font-size: 16px;">${escapeHTML(pa.proveedor_nombre)}</h4>
-                        ${pa.proveedor_contacto ? '<p style="margin: 4px 0; font-size: 13px; color: #64748B;">👤 ' + escapeHTML(pa.proveedor_contacto) + '</p>' : ''}
-                        ${pa.proveedor_telefono ? '<p style="margin: 4px 0; font-size: 13px; color: #64748B;">📞 ' + escapeHTML(pa.proveedor_telefono) + '</p>' : ''}
-                        ${pa.proveedor_email ? '<p style="margin: 4px 0; font-size: 13px; color: #64748B;">✉️ ' + escapeHTML(pa.proveedor_email) + '</p>' : ''}
+            <div style="border: 2px solid ${borderColor}; border-radius: 16px; padding: 20px; background: ${bgGradient}; box-shadow: 0 4px 12px ${shadowColor}; transition: all 0.2s; position: relative; overflow: hidden;">
+                ${esPrincipal ? '<div style="position: absolute; top: 0; right: 0; width: 100px; height: 100px; background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%); pointer-events: none;"></div>' : ''}
+
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; position: relative; z-index: 1;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🏭</span>
+                            <h4 style="margin: 0; color: #0f172a; font-size: 18px; font-weight: 700;">${escapeHTML(pa.proveedor_nombre)}</h4>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 6px; margin-left: 44px;">
+                            ${pa.proveedor_contacto ? '<p style="margin: 0; font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px;"><span style="font-size: 16px;">👤</span><span>' + escapeHTML(pa.proveedor_contacto) + '</span></p>' : ''}
+                            ${pa.proveedor_telefono ? '<p style="margin: 0; font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px;"><span style="font-size: 16px;">📞</span><span>' + escapeHTML(pa.proveedor_telefono) + '</span></p>' : ''}
+                            ${pa.proveedor_email ? '<p style="margin: 0; font-size: 14px; color: #475569; display: flex; align-items: center; gap: 8px;"><span style="font-size: 16px;">✉️</span><span>' + escapeHTML(pa.proveedor_email) + '</span></p>' : ''}
+                        </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 24px; font-weight: bold; color: #1E293B; margin-bottom: 4px;">
-                            ${parseFloat(pa.precio).toFixed(2)} €
+                    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 12px;">
+                        <div style="background: white; padding: 12px 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-size: 11px; color: #64748B; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Precio</div>
+                            <div style="font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                                ${parseFloat(pa.precio).toFixed(2)} €
+                            </div>
                         </div>
                         ${badgePrincipal}
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                    <button class="btn-sm" onclick="window.editarPrecioProveedor(${ingredienteActualId}, ${pa.proveedor_id}, ${pa.precio})" style="background: #3B82F6; color: white;">
-                        ✏️ Editar precio
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; padding-top: 16px; border-top: 2px solid ${esPrincipal ? '#BBF7D0' : '#e2e8f0'};">
+                    <button class="btn-sm" onclick="window.editarPrecioProveedor(${ingredienteActualId}, ${pa.proveedor_id}, ${pa.precio})" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; box-shadow: 0 3px 10px rgba(59, 130, 246, 0.3); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 15px;">✏️</span><span>Editar precio</span>
                     </button>
-                    <button class="btn-sm" onclick="window.eliminarProveedorIngrediente(${ingredienteActualId}, ${pa.proveedor_id})" style="background: #EF4444; color: white;">
-                        🗑️ Eliminar
+                    <button class="btn-sm" onclick="window.eliminarProveedorIngrediente(${ingredienteActualId}, ${pa.proveedor_id})" style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 15px;">🗑️</span><span>Eliminar</span>
                     </button>
                 </div>
             </div>

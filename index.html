@@ -1549,42 +1549,63 @@
 
   <!-- Modal gestionar proveedores de ingrediente -->
   <div id="modal-proveedores-ingrediente" class="modal">
-    <div class="modal-content" style="max-width: 700px;">
-      <h3 id="modal-proveedores-titulo">Proveedores del ingrediente</h3>
+    <div class="modal-content" style="max-width: 800px; background: linear-gradient(to bottom, #ffffff, #f8fafc);">
+      <!-- Header con gradiente y sombra -->
+      <div style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); padding: 24px; margin: -24px -24px 24px -24px; border-radius: 12px 12px 0 0; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.15);">
+        <h3 id="modal-proveedores-titulo" style="color: white; margin: 0; font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 32px;">🏢</span>
+          <span>Proveedores del ingrediente</span>
+        </h3>
+        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0 0; font-size: 14px;">Gestiona los proveedores y sus precios</p>
+      </div>
 
       <!-- Lista de proveedores asociados -->
-      <div style="margin: 20px 0;">
-        <h4 style="color: #64748B; font-size: 14px; margin-bottom: 12px;">PROVEEDORES ASOCIADOS</h4>
-        <div id="lista-proveedores-asociados" style="max-height: 400px; overflow-y: auto;">
+      <div style="margin: 0 0 24px 0;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+          <span style="font-size: 20px;">📋</span>
+          <h4 style="color: #1E293B; font-size: 16px; margin: 0; font-weight: 600;">Proveedores Asociados</h4>
+        </div>
+        <div id="lista-proveedores-asociados" style="max-height: 450px; overflow-y: auto; padding-right: 8px;">
           <!-- Se renderiza dinámicamente -->
         </div>
       </div>
 
-      <!-- Formulario para agregar nuevo proveedor -->
-      <div style="background: #F8FAFC; padding: 20px; border-radius: 12px; margin-top: 20px;">
-        <h4 style="color: #1E293B; font-size: 15px; margin-bottom: 16px;">➕ Agregar proveedor</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end;">
+      <!-- Formulario para agregar nuevo proveedor con diseño mejorado -->
+      <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 24px; border-radius: 16px; border: 2px solid #bae6fd; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+          <span style="font-size: 24px;">➕</span>
+          <h4 style="color: #0369a1; font-size: 17px; margin: 0; font-weight: 600;">Agregar Nuevo Proveedor</h4>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end;">
           <div>
-            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #64748B;">Proveedor</label>
-            <select id="select-proveedor-nuevo" class="form-input" style="width: 100%;">
-              <option value="">Seleccionar...</option>
+            <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 14px; color: #0c4a6e; font-weight: 500;">
+              <span>🏭</span>
+              <span>Proveedor</span>
+            </label>
+            <select id="select-proveedor-nuevo" class="form-input" style="width: 100%; padding: 12px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 14px; background: white; transition: all 0.2s;">
+              <option value="">Seleccionar proveedor...</option>
             </select>
           </div>
           <div>
-            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #64748B;">Precio</label>
-            <input type="number" id="input-precio-nuevo" class="form-input" placeholder="0.00" step="0.01" min="0" style="width: 100%;">
+            <label style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 14px; color: #0c4a6e; font-weight: 500;">
+              <span>💰</span>
+              <span>Precio (€)</span>
+            </label>
+            <input type="number" id="input-precio-nuevo" class="form-input" placeholder="0.00" step="0.01" min="0" style="width: 100%; padding: 12px; border: 2px solid #bae6fd; border-radius: 8px; font-size: 14px; transition: all 0.2s;">
           </div>
           <div>
-            <button class="btn btn-primary" onclick="window.agregarProveedorIngrediente()" style="padding: 10px 20px;">
+            <button class="btn btn-primary" onclick="window.agregarProveedorIngrediente()" style="padding: 12px 24px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border: none; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: all 0.2s; cursor: pointer;">
               ➕ Agregar
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Botones del modal -->
-      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-        <button class="btn btn-secondary" onclick="window.cerrarModalProveedoresIngrediente()">Cerrar</button>
+      <!-- Botones del modal con mejor estilo -->
+      <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 24px; border-top: 2px solid #e2e8f0;">
+        <button class="btn btn-secondary" onclick="window.cerrarModalProveedoresIngrediente()" style="padding: 12px 24px; border-radius: 8px; font-weight: 500;">
+          ✕ Cerrar
+        </button>
       </div>
     </div>
   </div>
