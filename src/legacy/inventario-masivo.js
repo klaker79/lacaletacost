@@ -1287,7 +1287,7 @@ async function renderizarTablaPLDiario() {
     // Obtener gastos fijos mensuales desde API (misma fuente que Finanzas)
     let gastosFijosMes = 0;
     try {
-        const gastosFijos = await window.API.getGastosFijos();
+        const gastosFijos = await window.api.getGastosFijos();
         if (gastosFijos && gastosFijos.length > 0) {
             gastosFijosMes = gastosFijos.reduce((sum, g) => sum + parseFloat(g.monto_mensual || 0), 0);
         }
