@@ -1484,13 +1484,53 @@
       </div>
     </div>
     <div class="card">
+      <!-- Botones de navegación siempre visibles -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <button onclick="window.semanaAnterior?.()" class="btn btn-secondary" style="padding: 8px 12px;">◀</button>
+          <h3 id="horarios-semana-titulo" style="margin: 0; font-size: 1.1rem;">Semana actual</h3>
+          <button onclick="window.semanaSiguiente?.()" class="btn btn-secondary" style="padding: 8px 12px;">▶</button>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button onclick="window.copiarSemanaAnterior?.()" class="btn btn-secondary">📋 Copiar Semana</button>
+          <button onclick="window.mostrarModalEmpleado?.()" class="btn btn-primary">+ Añadir Empleado</button>
+        </div>
+      </div>
+      <!-- Contenedor para la tabla -->
       <div id="horarios-container">
-        <div class="empty-state">
-          <div class="icon">📅</div>
-          <h3>Cargando horarios...</h3>
+        <div style="padding: 40px; text-align: center; color: #64748B;">
+          <div style="font-size: 3rem; margin-bottom: 10px;">👥</div>
+          <p>Haz clic en <a href="#" onclick="window.mostrarModalEmpleado?.(); return false;"
+              style="color: #7C3AED; font-weight: 600;">+ Añadir Empleado</a> para empezar</p>
+          <p style="font-size: 0.8rem; margin-top: 10px;">O espera a que se carguen los empleados existentes...</p>
+        </div>
+      </div>
+      <!-- Estadísticas -->
+      <div id="horarios-stats" style="margin-top: 20px; padding: 15px 20px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); 
+                  border-radius: 12px; display: flex; justify-content: space-around; text-align: center;">
+        <div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: #7C3AED;">0</div>
+          <div style="font-size: 0.8rem; color: #64748B;">Empleados</div>
+        </div>
+        <div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">0</div>
+          <div style="font-size: 0.8rem; color: #64748B;">Turnos esta semana</div>
+        </div>
+        <div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: #DC2626;">0€</div>
+          <div style="font-size: 0.8rem; color: #64748B;">Coste estimado</div>
         </div>
       </div>
     </div>
+    <script>
+      // Auto-cargar horarios cuando la pestaña sea visible
+      setTimeout(function() {
+        if (window.renderizarHorarios) {
+          console.log('📅 Auto-cargando horarios...');
+          window.renderizarHorarios();
+        }
+      }, 1000);
+    </script>
   </div>
 
   <!-- MODAL EMPLEADO -->
