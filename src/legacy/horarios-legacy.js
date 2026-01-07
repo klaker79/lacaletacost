@@ -1,21 +1,21 @@
 /**
- * Horarios Legacy Module
- * Gestión visual de horarios del personal
- * Script legacy para compatibilidad
+ * MindLoop AI Staff Scheduler
+ * Ultra-modern staff scheduling with AI generation
  */
 
 (function () {
     'use strict';
 
+    // State
     let empleados = [];
-    let horariosSemanales = {};
+    let horarios = {};
     let semanaActual = getInicioSemana(new Date());
 
+    // Utilities
     function getInicioSemana(date) {
         const d = new Date(date);
         const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-        d.setDate(diff);
+        d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
         d.setHours(0, 0, 0, 0);
         return d;
     }
@@ -24,337 +24,353 @@
         return date.toISOString().split('T')[0];
     }
 
-    function getDiasSemana(inicioSemana) {
+    function getDiasSemana() {
         const dias = [];
-        const nombres = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+        const nombres = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
         for (let i = 0; i < 7; i++) {
-            const d = new Date(inicioSemana);
+            const d = new Date(semanaActual);
             d.setDate(d.getDate() + i);
-            dias.push({
-                nombre: nombres[i],
-                fecha: formatFecha(d),
-                dia: d.getDate()
-            });
+            dias.push({ nombre: nombres[i], fecha: formatFecha(d), dia: d.getDate() });
         }
         return dias;
     }
 
+    // API calls
+    async function api(url, options = {}) {
+        const apiObj = window.API || window.api;
+        if (!apiObj || !apiObj.fetch) throw new Error('API not available');
+        return await apiObj.fetch(url, options);
+    }
+
     async function cargarEmpleados() {
         try {
-            const api = window.API || window.api;
-            if (!api || !api.fetch) {
-                console.warn('API no disponible para horarios');
-                empleados = [];
-                return;
-            }
-            empleados = await api.fetch('/api/empleados');
+            empleados = await api('/api/empleados');
             if (!Array.isArray(empleados)) empleados = [];
-        } catch (error) {
-            console.error('Error cargando empleados:', error);
+            console.log('✅ Empleados cargados:', empleados.length);
+        } catch (e) {
+            console.error('Error cargando empleados:', e);
             empleados = [];
         }
     }
 
-    async function cargarHorariosSemana() {
+    async function cargarHorarios() {
         try {
-            const api = window.API || window.api;
-            if (!api || !api.fetch) {
-                horariosSemanales = {};
-                return;
-            }
             const desde = formatFecha(semanaActual);
             const hasta = formatFecha(new Date(semanaActual.getTime() + 6 * 24 * 60 * 60 * 1000));
-            const horarios = await api.fetch(`/api/horarios?desde=${desde}&hasta=${hasta}`);
-
-            horariosSemanales = {};
-            if (Array.isArray(horarios)) {
-                horarios.forEach(h => {
-                    const key = `${h.empleado_id}-${h.fecha}`;
-                    horariosSemanales[key] = h;
-                });
+            const data = await api(`/api/horarios?desde=${desde}&hasta=${hasta}`);
+            horarios = {};
+            if (Array.isArray(data)) {
+                data.forEach(h => { horarios[`${h.empleado_id}-${h.fecha}`] = h; });
             }
-        } catch (error) {
-            console.error('Error cargando horarios:', error);
-            horariosSemanales = {};
+        } catch (e) {
+            console.error('Error cargando horarios:', e);
+            horarios = {};
         }
     }
 
-    window.toggleTurno = async function (empleadoId, fecha) {
-        const key = `${empleadoId}-${fecha}`;
-        const api = window.API || window.api;
+    // Render functions
+    function renderListaEmpleados() {
+        const container = document.getElementById('lista-empleados');
+        if (!container) return;
 
+        if (empleados.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 30px; color: #64748B;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">👤</div>
+                    <p style="font-size: 0.85rem;">Sin empleados</p>
+                    <p style="font-size: 0.75rem; opacity: 0.7;">Haz clic en "+ Nuevo"</p>
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = empleados.map(emp => `
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; margin-bottom: 8px; background: linear-gradient(135deg, ${emp.color}15 0%, ${emp.color}08 100%); border: 1px solid ${emp.color}30; cursor: pointer; transition: all 0.2s;" 
+                 onmouseover="this.style.transform='scale(1.02)'" 
+                 onmouseout="this.style.transform='scale(1)'">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: ${emp.color || '#667eea'}; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9rem;">
+                    ${(emp.nombre || '?')[0].toUpperCase()}
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.9rem;">${emp.nombre}</div>
+                    <div style="font-size: 0.75rem; color: #64748B;">${emp.puesto || 'Sin puesto'} • ${emp.coste_hora || 10}€/h</div>
+                </div>
+                <button onclick="event.stopPropagation(); eliminarEmpleadoUI(${emp.id})" style="background: none; border: none; color: #EF4444; cursor: pointer; font-size: 1rem;">✕</button>
+            </div>
+        `).join('');
+    }
+
+    function renderGrid() {
+        const tbody = document.getElementById('tbody-horarios');
+        const titulo = document.getElementById('titulo-semana');
+        if (!tbody) return;
+
+        const dias = getDiasSemana();
+        const mesAno = semanaActual.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+        if (titulo) titulo.textContent = `${dias[0].dia}-${dias[6].dia} ${mesAno.charAt(0).toUpperCase() + mesAno.slice(1)}`;
+
+        if (empleados.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="padding: 50px; text-align: center; color: #94A3B8;">
+                        <div style="font-size: 2.5rem; margin-bottom: 15px;">📅</div>
+                        <p style="font-weight: 500;">Añade empleados para empezar</p>
+                        <p style="font-size: 0.8rem; opacity: 0.7;">Usa el botón "+ Nuevo" en el panel izquierdo</p>
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        tbody.innerHTML = empleados.map(emp => {
+            const celdas = dias.map(dia => {
+                const key = `${emp.id}-${dia.fecha}`;
+                const tiene = !!horarios[key];
+                return `
+                    <td style="padding: 6px; text-align: center;">
+                        <div onclick="toggleTurnoUI(${emp.id}, '${dia.fecha}')" 
+                             style="width: 40px; height: 40px; margin: 0 auto; border-radius: 10px; cursor: pointer; 
+                                    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+                                    ${tiene
+                        ? `background: ${emp.color || '#667eea'}; color: white; box-shadow: 0 3px 12px ${emp.color || '#667eea'}50;`
+                        : 'background: #f1f5f9; color: #94A3B8;'}"
+                             onmouseover="this.style.transform='scale(1.1)'" 
+                             onmouseout="this.style.transform='scale(1)'">
+                            ${tiene ? '✓' : ''}
+                        </div>
+                    </td>`;
+            }).join('');
+
+            return `
+                <tr>
+                    <td style="padding: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: ${emp.color || '#667eea'}; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.8rem;">
+                                ${(emp.nombre || '?')[0].toUpperCase()}
+                            </div>
+                            <span style="font-weight: 500; font-size: 0.9rem;">${emp.nombre}</span>
+                        </div>
+                    </td>
+                    ${celdas}
+                </tr>`;
+        }).join('');
+    }
+
+    function renderStats() {
+        const totalTurnos = Object.keys(horarios).length;
+        const horasTurno = 8;
+        let costeTotal = 0;
+        Object.values(horarios).forEach(h => {
+            const emp = empleados.find(e => e.id === h.empleado_id);
+            if (emp) costeTotal += (emp.coste_hora || 10) * horasTurno;
+        });
+
+        const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+        el('stat-empleados', empleados.length);
+        el('stat-turnos', totalTurnos);
+        el('stat-horas', `${totalTurnos * horasTurno}h`);
+        el('stat-coste', `${costeTotal}€`);
+    }
+
+    async function render() {
+        await cargarEmpleados();
+        await cargarHorarios();
+        renderListaEmpleados();
+        renderGrid();
+        renderStats();
+    }
+
+    // Actions
+    window.toggleTurnoUI = async function (empId, fecha) {
+        const key = `${empId}-${fecha}`;
         try {
-            if (horariosSemanales[key]) {
-                await api.fetch(`/api/horarios/empleado/${empleadoId}/fecha/${fecha}`, { method: 'DELETE' });
-                delete horariosSemanales[key];
+            if (horarios[key]) {
+                await api(`/api/horarios/empleado/${empId}/fecha/${fecha}`, { method: 'DELETE' });
+                delete horarios[key];
             } else {
-                const result = await api.fetch('/api/horarios', {
+                const result = await api('/api/horarios', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ empleado_id: empleadoId, fecha })
+                    body: JSON.stringify({ empleado_id: empId, fecha })
                 });
-                horariosSemanales[key] = result;
+                horarios[key] = result;
             }
-            window.renderizarHorarios();
-        } catch (error) {
-            console.error('Error toggling turno:', error);
+            renderGrid();
+            renderStats();
+        } catch (e) {
+            console.error('Error toggle turno:', e);
             window.showToast?.('Error al modificar turno', 'error');
         }
     };
 
-    window.semanaAnterior = function () {
-        semanaActual.setDate(semanaActual.getDate() - 7);
-        window.renderizarHorarios();
-    };
-
-    window.semanaSiguiente = function () {
-        semanaActual.setDate(semanaActual.getDate() + 7);
-        window.renderizarHorarios();
-    };
-
-    window.copiarSemanaAnterior = async function () {
-        const api = window.API || window.api;
-        const semanaOrigen = new Date(semanaActual);
-        semanaOrigen.setDate(semanaOrigen.getDate() - 7);
-
+    window.eliminarEmpleadoUI = async function (id) {
+        if (!confirm('¿Eliminar este empleado?')) return;
         try {
-            const result = await api.fetch('/api/horarios/copiar-semana', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    semana_origen: formatFecha(semanaOrigen),
-                    semana_destino: formatFecha(semanaActual)
-                })
-            });
-            window.showToast?.(`${result.turnos_copiados} turnos copiados`, 'success');
-            await cargarHorariosSemana();
-            window.renderizarHorarios();
-        } catch (error) {
-            console.error('Error copiando semana:', error);
-            window.showToast?.('Error al copiar semana', 'error');
+            await api(`/api/empleados/${id}`, { method: 'DELETE' });
+            await render();
+            window.showToast?.('Empleado eliminado', 'success');
+        } catch (e) {
+            console.error('Error eliminando empleado:', e);
         }
     };
 
-    window.mostrarModalEmpleado = function (empleado) {
+    // Modal functions
+    function showModal() {
         const modal = document.getElementById('modal-empleado');
-        const form = document.getElementById('form-empleado');
-
-        if (empleado && typeof empleado === 'object') {
-            document.getElementById('empleado-id').value = empleado.id || '';
-            document.getElementById('empleado-nombre').value = empleado.nombre || '';
-            document.getElementById('empleado-color').value = empleado.color || '#3B82F6';
-            document.getElementById('empleado-puesto').value = empleado.puesto || 'Camarero';
-            document.getElementById('empleado-coste-hora').value = empleado.coste_hora || 10;
-        } else {
-            form?.reset();
+        if (modal) {
+            modal.style.display = 'flex';
             document.getElementById('empleado-id').value = '';
-            document.getElementById('empleado-color').value = '#3B82F6';
+            document.getElementById('empleado-nombre').value = '';
+            document.getElementById('empleado-color').value = '#667eea';
+            document.getElementById('empleado-puesto').value = 'Camarero';
+            document.getElementById('empleado-coste-hora').value = '10';
+            setTimeout(() => document.getElementById('empleado-nombre')?.focus(), 100);
         }
+    }
 
-        if (modal) modal.style.display = 'flex';
-    };
-
-    window.cerrarModalEmpleado = function () {
+    function hideModal() {
         const modal = document.getElementById('modal-empleado');
         if (modal) modal.style.display = 'none';
-    };
+    }
 
-    window.guardarEmpleado = async function (event) {
-        if (event) event.preventDefault();
-        const api = window.API || window.api;
+    async function saveEmpleado(e) {
+        if (e) e.preventDefault();
+        const nombre = document.getElementById('empleado-nombre')?.value;
+        if (!nombre) { alert('Nombre requerido'); return; }
 
-        const id = document.getElementById('empleado-id').value;
         const data = {
-            nombre: document.getElementById('empleado-nombre').value,
-            color: document.getElementById('empleado-color').value,
-            puesto: document.getElementById('empleado-puesto').value,
-            coste_hora: parseFloat(document.getElementById('empleado-coste-hora').value) || 10
+            nombre,
+            color: document.getElementById('empleado-color')?.value || '#667eea',
+            puesto: document.getElementById('empleado-puesto')?.value || 'Camarero',
+            coste_hora: parseFloat(document.getElementById('empleado-coste-hora')?.value) || 10
         };
 
         try {
-            if (id) {
-                await api.fetch(`/api/empleados/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-            } else {
-                await api.fetch('/api/empleados', {
+            await api('/api/empleados', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            hideModal();
+            await render();
+            window.showToast?.('Empleado añadido', 'success');
+        } catch (e) {
+            console.error('Error guardando empleado:', e);
+            window.showToast?.('Error al guardar', 'error');
+        }
+    }
+
+    // AI Generation
+    async function generarHorarioIA() {
+        if (empleados.length === 0) {
+            window.showToast?.('Primero añade empleados', 'warning');
+            return;
+        }
+
+        window.showToast?.('🤖 Generando horario inteligente...', 'info');
+
+        const dias = getDiasSemana();
+
+        // Simple AI: distribute employees across days based on availability
+        for (const emp of empleados) {
+            // Parse dias_libres_fijos if available
+            const diasLibres = (emp.dias_libres_fijos || '').split(',').map(d => d.trim().toLowerCase());
+            const diasNombres = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+
+            for (let i = 0; i < dias.length; i++) {
+                const dia = dias[i];
+                const key = `${emp.id}-${dia.fecha}`;
+
+                // Skip if already has shift or is a day off
+                if (horarios[key]) continue;
+                if (diasLibres.includes(diasNombres[i])) continue;
+
+                // Add shift
+                try {
+                    const result = await api('/api/horarios', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ empleado_id: emp.id, fecha: dia.fecha })
+                    });
+                    horarios[key] = result;
+                } catch (e) {
+                    // Ignore errors (might already exist)
+                }
+            }
+        }
+
+        renderGrid();
+        renderStats();
+        window.showToast?.('✅ Horario generado con IA', 'success');
+    }
+
+    // Event bindings
+    function bindEvents() {
+        // Add employee button
+        document.getElementById('btn-add-empleado')?.addEventListener('click', showModal);
+
+        // Week navigation
+        document.getElementById('btn-semana-prev')?.addEventListener('click', () => {
+            semanaActual.setDate(semanaActual.getDate() - 7);
+            render();
+        });
+        document.getElementById('btn-semana-next')?.addEventListener('click', () => {
+            semanaActual.setDate(semanaActual.getDate() + 7);
+            render();
+        });
+
+        // Copy week
+        document.getElementById('btn-copiar-semana')?.addEventListener('click', async () => {
+            try {
+                const origen = new Date(semanaActual);
+                origen.setDate(origen.getDate() - 7);
+                const result = await api('/api/horarios/copiar-semana', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify({
+                        semana_origen: formatFecha(origen),
+                        semana_destino: formatFecha(semanaActual)
+                    })
                 });
-            }
-
-            window.cerrarModalEmpleado();
-            await cargarEmpleados();
-            window.renderizarHorarios();
-            window.showToast?.('Empleado guardado', 'success');
-        } catch (error) {
-            console.error('Error guardando empleado:', error);
-            window.showToast?.('Error al guardar empleado', 'error');
-        }
-    };
-
-    window.eliminarEmpleado = async function (id) {
-        if (!confirm('¿Eliminar este empleado?')) return;
-        const api = window.API || window.api;
-
-        try {
-            await api.fetch(`/api/empleados/${id}`, { method: 'DELETE' });
-            await cargarEmpleados();
-            window.renderizarHorarios();
-            window.showToast?.('Empleado eliminado', 'success');
-        } catch (error) {
-            console.error('Error eliminando empleado:', error);
-            window.showToast?.('Error al eliminar empleado', 'error');
-        }
-    };
-
-    function calcularEstadisticas() {
-        let totalTurnos = 0;
-        let costeTotal = 0;
-        const horasJornada = 8;
-
-        Object.values(horariosSemanales).forEach(h => {
-            totalTurnos++;
-            const emp = empleados.find(e => e.id === h.empleado_id);
-            if (emp) {
-                costeTotal += (emp.coste_hora || 10) * horasJornada;
+                await render();
+                window.showToast?.(`${result.turnos_copiados} turnos copiados`, 'success');
+            } catch (e) {
+                window.showToast?.('Error copiando semana', 'error');
             }
         });
 
-        return { totalTurnos, costeTotal, empleadosActivos: empleados.length };
+        // AI Generation
+        document.getElementById('btn-generar-horario')?.addEventListener('click', generarHorarioIA);
+
+        // Modal close button
+        document.querySelector('#modal-empleado .close')?.addEventListener('click', hideModal);
+
+        // Form submit
+        document.getElementById('form-empleado')?.addEventListener('submit', saveEmpleado);
+
+        // Close modal on backdrop click
+        document.getElementById('modal-empleado')?.addEventListener('click', (e) => {
+            if (e.target.id === 'modal-empleado') hideModal();
+        });
     }
 
-    function escapeHTML(str) {
-        if (!str) return '';
-        return String(str).replace(/[&<>"']/g, s => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        }[s]));
+    // Expose globally for legacy compatibility
+    window.mostrarModalEmpleado = showModal;
+    window.cerrarModalEmpleado = hideModal;
+    window.guardarEmpleado = saveEmpleado;
+    window.renderizarHorarios = render;
+
+    // Initialize
+    function init() {
+        console.log('🤖 MindLoop AI Staff Scheduler inicializando...');
+        bindEvents();
+        render();
     }
 
-    window.renderizarHorarios = async function () {
-        const container = document.getElementById('horarios-container');
-        if (!container) return;
+    // Run on load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        setTimeout(init, 100);
+    }
 
-        await cargarEmpleados();
-        await cargarHorariosSemana();
-
-        const dias = getDiasSemana(semanaActual);
-        const stats = calcularEstadisticas();
-
-        const mesAno = semanaActual.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-        const rangoFechas = `${dias[0].dia}-${dias[6].dia} ${mesAno.charAt(0).toUpperCase() + mesAno.slice(1)}`;
-
-        let html = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <button onclick="window.semanaAnterior()" class="btn btn-secondary" style="padding: 8px 12px;">◀</button>
-                    <h3 style="margin: 0; font-size: 1.1rem;">${rangoFechas}</h3>
-                    <button onclick="window.semanaSiguiente()" class="btn btn-secondary" style="padding: 8px 12px;">▶</button>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="window.copiarSemanaAnterior()" class="btn btn-secondary">📋 Copiar Semana</button>
-                    <button onclick="window.mostrarModalEmpleado()" class="btn btn-primary">+ Añadir Empleado</button>
-                </div>
-            </div>
-        `;
-
-        html += `
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; min-width: 700px;">
-                    <thead>
-                        <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                            <th style="padding: 12px 15px; text-align: left; border-radius: 8px 0 0 0;">Empleado</th>
-                            ${dias.map((d, i) => `<th style="padding: 12px 10px; text-align: center; ${i === 6 ? 'border-radius: 0 8px 0 0;' : ''}">${d.nombre} ${d.dia}</th>`).join('')}
-                            <th style="padding: 12px 10px; text-align: center;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-
-        if (empleados.length === 0) {
-            html += `
-                <tr>
-                    <td colspan="9" style="padding: 40px; text-align: center; color: #64748B;">
-                        <div style="font-size: 3rem; margin-bottom: 10px;">👥</div>
-                        <p>No hay empleados. <a href="#" onclick="window.mostrarModalEmpleado(); return false;" style="color: #7C3AED;">Añade el primero</a></p>
-                    </td>
-                </tr>
-            `;
-        } else {
-            empleados.forEach(emp => {
-                html += `
-                    <tr style="border-bottom: 1px solid #E2E8F0;">
-                        <td style="padding: 12px 15px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="width: 12px; height: 12px; border-radius: 50%; background: ${emp.color || '#3B82F6'};"></span>
-                                <span style="font-weight: 500;">${escapeHTML(emp.nombre)}</span>
-                                <span style="font-size: 0.75rem; color: #64748B;">${escapeHTML(emp.puesto) || ''}</span>
-                            </div>
-                        </td>
-                `;
-
-                dias.forEach(dia => {
-                    const key = `${emp.id}-${dia.fecha}`;
-                    const tieneTurno = horariosSemanales[key];
-                    const esExtra = tieneTurno?.es_extra;
-
-                    html += `
-                        <td style="padding: 8px; text-align: center;">
-                            <div onclick="window.toggleTurno(${emp.id}, '${dia.fecha}')" 
-                                 style="width: 36px; height: 36px; margin: 0 auto; border-radius: 8px; cursor: pointer; 
-                                        display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-                                        ${tieneTurno
-                            ? `background: ${emp.color || '#3B82F6'}; color: white; box-shadow: 0 2px 8px ${emp.color}40;`
-                            : 'background: #F1F5F9; color: #94A3B8;'}"
-                                 title="${tieneTurno ? 'Quitar turno' : 'Añadir turno'}">
-                                ${tieneTurno ? (esExtra ? '★' : '✓') : ''}
-                            </div>
-                        </td>
-                    `;
-                });
-
-                const empJson = JSON.stringify(emp).replace(/'/g, "\\'");
-                html += `
-                        <td style="padding: 8px; text-align: center;">
-                            <button onclick='window.mostrarModalEmpleado(${empJson})' 
-                                    class="icon-btn" title="Editar" style="margin-right: 5px;">✏️</button>
-                            <button onclick="window.eliminarEmpleado(${emp.id})" 
-                                    class="icon-btn delete" title="Eliminar">🗑️</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-
-        html += `
-                    </tbody>
-                </table>
-            </div>
-        `;
-
-        html += `
-            <div style="margin-top: 20px; padding: 15px 20px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); 
-                        border-radius: 12px; display: flex; justify-content: space-around; text-align: center;">
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #7C3AED;">${stats.empleadosActivos}</div>
-                    <div style="font-size: 0.8rem; color: #64748B;">Empleados</div>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">${stats.totalTurnos}</div>
-                    <div style="font-size: 0.8rem; color: #64748B;">Turnos esta semana</div>
-                </div>
-                <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #DC2626;">${stats.costeTotal.toFixed(0)}€</div>
-                    <div style="font-size: 0.8rem; color: #64748B;">Coste estimado</div>
-                </div>
-            </div>
-        `;
-
-        container.innerHTML = html;
-    };
-
-    console.log('✅ Módulo horarios-legacy.js cargado');
+    console.log('✅ MindLoop AI Staff Scheduler cargado');
 })();

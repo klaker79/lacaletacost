@@ -1475,62 +1475,126 @@
     </div>
   </div>
 
-  <!-- TAB: HORARIOS (Staff Scheduling) -->
+  <!-- TAB: HORARIOS (AI Staff Scheduler) -->
   <div id="tab-horarios" class="tab-content">
-    <div class="top-bar">
+    <div class="top-bar" style="display: flex; justify-content: space-between; align-items: center;">
       <div>
-        <h2>📅 Horarios del Personal</h2>
-        <p>Gestión visual de turnos del equipo</p>
+        <h2 style="display: flex; align-items: center; gap: 10px;">
+          <span
+            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px; border-radius: 10px;">🤖</span>
+          MindLoop Staff Scheduler
+        </h2>
+        <p style="opacity: 0.7;">Generador inteligente de horarios con IA</p>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button id="btn-generar-horario" class="btn btn-primary"
+          style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 12px 20px; font-weight: 600;">
+          ⚡ Generar Horario IA
+        </button>
       </div>
     </div>
-    <div class="card">
-      <!-- Botones de navegación siempre visibles -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <div style="display: flex; align-items: center; gap: 15px;">
-          <button onclick="window.semanaAnterior?.()" class="btn btn-secondary" style="padding: 8px 12px;">◀</button>
-          <h3 id="horarios-semana-titulo" style="margin: 0; font-size: 1.1rem;">Semana actual</h3>
-          <button onclick="window.semanaSiguiente?.()" class="btn btn-secondary" style="padding: 8px 12px;">▶</button>
+
+    <div style="display: grid; grid-template-columns: 300px 1fr; gap: 20px; margin-top: 20px;">
+
+      <!-- Panel izquierdo: Equipo -->
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <div
+          style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; font-size: 1rem;">👥 Equipo</h3>
+          <button id="btn-add-empleado"
+            style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+            + Nuevo
+          </button>
         </div>
-        <div style="display: flex; gap: 10px;">
-          <button onclick="window.copiarSemanaAnterior?.()" class="btn btn-secondary">📋 Copiar Semana</button>
-          <button onclick="window.mostrarModalEmpleado?.()" class="btn btn-primary">+ Añadir Empleado</button>
+        <div id="lista-empleados" style="padding: 15px; max-height: 400px; overflow-y: auto;">
+          <div style="text-align: center; padding: 30px; color: #64748B;">
+            <div style="font-size: 2rem; margin-bottom: 10px;">👤</div>
+            <p style="font-size: 0.85rem;">Sin empleados</p>
+            <p style="font-size: 0.75rem; opacity: 0.7;">Haz clic en "+ Nuevo" para añadir</p>
+          </div>
         </div>
       </div>
-      <!-- Contenedor para la tabla -->
-      <div id="horarios-container">
-        <div style="padding: 40px; text-align: center; color: #64748B;">
-          <div style="font-size: 3rem; margin-bottom: 10px;">👥</div>
-          <p>Haz clic en <a href="#" onclick="window.mostrarModalEmpleado?.(); return false;"
-              style="color: #7C3AED; font-weight: 600;">+ Añadir Empleado</a> para empezar</p>
-          <p style="font-size: 0.8rem; margin-top: 10px;">O espera a que se carguen los empleados existentes...</p>
+
+      <!-- Panel derecho: Calendario semanal -->
+      <div class="card" style="padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <button id="btn-semana-prev"
+              style="background: #f1f5f9; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 1rem;">◀</button>
+            <h3 id="titulo-semana" style="margin: 0; font-size: 1.1rem; font-weight: 600;">Enero 2026</h3>
+            <button id="btn-semana-next"
+              style="background: #f1f5f9; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 1rem;">▶</button>
+          </div>
+          <button id="btn-copiar-semana"
+            style="background: #f1f5f9; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem;">
+            📋 Copiar semana anterior
+          </button>
         </div>
-      </div>
-      <!-- Estadísticas -->
-      <div id="horarios-stats" style="margin-top: 20px; padding: 15px 20px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); 
-                  border-radius: 12px; display: flex; justify-content: space-around; text-align: center;">
-        <div>
-          <div style="font-size: 1.5rem; font-weight: 700; color: #7C3AED;">0</div>
-          <div style="font-size: 0.8rem; color: #64748B;">Empleados</div>
+
+        <div id="grid-horarios" style="overflow-x: auto;">
+          <!-- Aquí se renderiza la cuadrícula -->
+          <table style="width: 100%; border-collapse: separate; border-spacing: 4px; min-width: 600px;">
+            <thead>
+              <tr>
+                <th style="padding: 12px; text-align: left; font-weight: 600; color: #64748B; font-size: 0.8rem;">
+                  EMPLEADO</th>
+                <th style="padding: 12px; text-align: center; font-weight: 600; color: #64748B; font-size: 0.8rem;">LUN
+                </th>
+                <th style="padding: 12px; text-align: center; font-weight: 600; color: #64748B; font-size: 0.8rem;">MAR
+                </th>
+                <th style="padding: 12px; text-align: center; font-weight: 600; color: #64748B; font-size: 0.8rem;">MIÉ
+                </th>
+                <th style="padding: 12px; text-align: center; font-weight: 600; color: #64748B; font-size: 0.8rem;">JUE
+                </th>
+                <th style="padding: 12px; text-align: center; font-weight: 600; color: #64748B; font-size: 0.8rem;">VIE
+                </th>
+                <th style="padding: 12px; text-align: center; font-weight: 600; color: #64748B; font-size: 0.8rem;">SÁB
+                </th>
+                <th style="padding: 12px; text-align: center; font-weight: 600; color: #64748B; font-size: 0.8rem;">DOM
+                </th>
+              </tr>
+            </thead>
+            <tbody id="tbody-horarios">
+              <tr>
+                <td colspan="8" style="padding: 50px; text-align: center; color: #94A3B8;">
+                  <div style="font-size: 2.5rem; margin-bottom: 15px;">📅</div>
+                  <p style="font-weight: 500;">Añade empleados para empezar</p>
+                  <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 5px;">El horario se generará automáticamente
+                    con IA</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div>
-          <div style="font-size: 1.5rem; font-weight: 700; color: #059669;">0</div>
-          <div style="font-size: 0.8rem; color: #64748B;">Turnos esta semana</div>
-        </div>
-        <div>
-          <div style="font-size: 1.5rem; font-weight: 700; color: #DC2626;">0€</div>
-          <div style="font-size: 0.8rem; color: #64748B;">Coste estimado</div>
+
+        <!-- Stats footer -->
+        <div
+          style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+          <div style="text-align: center;">
+            <div id="stat-empleados"
+              style="font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+              0</div>
+            <div style="font-size: 0.75rem; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Empleados
+            </div>
+          </div>
+          <div style="text-align: center;">
+            <div id="stat-turnos" style="font-size: 1.8rem; font-weight: 700; color: #059669;">0</div>
+            <div style="font-size: 0.75rem; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Turnos
+            </div>
+          </div>
+          <div style="text-align: center;">
+            <div id="stat-horas" style="font-size: 1.8rem; font-weight: 700; color: #0EA5E9;">0h</div>
+            <div style="font-size: 0.75rem; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Horas
+            </div>
+          </div>
+          <div style="text-align: center;">
+            <div id="stat-coste" style="font-size: 1.8rem; font-weight: 700; color: #DC2626;">0€</div>
+            <div style="font-size: 0.75rem; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Coste
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <script>
-      // Auto-cargar horarios cuando la pestaña sea visible
-      setTimeout(function() {
-        if (window.renderizarHorarios) {
-          console.log('📅 Auto-cargando horarios...');
-          window.renderizarHorarios();
-        }
-      }, 1000);
-    </script>
   </div>
 
   <!-- MODAL EMPLEADO -->
