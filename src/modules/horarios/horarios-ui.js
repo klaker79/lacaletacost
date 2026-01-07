@@ -40,17 +40,26 @@ function getDiasSemana(inicioSemana) {
 
 // Cargar empleados
 async function cargarEmpleados() {
+    console.log('📅 cargarEmpleados: iniciando...');
     try {
-        empleados = await window.API.fetch('/api/empleados');
+        const apiFunc = window.API?.fetch || window.api?.fetch;
+        if (!apiFunc) {
+            console.error('📅 API.fetch no disponible');
+            empleados = [];
+            return;
+        }
+        empleados = await apiFunc('/api/empleados');
+        console.log('📅 cargarEmpleados: recibidos', empleados);
         if (!Array.isArray(empleados)) empleados = [];
     } catch (error) {
-        console.error('Error cargando empleados:', error);
+        console.error('📅 Error cargando empleados:', error);
         empleados = [];
     }
 }
 
 // Cargar horarios de la semana
 async function cargarHorariosSemana() {
+    console.log('📅 cargarHorariosSemana: iniciando...');
     try {
         const desde = formatFecha(semanaActual);
         const hasta = formatFecha(new Date(semanaActual.getTime() + 6 * 24 * 60 * 60 * 1000));
@@ -226,8 +235,13 @@ function calcularEstadisticas() {
 
 // Renderizar
 export async function renderizarHorarios() {
+    console.log('📅 renderizarHorarios: iniciando...');
     const container = document.getElementById('horarios-container');
-    if (!container) return;
+    if (!container) {
+        console.error('📅 Container horarios-container no encontrado');
+        return;
+    }
+    console.log('📅 Container encontrado, cargando datos...');
 
     await cargarEmpleados();
     await cargarHorariosSemana();
