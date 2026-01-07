@@ -83,29 +83,83 @@ function renderizarProveedoresAsociados(proveedoresAsociados) {
         return;
     }
 
+    // 📊 Calcular análisis de precios
+    const precios = proveedoresAsociados.map(pa => ({
+        nombre: pa.proveedor_nombre,
+        precio: parseFloat(pa.precio),
+        esPrincipal: pa.es_proveedor_principal
+    }));
+
+    const precioMin = Math.min(...precios.map(p => p.precio));
+    const precioMax = Math.max(...precios.map(p => p.precio));
+    const precioMedio = precios.reduce((sum, p) => sum + p.precio, 0) / precios.length;
+    const mejorProveedor = precios.find(p => p.precio === precioMin);
+    const peorProveedor = precios.find(p => p.precio === precioMax);
+    const ahorroPotencial = precioMax - precioMin;
+    const hayDiferencia = precios.length > 1 && ahorroPotencial > 0.01;
+
     let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
 
+    // 📊 Sección de análisis de precios (solo si hay más de 1 proveedor)
+    if (hayDiferencia) {
+        html += `
+            <div style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border: 2px solid #6366F1; border-radius: 12px; padding: 16px; margin-bottom: 8px;">
+                <h4 style="margin: 0 0 12px 0; color: #4338CA; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+                    📊 Análisis de Precios
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
+                    <div style="background: #DCFCE7; padding: 12px; border-radius: 8px; border: 1px solid #22C55E;">
+                        <div style="font-size: 11px; color: #166534; text-transform: uppercase; font-weight: 600;">💰 Mejor Precio</div>
+                        <div style="font-size: 20px; font-weight: bold; color: #059669;">${precioMin.toFixed(2)}€</div>
+                        <div style="font-size: 12px; color: #166534;">${escapeHTML(mejorProveedor.nombre)}</div>
+                    </div>
+                    <div style="background: #F1F5F9; padding: 12px; border-radius: 8px;">
+                        <div style="font-size: 11px; color: #64748B; text-transform: uppercase; font-weight: 600;">📈 Precio Medio</div>
+                        <div style="font-size: 20px; font-weight: bold; color: #475569;">${precioMedio.toFixed(2)}€</div>
+                        <div style="font-size: 12px; color: #64748B;">${precios.length} proveedores</div>
+                    </div>
+                    <div style="background: #FEF2F2; padding: 12px; border-radius: 8px; border: 1px solid #EF4444;">
+                        <div style="font-size: 11px; color: #991B1B; text-transform: uppercase; font-weight: 600;">⚠️ Más Caro</div>
+                        <div style="font-size: 20px; font-weight: bold; color: #DC2626;">${precioMax.toFixed(2)}€</div>
+                        <div style="font-size: 12px; color: #991B1B;">${escapeHTML(peorProveedor.nombre)}</div>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; padding: 10px; background: #FEF3C7; border-radius: 8px; text-align: center;">
+                    <span style="font-size: 13px; color: #92400E;">
+                        💡 <strong>Ahorro potencial:</strong> ${ahorroPotencial.toFixed(2)}€/unidad comprando a ${escapeHTML(mejorProveedor.nombre)}
+                    </span>
+                </div>
+            </div>
+        `;
+    }
+
+    // Lista de proveedores
     proveedoresAsociados.forEach(pa => {
         const esPrincipal = pa.es_proveedor_principal;
+        const esMejorPrecio = parseFloat(pa.precio) === precioMin && hayDiferencia;
         const badgePrincipal = esPrincipal
             ? '<span style="background: #10B981; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">⭐ PRINCIPAL</span>'
             : '<button class="btn-sm" onclick="window.marcarProveedorPrincipal(' +
-              ingredienteActualId +
-              ', ' +
-              pa.proveedor_id +
-              ')" style="font-size: 11px; padding: 4px 8px;">Marcar como principal</button>';
+            ingredienteActualId +
+            ', ' +
+            pa.proveedor_id +
+            ')" style="font-size: 11px; padding: 4px 8px;">Marcar como principal</button>';
+
+        const badgeMejorPrecio = esMejorPrecio
+            ? '<span style="background: #22C55E; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-left: 6px;">💰 MEJOR PRECIO</span>'
+            : '';
 
         html += `
-            <div style="border: 2px solid ${esPrincipal ? '#10B981' : '#E2E8F0'}; border-radius: 12px; padding: 16px; background: ${esPrincipal ? '#F0FDF4' : 'white'};">
+            <div style="border: 2px solid ${esPrincipal ? '#10B981' : esMejorPrecio ? '#22C55E' : '#E2E8F0'}; border-radius: 12px; padding: 16px; background: ${esPrincipal ? '#F0FDF4' : 'white'};">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                     <div>
-                        <h4 style="margin: 0; color: #1E293B; font-size: 16px;">${escapeHTML(pa.proveedor_nombre)}</h4>
+                        <h4 style="margin: 0; color: #1E293B; font-size: 16px;">${escapeHTML(pa.proveedor_nombre)}${badgeMejorPrecio}</h4>
                         ${pa.proveedor_contacto ? '<p style="margin: 4px 0; font-size: 13px; color: #64748B;">👤 ' + escapeHTML(pa.proveedor_contacto) + '</p>' : ''}
                         ${pa.proveedor_telefono ? '<p style="margin: 4px 0; font-size: 13px; color: #64748B;">📞 ' + escapeHTML(pa.proveedor_telefono) + '</p>' : ''}
                         ${pa.proveedor_email ? '<p style="margin: 4px 0; font-size: 13px; color: #64748B;">✉️ ' + escapeHTML(pa.proveedor_email) + '</p>' : ''}
                     </div>
                     <div style="text-align: right;">
-                        <div style="font-size: 24px; font-weight: bold; color: #1E293B; margin-bottom: 4px;">
+                        <div style="font-size: 24px; font-weight: bold; color: ${esMejorPrecio ? '#059669' : '#1E293B'}; margin-bottom: 4px;">
                             ${parseFloat(pa.precio).toFixed(2)} €
                         </div>
                         ${badgePrincipal}

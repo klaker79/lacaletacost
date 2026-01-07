@@ -16,79 +16,149 @@ export async function guardarPedido(event) {
 
   items.forEach(item => {
     const select = item.querySelector('select');
-    const input = item.querySelector('input[type="number"]');
+    const cantidadInput = item.querySelector('.cantidad-input');
+    const precioInput = item.querySelector('.precio-input');
     const formatoSelect = item.querySelector('select[id$="-formato-select"]');
 
-    if (select && select.value && input && input.value) {
+    if (select && select.value && cantidadInput && cantidadInput.value) {
       const ingId = parseInt(select.value);
       const ing = window.ingredientes.find(i => i.id === ingId);
-      const cantidadInput = parseFloat(input.value);
+      const cantidadValue = parseFloat(cantidadInput.value);
+
+      // 💰 Precio: usar el del input si está relleno, sino el del ingrediente
+      const precioManual = precioInput ? parseFloat(precioInput.value) : 0;
+      const precioIngrediente = ing ? parseFloat(ing.precio || 0) : 0;
+      const precioFinal = precioManual > 0 ? precioManual : precioIngrediente;
 
       // 🆕 Obtener multiplicador del formato de compra
       let multiplicador = 1;
-      let formatoMult = 1; // Multiplicador del formato original (para calcular precio)
+      let formatoMult = 1;
       let formatoUsado = null;
       let usandoFormato = false;
       if (formatoSelect && formatoSelect.parentElement?.style.display !== 'none') {
         const selectedFormatoOption = formatoSelect.options[formatoSelect.selectedIndex];
         multiplicador = parseFloat(selectedFormatoOption?.dataset?.multiplicador) || 1;
         formatoMult = parseFloat(selectedFormatoOption?.dataset?.formatoMult) || 1;
-        formatoUsado = formatoSelect.value; // 'formato' o 'unidad'
+        formatoUsado = formatoSelect.value;
         usandoFormato = formatoUsado === 'formato' && formatoMult > 1;
       }
 
       // Cantidad real en unidad base para stock
-      // Si pide 1 BOTE → 3.2 kg para stock
-      // Si pide 1 kg → 1 kg para stock
-      const cantidadReal = usandoFormato ? cantidadInput * formatoMult : cantidadInput;
+      const cantidadReal = usandoFormato ? cantidadValue * formatoMult : cantidadValue;
 
-      // 💰 Precio unitario por unidad base (kg, L, etc.)
-      // precio del ingrediente = 11.54€ (precio del BOTE)
-      // Si compra BOTE: precio/kg = 11.54/3.2 = 3.61€/kg
-      // Si compra kg: precio/kg = 11.54/3.2 = 3.61€/kg (mismo)
-      const precioIngrediente = ing ? parseFloat(ing.precio || 0) : 0;
+      // Precio unitario por unidad base
       const precioUnitarioBase = formatoMult > 1
-        ? precioIngrediente / formatoMult  // Precio por kg = precio_bote / kg_por_bote
-        : precioIngrediente;
+        ? precioFinal / formatoMult
+        : precioFinal;
 
       ingredientesPedido.push({
         ingredienteId: ingId,
         ingrediente_id: ingId,
-        cantidad: cantidadReal, // Cantidad en unidad base para stock
-        cantidadOriginal: cantidadInput, // Cantidad pedida (1 si pide 1 bote o 1 si pide 1 kg)
-        cantidadFormatos: usandoFormato ? cantidadInput : null, // Número de formatos comprados
-        formatoUsado: formatoUsado, // 'formato' o 'unidad'
+        cantidad: cantidadReal,
+        cantidadOriginal: cantidadValue,
+        cantidadFormatos: usandoFormato ? cantidadValue : null,
+        formatoUsado: formatoUsado,
         multiplicador: formatoMult,
-        precio_unitario: precioUnitarioBase, // 💰 Precio por unidad base (€/kg)
+        precio_unitario: precioUnitarioBase,
         precio: precioUnitarioBase,
-        precioFormato: formatoMult > 1 ? precioIngrediente : null, // Precio por formato (€/BOTE)
+        precioFormato: formatoMult > 1 ? precioFinal : null,
       });
     }
   });
 
-  if (ingredientesPedido.length === 0) {
-    window.showToast('Selecciona al menos un ingrediente', 'warning');
-    return;
-  }
 
-  const pedido = {
-    proveedorId: parseInt(document.getElementById('ped-proveedor').value),
-    proveedor_id: parseInt(document.getElementById('ped-proveedor').value),
-    fecha: new Date().toISOString(),
-    estado: 'pendiente',
-    ingredientes: ingredientesPedido,
-    total: window.calcularTotalPedido(),
-  };
+  const proveedorId = parseInt(document.getElementById('ped-proveedor').value);
+  const proveedor = window.proveedores.find(p => p.id === proveedorId);
+  const esCompraMercado = proveedor && proveedor.nombre.toLowerCase().includes('mercado');
+
+  let pedido;
+
+  // Datos del puesto del mercado (si aplica)
+  const puestoMercado = document.getElementById('ped-mercado-puesto')?.value?.trim() || '';
+
+  if (esCompraMercado) {
+    // ========== COMPRA MERCADO (con ingredientes + actualización de stock inmediata) ==========
+    if (ingredientesPedido.length === 0) {
+      window.showToast('Selecciona al menos un ingrediente', 'warning');
+      return;
+    }
+
+    pedido = {
+      proveedorId: proveedorId,
+      proveedor_id: proveedorId,
+      fecha: new Date().toISOString(),
+      estado: 'recibido', // Se marca directamente como recibido
+      ingredientes: ingredientesPedido,
+      total: window.calcularTotalPedido(),
+      es_compra_mercado: true,
+      detalle_mercado: puestoMercado,
+    };
+  } else {
+    // ========== PEDIDO NORMAL (con ingredientes) ==========
+    if (ingredientesPedido.length === 0) {
+      window.showToast('Selecciona al menos un ingrediente', 'warning');
+      return;
+    }
+
+    pedido = {
+      proveedorId: proveedorId,
+      proveedor_id: proveedorId,
+      fecha: new Date().toISOString(),
+      estado: 'pendiente',
+      ingredientes: ingredientesPedido,
+      total: window.calcularTotalPedido(),
+    };
+  }
 
   window.showLoading();
 
   try {
+    // Guardar pedido
     await window.api.createPedido(pedido);
+
+    // 🏪 Para compras del mercado: actualizar stock inmediatamente
+    if (esCompraMercado) {
+      for (const item of ingredientesPedido) {
+        const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
+        if (ing) {
+          const stockAnterior = parseFloat(ing.stockActual || ing.stock_actual || 0);
+          const precioAnterior = parseFloat(ing.precio || 0);
+          const cantidadRecibida = parseFloat(item.cantidad || 0);
+          const precioNuevo = parseFloat(item.precio_unitario || item.precio || 0);
+
+          // Cálculo de media ponderada de precios
+          let precioMedioPonderado;
+          if (stockAnterior + cantidadRecibida > 0) {
+            precioMedioPonderado =
+              (stockAnterior * precioAnterior + cantidadRecibida * precioNuevo) /
+              (stockAnterior + cantidadRecibida);
+          } else {
+            precioMedioPonderado = precioNuevo;
+          }
+
+          const nuevoStock = stockAnterior + cantidadRecibida;
+
+          console.log(`🏪 Mercado - ${ing.nombre}: Stock ${stockAnterior} → ${nuevoStock}, Precio ${precioAnterior.toFixed(2)}€ → ${precioMedioPonderado.toFixed(2)}€`);
+
+          await window.api.updateIngrediente(item.ingredienteId, {
+            ...ing,
+            stockActual: nuevoStock,
+            stock_actual: nuevoStock,
+            precio: precioMedioPonderado
+          });
+        }
+      }
+      // Recargar ingredientes para reflejar cambios
+      window.ingredientes = await window.api.getIngredientes();
+      window.renderizarIngredientes?.();
+      window.renderizarInventario?.();
+    }
+
     // Recargar pedidos
     window.pedidos = await window.api.getPedidos();
     window.renderizarPedidos();
     window.hideLoading();
-    window.showToast('Pedido creado', 'success');
+    window.showToast(esCompraMercado ? '🏪 Compra del mercado registrada (stock actualizado)' : 'Pedido creado', 'success');
     window.cerrarFormularioPedido();
   } catch (error) {
     window.hideLoading();
@@ -532,11 +602,17 @@ export function verDetallesPedido(pedidoId) {
   const varianzaTotal = totalRecibido - totalOriginal;
   const varianzaColor = varianzaTotal > 0 ? '#EF4444' : varianzaTotal < 0 ? '#10B981' : '#666';
 
+  // Mostrar detalle del mercado si existe
+  const detalleMercadoHtml = ped.detalle_mercado
+    ? `<p style="margin: 5px 0 0; color: #10b981; font-size: 13px;">📍 ${ped.detalle_mercado}</p>`
+    : '';
+
   const html = `
       <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
         <div>
           <h2 style="margin: 0; color: #1E293B;">Pedido #${ped.id}</h2>
           <p style="margin: 5px 0 0; color: #64748B;">${provNombre}</p>
+          ${detalleMercadoHtml}
         </div>
         <div style="text-align: right;">
           <span style="background: ${estadoClass}; color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${estadoText}</span>

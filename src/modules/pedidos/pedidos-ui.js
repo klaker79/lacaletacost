@@ -34,11 +34,42 @@ export function mostrarFormularioPedido() {
             `<option value="${prov.id}">${prov.nombre}</option>`
         ).join('');
         select.innerHTML = '<option value="">Seleccionar proveedor...</option>' + options;
+
+        // Añadir listener para mostrar/ocultar campo detalle mercado
+        select.addEventListener('change', mostrarCampoDetalleMercado);
     }
+
+    // Ocultar campo detalle mercado al inicio
+    const campoDetalle = document.getElementById('campo-detalle-mercado');
+    if (campoDetalle) campoDetalle.style.display = 'none';
 
     document.getElementById('formulario-pedido').style.display = 'block';
     window.cargarIngredientesPedido();
     document.getElementById('ped-proveedor').focus();
+}
+
+/**
+ * Muestra u oculta el campo de detalle cuando es "Compras Mercado"
+ */
+function mostrarCampoDetalleMercado() {
+    const select = document.getElementById('ped-proveedor');
+    const campoDetalle = document.getElementById('campo-detalle-mercado');
+
+    if (!select || !campoDetalle) return;
+
+    const proveedorId = parseInt(select.value);
+    const proveedor = window.proveedores.find(p => p.id === proveedorId);
+
+    // Mostrar campo si es "Compras Mercado" (buscar por nombre)
+    const esCompasMercado = proveedor && proveedor.nombre.toLowerCase().includes('mercado');
+
+    campoDetalle.style.display = esCompasMercado ? 'block' : 'none';
+
+    // Limpiar campo si se oculta
+    if (!esCompasMercado) {
+        const input = document.getElementById('ped-detalle-mercado');
+        if (input) input.value = '';
+    }
 }
 
 /**
@@ -52,6 +83,7 @@ export function cerrarFormularioPedido() {
 
 /**
  * Carga lista de ingredientes según el proveedor seleccionado
+ * 🏪 Para "Compras Mercado": muestra TODOS los ingredientes
  */
 export function cargarIngredientesPedido() {
     const proveedorId = parseInt(document.getElementById('ped-proveedor')?.value);
@@ -64,6 +96,24 @@ export function cargarIngredientesPedido() {
     }
 
     const proveedor = window.proveedores.find(p => p.id === proveedorId);
+    const esCompraMercado = proveedor && proveedor.nombre.toLowerCase().includes('mercado');
+
+    // 🏪 Para compras del mercado: mostrar TODOS los ingredientes
+    if (esCompraMercado) {
+        if (window.ingredientes.length === 0) {
+            if (containerWrapper) containerWrapper.style.display = 'none';
+            window.showToast('No hay ingredientes en el sistema', 'warning');
+            return;
+        }
+        // Mostrar contenedor de ingredientes
+        if (containerWrapper) containerWrapper.style.display = 'block';
+        if (container) container.innerHTML = '';
+        // Agregar primera fila de ingrediente
+        window.agregarIngredientePedido();
+        return;
+    }
+
+    // Pedido normal: mostrar solo ingredientes del proveedor
     if (!proveedor || !proveedor.ingredientes || proveedor.ingredientes.length === 0) {
         if (containerWrapper) containerWrapper.style.display = 'none';
         window.showToast('Este proveedor no tiene ingredientes asignados', 'warning');
@@ -81,19 +131,26 @@ export function cargarIngredientesPedido() {
 /**
  * Agrega una fila de ingrediente al pedido
  * 🆕 Ahora soporta formato de compra con conversión automática
+ * 🏪 Para "Compras Mercado": muestra TODOS los ingredientes
  */
 export function agregarIngredientePedido() {
     const proveedorId = parseInt(document.getElementById('ped-proveedor')?.value);
     if (!proveedorId) return;
 
     const proveedor = window.proveedores.find(p => p.id === proveedorId);
-    if (!proveedor || !proveedor.ingredientes) return;
+    const esCompraMercado = proveedor && proveedor.nombre.toLowerCase().includes('mercado');
 
-    // ⚡ OPTIMIZACIÓN: Convertir array a Set para lookups O(1) en lugar de .includes() O(n)
-    const provIngSet = new Set(proveedor.ingredientes);
-    const ingredientesProveedor = window.ingredientes.filter(ing =>
-        provIngSet.has(ing.id)
-    );
+    let ingredientesDisponibles;
+
+    if (esCompraMercado) {
+        // 🏪 Compras del mercado: mostrar TODOS los ingredientes
+        ingredientesDisponibles = window.ingredientes || [];
+    } else {
+        // Pedido normal: mostrar solo ingredientes del proveedor
+        if (!proveedor || !proveedor.ingredientes) return;
+        const provIngSet = new Set(proveedor.ingredientes);
+        ingredientesDisponibles = window.ingredientes.filter(ing => provIngSet.has(ing.id));
+    }
 
     const container = document.getElementById('lista-ingredientes-pedido');
     if (!container) return;
@@ -106,13 +163,18 @@ export function agregarIngredientePedido() {
         'display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px; flex-wrap: wrap;';
 
     let opciones = '<option value="">Seleccionar...</option>';
-    ingredientesProveedor.forEach(ing => {
+    ingredientesDisponibles.forEach(ing => {
         // Guardar datos del formato en data attributes
         const formatoInfo = ing.formato_compra && ing.cantidad_por_formato
             ? `data-formato="${escapeHTML(ing.formato_compra)}" data-cantidad-formato="${escapeHTML(String(ing.cantidad_por_formato))}"`
             : '';
-        opciones += `<option value="${ing.id}" ${formatoInfo} data-unidad="${escapeHTML(ing.unidad || 'ud')}">${escapeHTML(ing.nombre)} (${parseFloat(ing.precio || 0).toFixed(2)}€/${escapeHTML(ing.unidad || 'ud')})</option>`;
+        opciones += `<option value="${ing.id}" ${formatoInfo} data-unidad="${escapeHTML(ing.unidad || 'ud')}" data-precio="${parseFloat(ing.precio || 0)}">${escapeHTML(ing.nombre)} (${parseFloat(ing.precio || 0).toFixed(2)}€/${escapeHTML(ing.unidad || 'ud')})</option>`;
     });
+
+    // Para compras del mercado: mostrar campo de precio editable
+    const precioInputStyle = esCompraMercado
+        ? 'flex: 1; padding: 8px; border: 2px solid #10b981; border-radius: 6px; background: #f0fdf4;'
+        : 'flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px;';
 
     div.innerHTML = `
       <select style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 6px;" onchange="window.onIngredientePedidoChange(this, '${rowId}')">${opciones}</select>
@@ -120,8 +182,9 @@ export function agregarIngredientePedido() {
         <select id="${rowId}-formato-select" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; width: 100%;" onchange="window.calcularTotalPedido()">
         </select>
       </div>
-      <input type="number" placeholder="Cantidad" step="0.01" min="0" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px;" oninput="window.calcularTotalPedido()">
-      <span id="${rowId}-conversion" style="font-size: 11px; color: #64748b; min-width: 80px;"></span>
+      <input type="number" placeholder="Cantidad" step="0.01" min="0" class="cantidad-input" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px;" oninput="window.calcularTotalPedido()">
+      <input type="number" placeholder="€/ud" step="0.01" min="0" class="precio-input" style="${precioInputStyle}" oninput="window.calcularTotalPedido()">
+      <span id="${rowId}-conversion" style="font-size: 11px; color: #64748b; min-width: 60px;"></span>
       <button type="button" onclick="this.parentElement.remove(); window.calcularTotalPedido()" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">×</button>
     `;
 
@@ -131,32 +194,56 @@ export function agregarIngredientePedido() {
 /**
  * Maneja el cambio de ingrediente seleccionado en pedido
  * Muestra selector de formato si el ingrediente lo tiene definido
+ * 🆕 Pre-rellena el precio con el del proveedor específico
  */
-export function onIngredientePedidoChange(selectElement, rowId) {
+export async function onIngredientePedidoChange(selectElement, rowId) {
     const selectedOption = selectElement.options[selectElement.selectedIndex];
     const formatoContainer = document.getElementById(`${rowId}-formato-container`);
     const formatoSelect = document.getElementById(`${rowId}-formato-select`);
     const conversionSpan = document.getElementById(`${rowId}-conversion`);
+    const precioInput = selectElement.parentElement?.querySelector('.precio-input');
 
     const formato = selectedOption?.dataset?.formato;
     const cantidadFormato = selectedOption?.dataset?.cantidadFormato;
     const unidad = selectedOption?.dataset?.unidad || 'ud';
+    const ingId = parseInt(selectedOption?.value);
+    const precioGeneral = parseFloat(selectedOption?.dataset?.precio || 0);
 
     if (formato && cantidadFormato && formatoContainer && formatoSelect) {
         // Mostrar selector de formato
         formatoContainer.style.display = 'block';
-        // Guardar el multiplicador del formato en AMBAS opciones para poder calcular el precio correcto
         formatoSelect.innerHTML = `
             <option value="formato" data-multiplicador="${cantidadFormato}" data-formato-mult="${cantidadFormato}">${escapeHTML(formato)} (${cantidadFormato} ${unidad})</option>
             <option value="unidad" data-multiplicador="1" data-formato-mult="${cantidadFormato}">${unidad}</option>
         `;
-        formatoSelect.value = 'formato'; // Por defecto usar formato
+        formatoSelect.value = 'formato';
     } else if (formatoContainer) {
         formatoContainer.style.display = 'none';
     }
 
     if (conversionSpan) {
         conversionSpan.textContent = '';
+    }
+
+    // 🆕 Pre-rellenar precio del proveedor específico
+    if (precioInput && ingId) {
+        const proveedorId = parseInt(document.getElementById('ped-proveedor')?.value);
+
+        // Buscar precio del proveedor para este ingrediente
+        try {
+            const proveedoresIng = await window.API?.fetch(`/api/ingredients/${ingId}/suppliers`);
+            const proveedorEspecifico = proveedoresIng?.find(p => p.proveedor_id === proveedorId);
+
+            if (proveedorEspecifico && proveedorEspecifico.precio) {
+                precioInput.value = parseFloat(proveedorEspecifico.precio).toFixed(2);
+            } else {
+                // Si no hay precio específico, usar el precio general del ingrediente
+                precioInput.value = precioGeneral > 0 ? precioGeneral.toFixed(2) : '';
+            }
+        } catch (error) {
+            console.log('No se pudo obtener precio del proveedor, usando precio general');
+            precioInput.value = precioGeneral > 0 ? precioGeneral.toFixed(2) : '';
+        }
     }
 
     window.calcularTotalPedido();
@@ -280,12 +367,26 @@ export function renderizarPedidos() {
     pedidosFiltrados.forEach(ped => {
         const prov = provMap.get(ped.proveedorId);
         const fecha = new Date(ped.fecha).toLocaleDateString('es-ES');
+        const esCompraMercado = ped.es_compra_mercado;
 
         html += '<tr>';
         html += `<td>#${ped.id}</td>`;
         html += `<td>${fecha}</td>`;
-        html += `<td>${escapeHTML(prov ? prov.nombre : 'Sin proveedor')}</td>`;
-        html += `<td>${ped.ingredientes?.length || 0}</td>`;
+
+        // Proveedor + detalle mercado
+        if (esCompraMercado && ped.detalle_mercado) {
+            html += `<td>${escapeHTML(prov ? prov.nombre : 'Sin proveedor')}<br><small style="color:#10b981;">📍 ${escapeHTML(ped.detalle_mercado)}</small></td>`;
+        } else {
+            html += `<td>${escapeHTML(prov ? prov.nombre : 'Sin proveedor')}</td>`;
+        }
+
+        // Items: descripción para mercado, count para normal
+        if (esCompraMercado && ped.descripcion_mercado) {
+            html += `<td><small style="color:#64748b;">${escapeHTML(ped.descripcion_mercado)}</small></td>`;
+        } else {
+            html += `<td>${ped.ingredientes?.length || 0}</td>`;
+        }
+
         html += `<td>${parseFloat(ped.total || 0).toFixed(2)}€</td>`;
 
         const estadoClass = ped.estado === 'recibido' ? 'badge-success' : 'badge-warning';
