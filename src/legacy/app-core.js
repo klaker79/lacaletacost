@@ -4945,7 +4945,7 @@
                 html += '<tr>';
                 html += `<td><span class="stock-indicator ${estadoClass}"></span>${estadoIcon}</td>`;
                 html += `<td><strong>${escapeHTML(ing.nombre)}</strong></td>`;
-                html += `<td><span class="stock-value">${parseFloat(ing.stock_virtual || 0).toFixed(2)}</span></td>`;
+                html += `<td><span class="stock-value">${parseFloat(ing.stock_virtual || 0).toFixed(2)} <small style="color:#64748b;">${ing.unidad || ''}</small></span></td>`;
 
                 // Input con evento ONINPUT para cálculo dinámico
                 // Input con evento ONINPUT para cálculo dinámico

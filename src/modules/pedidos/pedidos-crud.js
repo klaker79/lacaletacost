@@ -541,10 +541,22 @@ export function verDetallesPedido(pedidoId) {
       const nombreIng = ing ? ing.nombre : 'Ingrediente';
       const unidadIng = ing ? ing.unidad : '';
 
+      // 🆕 Detectar si se usó formato de compra
+      const formatoUsado = item.formatoUsado;
+      const cantidadFormatos = item.cantidadFormatos || item.cantidadOriginal;
+      const multiplicador = item.multiplicador || 1;
+      const usaFormato = formatoUsado === 'formato' && cantidadFormatos && multiplicador !== 1;
+
       // Cantidades
       const cantPedida = parseFloat(item.cantidad || 0);
       const cantRecibida = parseFloat(item.cantidadRecibida || item.cantidad || 0);
       const varianzaCant = cantRecibida - cantPedida;
+
+      // 🆕 Mostrar cantidad en formato si se usó (ej: "2 BOTES → 1 kg")
+      let cantidadDisplay = `${cantPedida.toFixed(2)} ${unidadIng}`;
+      if (usaFormato && ing?.formato_compra) {
+        cantidadDisplay = `${cantidadFormatos} ${ing.formato_compra}<br><small style="color:#64748b;">(= ${cantPedida.toFixed(2)} ${unidadIng})</small>`;
+      }
 
       // Precios
       const precioOriginal = parseFloat(
@@ -580,7 +592,7 @@ export function verDetallesPedido(pedidoId) {
               <tr style="border-bottom: 1px solid #F1F5F9;">
                 <td style="padding: 12px;"><strong>${nombreIng}</strong></td>
                 <td style="padding: 12px; text-align: center;">
-                  ${cantPedida.toFixed(2)} ${unidadIng}
+                  ${cantidadDisplay}
                   ${esRecibido && Math.abs(varianzaCant) > 0.01 ? `<br><small style="color:${varianzaCant > 0 ? '#10B981' : '#EF4444'};">→ ${cantRecibida.toFixed(2)} (${varianzaCant > 0 ? '+' : ''}${varianzaCant.toFixed(2)})</small>` : ''}
                 </td>
                 <td style="padding: 12px; text-align: right;">
