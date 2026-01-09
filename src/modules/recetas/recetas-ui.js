@@ -252,17 +252,16 @@ export function renderizarRecetas() {
         return matchBusqueda && matchCategoria;
     }).sort((a, b) => {
         // Ordenar: con código primero, luego alfabético
-        const aCode = String(a.codigo || '').trim();
-        const bCode = String(b.codigo || '').trim();
-        const aHasCodigo = aCode !== '' && aCode !== 'null' && aCode !== 'undefined';
-        const bHasCodigo = bCode !== '' && bCode !== 'null' && bCode !== 'undefined';
+        // Verificar null/undefined ANTES de convertir a string
+        const aHasCodigo = a.codigo != null && String(a.codigo).trim() !== '';
+        const bHasCodigo = b.codigo != null && String(b.codigo).trim() !== '';
 
         if (aHasCodigo && !bHasCodigo) return -1;
         if (!aHasCodigo && bHasCodigo) return 1;
 
-        // Si ambos tienen código, ordenar por código numérico
+        // Si ambos tienen código, ordenar por código
         if (aHasCodigo && bHasCodigo) {
-            return aCode.localeCompare(bCode);
+            return String(a.codigo).localeCompare(String(b.codigo));
         }
 
         // Si ninguno tiene código, ordenar por nombre
