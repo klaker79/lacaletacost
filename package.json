@@ -34,8 +34,8 @@
     "dependencies": {
         "chart.js": "^4.5.1",
         "dompurify": "^3.3.1",
-        "jspdf": "^3.0.4",
-        "jspdf-autotable": "^5.0.2",
+        "jspdf": "^4.0.0",
+        "jspdf-autotable": "^5.0.3",
         "xlsx-js-style": "^1.2.0"
     }
 }
