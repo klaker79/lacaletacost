@@ -574,6 +574,9 @@ window.mostrarModalImportarVentas = function () {
     document.getElementById('modal-importar-ventas').classList.add('active');
     document.getElementById('preview-importar-ventas').style.display = 'none';
     document.getElementById('file-importar-ventas').value = '';
+    // Resetear fecha al abrir (vacío = fecha actual al importar)
+    const fechaInput = document.getElementById('fecha-importar-ventas');
+    if (fechaInput) fechaInput.value = '';
     datosImportarVentas = [];
 };
 
@@ -729,7 +732,17 @@ window.confirmarImportarVentas = async function () {
 
     try {
         let importados = 0;
-        const fechaHoy = new Date().toISOString();
+
+        // 📅 Usar fecha seleccionada o fecha actual
+        const fechaInput = document.getElementById('fecha-importar-ventas');
+        let fechaVentas;
+        if (fechaInput && fechaInput.value) {
+            // Usuario seleccionó fecha específica (retroactiva)
+            fechaVentas = new Date(fechaInput.value + 'T12:00:00').toISOString();
+        } else {
+            // Fecha actual por defecto
+            fechaVentas = new Date().toISOString();
+        }
 
         // Procesar en lotes o uno a uno (por ahora uno a uno para simplicidad, idealmente batch en backend)
         // Nota: La API actual de createSale espera un solo objeto.
@@ -742,7 +755,7 @@ window.confirmarImportarVentas = async function () {
                     recetaId: venta.recetaId,
                     cantidad: venta.cantidad,
                     total: venta.total, // Opcional si el backend lo recalcula, pero útil si el precio TPV varía
-                    fecha: fechaHoy,
+                    fecha: fechaVentas,
                 });
             } else {
                 // Si NO está vinculado, solo registramos financieramente (TODO: Backend support for generic sales)

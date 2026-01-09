@@ -2307,6 +2307,21 @@
           <strong>Nombre</strong>, <strong>Cantidad</strong>, <strong>Total</strong>
         </p>
 
+        <!-- 📅 Selector de fecha retroactiva -->
+        <div
+          style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <span style="font-size: 24px;">📅</span>
+            <div style="flex: 1; min-width: 200px;">
+              <label style="font-weight: 600; color: #92400e; font-size: 14px;">Fecha de las ventas:</label>
+              <p style="font-size: 12px; color: #b45309; margin: 2px 0 8px;">Si dejas vacío, se usa la fecha de hoy. Usa
+                esto para importar ventas de días anteriores.</p>
+              <input type="date" id="fecha-importar-ventas"
+                style="padding: 10px 14px; border: 2px solid #f59e0b; border-radius: 8px; font-size: 14px; width: 100%; max-width: 200px; background: white;">
+            </div>
+          </div>
+        </div>
+
         <div
           style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 30px; text-align: center; background: #f8fafc;">
           <input type="file" id="file-importar-ventas" accept=".xlsx,.csv" style="display: none;"
