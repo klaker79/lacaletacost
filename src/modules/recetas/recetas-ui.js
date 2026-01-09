@@ -250,6 +250,16 @@ export function renderizarRecetas() {
             (filtroRecetaCategoria === 'base' && r.categoria?.toLowerCase() === 'base');
 
         return matchBusqueda && matchCategoria;
+    }).sort((a, b) => {
+        // Ordenar: con código primero, luego alfabético
+        const aHasCodigo = a.codigo && a.codigo.trim() !== '';
+        const bHasCodigo = b.codigo && b.codigo.trim() !== '';
+
+        if (aHasCodigo && !bHasCodigo) return -1;
+        if (!aHasCodigo && bHasCodigo) return 1;
+
+        // Si ambos tienen o no tienen código, ordenar por nombre
+        return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
     });
 
     const container = document.getElementById('tabla-recetas');
