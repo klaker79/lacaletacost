@@ -252,13 +252,20 @@ export function renderizarRecetas() {
         return matchBusqueda && matchCategoria;
     }).sort((a, b) => {
         // Ordenar: con código primero, luego alfabético
-        const aHasCodigo = a.codigo && a.codigo.trim() !== '';
-        const bHasCodigo = b.codigo && b.codigo.trim() !== '';
+        const aCode = String(a.codigo || '').trim();
+        const bCode = String(b.codigo || '').trim();
+        const aHasCodigo = aCode !== '' && aCode !== 'null' && aCode !== 'undefined';
+        const bHasCodigo = bCode !== '' && bCode !== 'null' && bCode !== 'undefined';
 
         if (aHasCodigo && !bHasCodigo) return -1;
         if (!aHasCodigo && bHasCodigo) return 1;
 
-        // Si ambos tienen o no tienen código, ordenar por nombre
+        // Si ambos tienen código, ordenar por código numérico
+        if (aHasCodigo && bHasCodigo) {
+            return aCode.localeCompare(bCode);
+        }
+
+        // Si ninguno tiene código, ordenar por nombre
         return a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' });
     });
 
