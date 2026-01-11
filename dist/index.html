@@ -66,7 +66,7 @@
       });
     }
   </script>
-  <script type="module" crossorigin src="/assets/main-gvIESi8Y.js"></script>
+  <script type="module" crossorigin src="/assets/main-BQbIS_FC.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/main-_e18OsjB.css">
 </head>
 
@@ -227,132 +227,174 @@
         <div id="sparkline-margen" style="opacity: 0.8;"></div>
       </div>
     </div>
-    <!-- Dashboard Compacto con Sidebar de Alertas -->
-    <div style="display: flex; gap: 16px; margin: 0 32px 20px 32px; align-items: flex-start;">
+    <!-- 🎯 DASHBOARD PREMIUM - Full Width Grid -->
+    <div id="dashboard-premium" style="margin: 0 20px 20px 20px;">
 
-      <!-- Columna Principal: Grid 2x2 -->
-      <div id="dashboard-expandido" class="dashboard-expandido"
-        style="flex: 1; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+      <!-- Fila 1: Grid 3 columnas iguales -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px;">
 
-        <!-- Alertas de Stock (compacto) -->
+        <!-- 🚨 Stock Bajo -->
         <div class="dashboard-card"
-          style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-          <h3
-            style="margin: 0 0 12px 0; font-size: 14px; color: #1E293B; display: flex; align-items: center; gap: 6px;">
-            🚨 Stock Bajo
-          </h3>
-          <div id="alertas-stock-lista" style="max-height: 100px; overflow-y: auto; font-size: 13px;">
+          style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <div
+              style="width: 44px; height: 44px; background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+              ⚠️</div>
+            <div>
+              <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1E293B;">Stock Bajo</h3>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #64748B;">Requieren atención</p>
+            </div>
+            <div style="margin-left: auto; font-size: 24px; font-weight: 800; color: #F59E0B;" id="kpi-stock-count">0
+            </div>
+          </div>
+          <div id="alertas-stock-lista" style="max-height: 120px; overflow-y: auto; font-size: 13px;">
             <p style="color: #64748B; margin: 0;">Cargando...</p>
           </div>
         </div>
 
-        <!-- Resumen del Día (compacto) -->
+        <!-- 📊 Resumen Hoy -->
         <div class="dashboard-card"
-          style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-          <h3
-            style="margin: 0 0 12px 0; font-size: 14px; color: #1E293B; display: flex; align-items: center; gap: 6px;">
-            📊 Hoy
-          </h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-            <div style="text-align: center; padding: 8px; background: #F0FDF4; border-radius: 6px;">
-              <div style="font-size: 18px; font-weight: 700; color: #10B981;" id="ventas-hoy">0</div>
-              <div style="font-size: 10px; color: #64748B;">Ventas</div>
+          style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <div
+              style="width: 44px; height: 44px; background: linear-gradient(135deg, #DBEAFE, #BFDBFE); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+              📊</div>
+            <div>
+              <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1E293B;">Hoy</h3>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #64748B;">Actividad del día</p>
             </div>
-            <div style="text-align: center; padding: 8px; background: #EFF6FF; border-radius: 6px;">
-              <div style="font-size: 18px; font-weight: 700; color: #3B82F6;" id="ingresos-hoy">0€</div>
-              <div style="font-size: 10px; color: #64748B;">Ingresos</div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div
+              style="text-align: center; padding: 14px 8px; background: linear-gradient(135deg, #F0FDF4, #DCFCE7); border-radius: 12px;">
+              <div style="font-size: 24px; font-weight: 800; color: #10B981;" id="ventas-hoy">0</div>
+              <div style="font-size: 11px; color: #059669; font-weight: 600;">Ventas</div>
             </div>
-            <div style="text-align: center; padding: 8px; background: #FFF7ED; border-radius: 6px;">
-              <div style="font-size: 12px; font-weight: 600; color: #F59E0B;" id="plato-estrella-hoy">-</div>
-              <div style="font-size: 10px; color: #64748B;">⭐ Estrella</div>
+            <div
+              style="text-align: center; padding: 14px 8px; background: linear-gradient(135deg, #EFF6FF, #DBEAFE); border-radius: 12px;">
+              <div style="font-size: 24px; font-weight: 800; color: #3B82F6;" id="ingresos-hoy">0€</div>
+              <div style="font-size: 11px; color: #2563EB; font-weight: 600;">Ingresos</div>
+            </div>
+            <div
+              style="text-align: center; padding: 14px 8px; background: linear-gradient(135deg, #FFF7ED, #FFEDD5); border-radius: 12px;">
+              <div
+                style="font-size: 13px; font-weight: 700; color: #F59E0B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                id="plato-estrella-hoy">-</div>
+              <div style="font-size: 11px; color: #D97706; font-weight: 600;">⭐ Estrella</div>
             </div>
           </div>
         </div>
+
+        <!-- 👥 Personal Hoy (Empleados que libran) -->
+        <div class="dashboard-card"
+          style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <div
+              style="width: 44px; height: 44px; background: linear-gradient(135deg, #E0E7FF, #C7D2FE); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+              👥</div>
+            <div>
+              <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1E293B;">Personal Hoy</h3>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #64748B;">Quién trabaja / libra</p>
+            </div>
+          </div>
+          <div id="personal-hoy-lista" style="max-height: 100px; overflow-y: auto; font-size: 13px;">
+            <div style="color: #64748B; text-align: center; padding: 12px 0;">
+              <div style="font-size: 20px; margin-bottom: 4px;">📅</div>
+              Cargando...
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: Grid 3 columnas -->
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
 
         <!-- 💰 Valor Stock Total -->
         <div class="dashboard-card"
-          style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-          <h3
-            style="margin: 0 0 12px 0; font-size: 14px; color: #1E293B; display: flex; align-items: center; gap: 6px;">
-            💰 Valor Stock
-          </h3>
-          <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div>
-              <div id="kpi-valor-stock" style="font-size: 28px; font-weight: 700; color: #10B981;">-€</div>
-              <div style="font-size: 11px; color: #64748B;">Total inventario valorizado</div>
+          style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <div
+              style="width: 44px; height: 44px; background: linear-gradient(135deg, #D1FAE5, #A7F3D0); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+              💰</div>
+            <div style="flex: 1;">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1E293B;">Valor Stock</h3>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #64748B;">Inventario valorizado</p>
             </div>
             <div style="text-align: right;">
-              <div id="kpi-items-stock" style="font-size: 16px; font-weight: 600; color: #3B82F6;">-</div>
+              <div id="kpi-items-stock" style="font-size: 18px; font-weight: 700; color: #3B82F6;">-</div>
               <div style="font-size: 10px; color: #64748B;">Items</div>
             </div>
           </div>
-          <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
+          <div id="kpi-valor-stock" style="font-size: 32px; font-weight: 800; color: #10B981; margin-bottom: 16px;">-€
+          </div>
+          <div style="display: flex; gap: 8px;">
             <button data-tab="ventas"
-              style="flex: 1; min-width: 60px; padding: 8px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px;">
-              💰 Venta
-            </button>
+              style="flex: 1; padding: 10px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 12px; transition: transform 0.2s;"
+              onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">💰
+              Venta</button>
             <button data-tab="pedidos"
-              style="flex: 1; min-width: 60px; padding: 8px; background: linear-gradient(135deg, #3B82F6, #2563EB); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px;">
-              📦 Pedido
-            </button>
+              style="flex: 1; padding: 10px; background: linear-gradient(135deg, #3B82F6, #2563EB); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 12px; transition: transform 0.2s;"
+              onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">📦
+              Pedido</button>
             <button data-tab="inventario"
-              style="flex: 1; min-width: 60px; padding: 8px; background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px;">
-              🔍 Stock
-            </button>
+              style="flex: 1; padding: 10px; background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 12px; transition: transform 0.2s;"
+              onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">🔍
+              Stock</button>
           </div>
         </div>
 
-        <!-- 📈 Proyección de Ventas con Tabs de Período -->
+        <!-- 📈 Proyección -->
         <div class="dashboard-card"
-          style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-            <h3 style="margin: 0; font-size: 14px; color: #1E293B; display: flex; align-items: center; gap: 6px;">
-              📈 Proyección
-            </h3>
-            <span id="forecast-total" style="font-size: 18px; font-weight: 700; color: #8B5CF6;">-€</span>
+          style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div
+              style="width: 44px; height: 44px; background: linear-gradient(135deg, #EDE9FE, #DDD6FE); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+              📈</div>
+            <div style="flex: 1;">
+              <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1E293B;">Proyección</h3>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #64748B;">Estimación de ingresos</p>
+            </div>
+            <span id="forecast-total" style="font-size: 22px; font-weight: 800; color: #8B5CF6;">0€</span>
           </div>
-
-          <!-- Tabs de período -->
-          <div id="forecast-tabs" style="display: flex; gap: 4px; margin-bottom: 12px;">
+          <div id="forecast-tabs" style="display: flex; gap: 6px; margin-bottom: 12px;">
             <button class="forecast-period-tab active" data-period="7"
-              style="flex: 1; padding: 6px 0; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; background: #8B5CF6; color: white; transition: all 0.2s;">
-              7 días
-            </button>
+              style="flex: 1; padding: 8px 0; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; background: linear-gradient(135deg, #8B5CF6, #7C3AED); color: white; transition: all 0.2s;">7
+              días</button>
             <button class="forecast-period-tab" data-period="30"
-              style="flex: 1; padding: 6px 0; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 500; background: #f1f5f9; color: #64748b; transition: all 0.2s;">
-              Mes
-            </button>
+              style="flex: 1; padding: 8px 0; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 500; background: #f1f5f9; color: #64748b; transition: all 0.2s;">Mes</button>
           </div>
-
-          <div style="height: 100px;">
+          <div style="height: 80px; position: relative;">
             <canvas id="chart-forecast"></canvas>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
             <div id="forecast-comparativa"
-              style="font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 4px;">
-              <!-- Comparativa semana vs anterior -->
+              style="font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; background: #f1f5f9;">
             </div>
-            <div id="forecast-confianza" style="font-size: 10px; color: #94a3b8;">
-              Basado en historial
+            <div id="forecast-confianza" style="font-size: 10px; color: #94a3b8;">Basado en historial</div>
+          </div>
+        </div>
+
+        <!-- 📊 Cambios de Precio -->
+        <div class="dashboard-card"
+          style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid #f1f5f9;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+            <div
+              style="width: 44px; height: 44px; background: linear-gradient(135deg, #FEE2E2, #FECACA); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+              📊</div>
+            <div>
+              <h3 style="margin: 0; font-size: 15px; font-weight: 700; color: #1E293B;">Cambios Precio</h3>
+              <p style="margin: 2px 0 0; font-size: 12px; color: #64748B;">Últimas variaciones</p>
+            </div>
+          </div>
+          <div id="lista-cambios-precio" style="max-height: 120px; overflow-y: auto; font-size: 13px;">
+            <div style="color: #64748B; text-align: center; padding: 16px 0;">
+              <div style="font-size: 24px; margin-bottom: 6px;">📉</div>
+              Cargando...
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- SIDEBAR: Alertas de Cambios de Precio -->
-      <div id="sidebar-precios" class="dashboard-card"
-        style="width: 280px; min-width: 280px; background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); max-height: 380px; overflow-y: auto;">
-        <h3 style="margin: 0 0 16px 0; font-size: 14px; color: #1E293B; display: flex; align-items: center; gap: 6px;">
-          📊 Cambios de Precio
-        </h3>
-        <div id="lista-cambios-precio" style="font-size: 13px;">
-          <div style="color: #64748B; text-align: center; padding: 20px 0;">
-            <div style="font-size: 24px; margin-bottom: 8px;">📉</div>
-            Cargando cambios...
-          </div>
-        </div>
       </div>
-
     </div>
 
 

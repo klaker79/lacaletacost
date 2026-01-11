@@ -305,6 +305,85 @@ export async function actualizarKPIs() {
             console.error('Error calculando cambios de precio:', e);
         }
 
+        // 7. PERSONAL HOY (empleados que trabajan / libran)
+        try {
+            const personalHoyEl = document.getElementById('personal-hoy-lista');
+            if (personalHoyEl) {
+                // Obtener horarios del día de hoy
+                const hoy = new Date();
+                const hoyStr = hoy.toISOString().split('T')[0];
+                const diaSemana = hoy.getDay(); // 0=domingo, 1=lunes...
+                const diasSemana = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+                const diaHoy = diasSemana[diaSemana];
+
+                // Intentar obtener empleados y horarios si existen
+                const empleados = window.empleados || [];
+                const horarios = window.horarios || [];
+
+                if (empleados.length > 0) {
+                    // Buscar quién trabaja hoy basado en horarios
+                    const horariosHoy = horarios.filter(h => {
+                        const fechaHorario = new Date(h.fecha).toISOString().split('T')[0];
+                        return fechaHorario === hoyStr;
+                    });
+
+                    const empleadosConTurno = new Set(horariosHoy.map(h => h.empleado_id));
+
+                    let htmlPersonal = '';
+                    let trabajando = 0;
+                    let libran = 0;
+
+                    empleados.forEach(emp => {
+                        const trabaja = empleadosConTurno.has(emp.id);
+                        if (trabaja) {
+                            trabajando++;
+                        } else {
+                            libran++;
+                        }
+                    });
+
+                    // Mostrar resumen compacto
+                    htmlPersonal = `
+                        <div style="display: flex; gap: 12px;">
+                            <div style="flex: 1; text-align: center; padding: 12px; background: linear-gradient(135deg, #F0FDF4, #DCFCE7); border-radius: 10px;">
+                                <div style="font-size: 22px; font-weight: 800; color: #10B981;">${trabajando}</div>
+                                <div style="font-size: 11px; color: #059669; font-weight: 600;">Trabajan</div>
+                            </div>
+                            <div style="flex: 1; text-align: center; padding: 12px; background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 10px;">
+                                <div style="font-size: 22px; font-weight: 800; color: #D97706;">${libran}</div>
+                                <div style="font-size: 11px; color: #B45309; font-weight: 600;">Libran</div>
+                            </div>
+                        </div>
+                    `;
+                    personalHoyEl.innerHTML = htmlPersonal;
+                } else {
+                    personalHoyEl.innerHTML = `
+                        <div style="display: flex; gap: 12px;">
+                            <div style="flex: 1; text-align: center; padding: 12px; background: linear-gradient(135deg, #F0FDF4, #DCFCE7); border-radius: 10px;">
+                                <div style="font-size: 22px; font-weight: 800; color: #10B981;">-</div>
+                                <div style="font-size: 11px; color: #059669; font-weight: 600;">Trabajan</div>
+                            </div>
+                            <div style="flex: 1; text-align: center; padding: 12px; background: linear-gradient(135deg, #FEF3C7, #FDE68A); border-radius: 10px;">
+                                <div style="font-size: 22px; font-weight: 800; color: #D97706;">-</div>
+                                <div style="font-size: 11px; color: #B45309; font-weight: 600;">Libran</div>
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; font-size: 11px; color: #94a3b8;">
+                            <a href="#" data-tab="horarios" style="color: #8B5CF6; text-decoration: none;">Ir a Gestión de Personal →</a>
+                        </div>
+                    `;
+                }
+            }
+        } catch (e) {
+            console.error('Error mostrando personal hoy:', e);
+        }
+
+        // Actualizar contador de stock bajo
+        const stockCountEl = document.getElementById('kpi-stock-count');
+        if (stockCountEl) {
+            stockCountEl.textContent = stockBajo;
+        }
+
         // Render sparklines
         const sparklineIngresos = document.getElementById('sparkline-ingresos');
         if (sparklineIngresos) {
