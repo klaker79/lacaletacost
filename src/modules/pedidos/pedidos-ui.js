@@ -26,11 +26,14 @@ export function mostrarFormularioPedido() {
         return;
     }
 
-    // Cargar select de proveedores
+    // Cargar select de proveedores (ordenados alfabéticamente)
     const select = document.getElementById('ped-proveedor');
     if (select) {
-        // ⚡ OPTIMIZACIÓN: Una sola operación DOM con map+join
-        const options = window.proveedores.map(prov =>
+        // ⚡ OPTIMIZACIÓN: Una sola operación DOM con map+join + ordenación A-Z
+        const proveedoresOrdenados = [...window.proveedores].sort((a, b) =>
+            (a.nombre || '').localeCompare(b.nombre || '')
+        );
+        const options = proveedoresOrdenados.map(prov =>
             `<option value="${prov.id}">${prov.nombre}</option>`
         ).join('');
         select.innerHTML = '<option value="">Seleccionar proveedor...</option>' + options;
