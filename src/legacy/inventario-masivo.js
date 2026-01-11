@@ -238,9 +238,16 @@ window.confirmarInventarioMasivo = async function () {
 
     document.getElementById('loading-overlay').classList.add('active');
 
+
     try {
-        // Usar consolidación
-        await window.api.consolidateStock(adjustments);
+        // Preparar finalStock para el UPDATE real del stock
+        const finalStock = datosValidos.map(d => ({
+            id: d.ingredienteId,
+            stock_real: d.stockReal,
+        }));
+
+        // Usar consolidación con finalStock
+        await window.api.consolidateStock([], [], finalStock);
 
         document.getElementById('loading-overlay').classList.remove('active');
         window.showToast(
