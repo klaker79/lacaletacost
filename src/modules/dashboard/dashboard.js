@@ -183,6 +183,32 @@ export async function actualizarKPIs() {
             }
         }
 
+        // 5. VALOR STOCK TOTAL (nuevo KPI)
+        try {
+            const inventario = window.inventarioCompleto || [];
+            if (inventario.length > 0) {
+                const valorTotal = inventario.reduce((sum, ing) => {
+                    const stock = parseFloat(ing.stock_virtual) || 0;
+                    const precioMedio = parseFloat(ing.precio_medio) || 0;
+                    return sum + (stock * precioMedio);
+                }, 0);
+
+                const valorStockEl = document.getElementById('kpi-valor-stock');
+                if (valorStockEl) {
+                    valorStockEl.textContent = valorTotal.toLocaleString('es-ES', {
+                        maximumFractionDigits: 0
+                    }) + '€';
+                }
+
+                const itemsStockEl = document.getElementById('kpi-items-stock');
+                if (itemsStockEl) {
+                    itemsStockEl.textContent = inventario.length;
+                }
+            }
+        } catch (e) {
+            console.error('Error calculando valor stock:', e);
+        }
+
         // Render sparklines
         const sparklineIngresos = document.getElementById('sparkline-ingresos');
         if (sparklineIngresos) {

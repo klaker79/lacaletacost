@@ -66,7 +66,7 @@
       });
     }
   </script>
-  <script type="module" crossorigin src="/assets/main-CLpfP0QG.js"></script>
+  <script type="module" crossorigin src="/assets/main-BFA_fE5N.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/main-_e18OsjB.css">
 </head>
 
@@ -264,23 +264,33 @@
         </div>
       </div>
 
-      <!-- Acciones Rápidas (compacto, horizontal) -->
+      <!-- 💰 Valor Stock Total -->
       <div class="dashboard-card"
         style="background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
         <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #1E293B; display: flex; align-items: center; gap: 6px;">
-          ⚡ Acciones
+          💰 Valor Stock
         </h3>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div id="kpi-valor-stock" style="font-size: 28px; font-weight: 700; color: #10B981;">-€</div>
+            <div style="font-size: 11px; color: #64748B;">Total inventario valorizado</div>
+          </div>
+          <div style="text-align: right;">
+            <div id="kpi-items-stock" style="font-size: 16px; font-weight: 600; color: #3B82F6;">-</div>
+            <div style="font-size: 10px; color: #64748B;">Items</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
           <button data-tab="ventas"
-            style="flex: 1; min-width: 80px; padding: 10px 12px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px;">
+            style="flex: 1; min-width: 60px; padding: 8px; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px;">
             💰 Venta
           </button>
           <button data-tab="pedidos"
-            style="flex: 1; min-width: 80px; padding: 10px 12px; background: linear-gradient(135deg, #3B82F6, #2563EB); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px;">
+            style="flex: 1; min-width: 60px; padding: 8px; background: linear-gradient(135deg, #3B82F6, #2563EB); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px;">
             📦 Pedido
           </button>
           <button data-tab="inventario"
-            style="flex: 1; min-width: 80px; padding: 10px 12px; background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px;">
+            style="flex: 1; min-width: 60px; padding: 8px; background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 11px;">
             🔍 Stock
           </button>
         </div>
