@@ -11,6 +11,7 @@ let empleados = [];
 let horarios = [];
 let semanaActual = new Date();
 let empleadoEditando = null;
+let filtroDepartamento = 'todos'; // 'todos', 'cocina', 'sala'
 
 // API Base URL
 const API_BASE = getApiUrl();
@@ -113,7 +114,20 @@ function renderizarEmpleados() {
 
     let html = '<div style="display: grid; gap: 12px;">';
 
-    empleados.forEach(emp => {
+    // Filtrar empleados por departamento
+    const empleadosFiltrados = empleados.filter(emp => {
+        if (filtroDepartamento === 'todos') return true;
+        const puesto = (emp.puesto || '').toLowerCase();
+        if (filtroDepartamento === 'cocina') {
+            return puesto === 'cocina' || puesto === 'cocinero' || puesto === 'cocinera';
+        }
+        if (filtroDepartamento === 'sala') {
+            return puesto === 'sala' || puesto === 'camarero' || puesto === 'camarera';
+        }
+        return true;
+    });
+
+    empleadosFiltrados.forEach(emp => {
         const horasSemanales = calcularHorasSemanales(emp.id);
         const colorBorde = emp.color || '#667eea';
 
@@ -258,8 +272,23 @@ function renderizarGridHorarios() {
         dias.push(fecha);
     }
 
+    // Pestañas de filtro por departamento
+    let html = `
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <button onclick="window.filtrarDepartamento('todos')" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; ${filtroDepartamento === 'todos' ? 'background: #667eea; color: white; border: none;' : 'background: white; color: #64748b; border: 2px solid #e2e8f0;'}">
+                👥 TODOS
+            </button>
+            <button onclick="window.filtrarDepartamento('cocina')" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; ${filtroDepartamento === 'cocina' ? 'background: #f97316; color: white; border: none;' : 'background: white; color: #64748b; border: 2px solid #e2e8f0;'}">
+                🍳 COCINA
+            </button>
+            <button onclick="window.filtrarDepartamento('sala')" style="padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; ${filtroDepartamento === 'sala' ? 'background: #22c55e; color: white; border: none;' : 'background: white; color: #64748b; border: 2px solid #e2e8f0;'}">
+                🍽️ SALA
+            </button>
+        </div>
+    `;
+
     // Crear tabla
-    let html = '<table style="width: 100%; border-collapse: separate; border-spacing: 0;">';
+    html += '<table style="width: 100%; border-collapse: separate; border-spacing: 0;">';
 
     // Header con días
     html += '<thead><tr style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">';
@@ -280,8 +309,21 @@ function renderizarGridHorarios() {
 
     html += '</tr></thead><tbody>';
 
+    // Filtrar empleados por departamento
+    const empleadosFiltrados = empleados.filter(emp => {
+        if (filtroDepartamento === 'todos') return true;
+        const puesto = (emp.puesto || '').toLowerCase();
+        if (filtroDepartamento === 'cocina') {
+            return puesto === 'cocina' || puesto === 'cocinero' || puesto === 'cocinera';
+        }
+        if (filtroDepartamento === 'sala') {
+            return puesto === 'sala' || puesto === 'camarero' || puesto === 'camarera';
+        }
+        return true;
+    });
+
     // Filas de empleados
-    empleados.forEach((emp, index) => {
+    empleadosFiltrados.forEach((emp, index) => {
         const bgColor = index % 2 === 0 ? 'white' : '#fafbfc';
         html += `<tr style="background: ${bgColor}; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc';" onmouseleave="this.style.background='${bgColor}';">`;
 
@@ -640,6 +682,15 @@ window.semanaSiguiente = function () {
         renderizarGridHorarios();
         actualizarTextoSemana();
     });
+};
+
+/**
+ * Filtrar por departamento (TODOS/COCINA/SALA)
+ */
+window.filtrarDepartamento = function (departamento) {
+    filtroDepartamento = departamento;
+    renderizarGridHorarios();
+    renderizarEmpleados();
 };
 
 /**
