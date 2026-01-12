@@ -116,7 +116,7 @@ function renderizarEmpleados() {
 
     // Filtrar empleados por departamento (nombres hardcodeados)
     const COCINA = ['IKER', 'LAURA', 'FRAN', 'LOLA', 'BEA'];
-    const SALA = ['PEROL', 'JUAN', 'LORENA', 'MANU', 'GUILLERMO'];
+    const SALA = ['PEROL', 'JUAN', 'LORENA', 'MANU', 'GUILLERMO', 'GUILLE'];
 
     const empleadosFiltrados = empleados.filter(emp => {
         if (filtroDepartamento === 'todos') return true;
@@ -314,7 +314,7 @@ function renderizarGridHorarios() {
 
     // Filtrar empleados por departamento (nombres hardcodeados)
     const COCINA = ['IKER', 'LAURA', 'FRAN', 'LOLA', 'BEA'];
-    const SALA = ['PEROL', 'JUAN', 'LORENA', 'MANU', 'GUILLERMO'];
+    const SALA = ['PEROL', 'JUAN', 'LORENA', 'MANU', 'GUILLERMO', 'GUILLE'];
 
     const empleadosFiltrados = empleados.filter(emp => {
         if (filtroDepartamento === 'todos') return true;
