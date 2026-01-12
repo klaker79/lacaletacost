@@ -972,11 +972,12 @@ export function enviarPedidoWhatsApp() {
   // Codificar mensaje para URL
   const mensajeCodificado = encodeURIComponent(mensaje);
 
-  // Abrir WhatsApp Web
-  const url = `https://wa.me/${telefono}?text=${mensajeCodificado}`;
+  // Abrir WhatsApp Web DIRECTAMENTE (sin página intermedia)
+  // Usar web.whatsapp.com/send en vez de wa.me para ir directo al chat
+  const url = `https://web.whatsapp.com/send?phone=${telefono}&text=${mensajeCodificado}`;
   window.open(url, '_blank');
 
-  window.showToast('📱 Abriendo WhatsApp...', 'success');
+  window.showToast('📱 Abriendo chat de WhatsApp...', 'success');
 }
 
 // Exponer al window
