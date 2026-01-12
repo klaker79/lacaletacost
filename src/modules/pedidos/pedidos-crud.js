@@ -94,20 +94,30 @@ export async function guardarPedido(event) {
       detalle_mercado: puestoMercado,
     };
   } else {
-    // ========== PEDIDO NORMAL (con ingredientes) ==========
+    // ========== PEDIDO NORMAL → AÑADIR AL CARRITO ==========
     if (ingredientesPedido.length === 0) {
       window.showToast('Selecciona al menos un ingrediente', 'warning');
       return;
     }
 
-    pedido = {
-      proveedorId: proveedorId,
-      proveedor_id: proveedorId,
-      fecha: new Date().toISOString(),
-      estado: 'pendiente',
-      ingredientes: ingredientesPedido,
-      total: window.calcularTotalPedido(),
-    };
+    // 🛒 NUEVO: Añadir ingredientes al carrito en lugar de crear pedido directamente
+    ingredientesPedido.forEach(item => {
+      const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
+      if (ing && typeof window.agregarAlCarrito === 'function') {
+        // Usar la función del carrito para añadir
+        window.agregarAlCarrito(item.ingredienteId, item.cantidad, proveedorId);
+      }
+    });
+
+    // Cerrar formulario y mostrar el carrito
+    window.cerrarFormularioPedido();
+    window.showToast(`🛒 ${ingredientesPedido.length} ingrediente(s) añadidos al carrito`, 'success');
+
+    // Abrir el carrito automáticamente
+    if (typeof window.abrirCarrito === 'function') {
+      setTimeout(() => window.abrirCarrito(), 300);
+    }
+    return; // No continuar con la creación directa
   }
 
   window.showLoading();
