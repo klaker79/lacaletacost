@@ -404,6 +404,12 @@
     <button id="tab-btn-recetas" class="tab" data-tab="recetas">👨‍🍳 Recetas</button>
     <button id="tab-btn-proveedores" class="tab" data-tab="proveedores">🚚 Proveedores</button>
     <button id="tab-btn-pedidos" class="tab" data-tab="pedidos">📋 Pedidos</button>
+    <button onclick="window.abrirCarrito()"
+      style="background: linear-gradient(135deg, #f97316, #ea580c); border: none; color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 6px; position: relative;">
+      🛒 Carrito
+      <span id="carrito-badge"
+        style="display: none; background: #dc2626; color: white; font-size: 11px; min-width: 18px; height: 18px; border-radius: 50%; justify-content: center; align-items: center; position: absolute; top: -5px; right: -5px;">0</span>
+    </button>
     <button id="tab-btn-analisis" class="tab" data-tab="analisis">📊 Análisis</button>
     <button id="tab-btn-inventario" class="tab" data-tab="inventario">📦 Inventario<span id="badge-inventario"
         class="tab-badge" style="display:none;">0</span></button>
@@ -2119,6 +2125,9 @@
       <div id="modal-ver-pedido-contenido"></div>
       <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
         <button class="btn btn-secondary" data-action="cerrar-modal-pedido">Cerrar</button>
+        <button class="btn" style="background: #25D366; color: white;" onclick="window.enviarPedidoWhatsApp()">
+          📱 WhatsApp
+        </button>
         <button class="btn btn-primary" data-action="descargar-pedido-pdf" id="btn-descargar-pdf">
           📄 Descargar PDF
         </button>
@@ -2528,6 +2537,46 @@
   </script>
   </div>
   <script src="src/legacy/inventario-masivo.js"></script>
+  <script src="src/modules/pedidos/pedidos-cart.js"></script>
+
+  <!-- MODAL CARRITO DE PEDIDOS -->
+  <div id="modal-carrito" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+          🛒 Carrito de Pedidos
+        </h2>
+        <button onclick="window.cerrarCarrito()"
+          style="background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b;">×</button>
+      </div>
+
+      <div id="carrito-contenido" style="min-height: 200px;">
+        <!-- Se renderiza dinámicamente -->
+      </div>
+
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+        <div>
+          <span style="color: #64748b; font-size: 14px;">Total estimado:</span>
+          <span id="carrito-total" style="font-size: 24px; font-weight: 700; color: #059669; margin-left: 10px;">0.00
+            €</span>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button onclick="window.vaciarCarrito()" class="btn btn-secondary"
+            style="background: #fee2e2; color: #dc2626; border: none;">
+            🗑️ Vaciar
+          </button>
+          <button onclick="window.cerrarCarrito()" class="btn btn-secondary">
+            Seguir comprando
+          </button>
+          <button onclick="window.confirmarCarrito()" class="btn btn-primary"
+            style="background: linear-gradient(135deg, #10B981, #059669);">
+            ✅ Crear Pedido(s)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- MODAL DE CONFIRMACIÓN PROFESIONAL -->
   <div id="modal-confirmacion" class="modal-overlay-custom" style="display: none;">
     <div class="modal-confirmacion-container">

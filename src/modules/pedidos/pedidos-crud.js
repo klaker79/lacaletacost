@@ -879,3 +879,80 @@ export function descargarPedidoPDF() {
   ventana.document.close();
   ventana.print();
 }
+
+/**
+ * Envía el pedido actual por WhatsApp al proveedor
+ * 📱 Usa la API de WhatsApp Web para abrir chat con mensaje pre-escrito
+ */
+export function enviarPedidoWhatsApp() {
+  if (window.pedidoViendoId === null) {
+    window.showToast('No hay pedido seleccionado', 'warning');
+    return;
+  }
+
+  const pedido = window.pedidos.find(p => p.id === window.pedidoViendoId);
+  if (!pedido) return;
+
+  const provId = pedido.proveedorId || pedido.proveedor_id;
+  const prov = window.proveedores.find(p => p.id === provId);
+
+  if (!prov || !prov.telefono) {
+    window.showToast('⚠️ El proveedor no tiene teléfono configurado', 'warning');
+    return;
+  }
+
+  // Limpiar número de teléfono (quitar espacios, guiones, etc.)
+  let telefono = prov.telefono.replace(/[\s\-\(\)]/g, '');
+  // Si empieza con 0, añadir código de España
+  if (telefono.startsWith('0')) {
+    telefono = '34' + telefono.substring(1);
+  }
+  // Si no tiene código de país, añadir 34 (España)
+  if (!telefono.startsWith('+') && !telefono.startsWith('34')) {
+    telefono = '34' + telefono;
+  }
+  // Quitar el + si lo tiene
+  telefono = telefono.replace('+', '');
+
+  // Obtener nombre del restaurante
+  const restaurante = window.getRestaurantName ? window.getRestaurantName() : 'La Nave 5';
+
+  // Construir mensaje
+  const items = pedido.itemsRecepcion || pedido.ingredientes || [];
+  let mensaje = `📦 *PEDIDO #${pedido.id}*\n`;
+  mensaje += `🏪 ${restaurante}\n`;
+  mensaje += `📅 ${new Date().toLocaleDateString('es-ES')}\n\n`;
+  mensaje += `*Ingredientes:*\n`;
+
+  items.forEach(item => {
+    const ingId = item.ingredienteId || item.ingrediente_id;
+    const ing = window.ingredientes.find(i => i.id === ingId);
+    const nombre = ing ? ing.nombre : 'Ingrediente';
+    const unidad = ing ? ing.unidad : '';
+    const cantidad = parseFloat(item.cantidad || 0);
+
+    // Si tiene formato de compra, mostrar en formato
+    if (item.formatoUsado === 'formato' && ing?.formato_compra) {
+      const cantFormatos = item.cantidadFormatos || Math.ceil(cantidad / (ing.cantidad_por_formato || 1));
+      mensaje += `• ${nombre}: ${cantFormatos} ${ing.formato_compra}\n`;
+    } else {
+      mensaje += `• ${nombre}: ${cantidad} ${unidad}\n`;
+    }
+  });
+
+  mensaje += `\n💰 *Total estimado: ${parseFloat(pedido.total || 0).toFixed(2)} €*`;
+  mensaje += `\n\n_Gracias!_`;
+
+  // Codificar mensaje para URL
+  const mensajeCodificado = encodeURIComponent(mensaje);
+
+  // Abrir WhatsApp Web
+  const url = `https://wa.me/${telefono}?text=${mensajeCodificado}`;
+  window.open(url, '_blank');
+
+  window.showToast('📱 Abriendo WhatsApp...', 'success');
+}
+
+// Exponer al window
+window.enviarPedidoWhatsApp = enviarPedidoWhatsApp;
+
