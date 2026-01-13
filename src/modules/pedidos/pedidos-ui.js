@@ -441,10 +441,10 @@ export function calcularTotalPedido() {
                 const precioIngrediente = precioManual > 0 ? precioManual : parseFloat(ing.precio || 0);
 
                 if (usandoFormato) {
-                    // Compra por formato: precio_unitario × cantidad_formato × cantidad_pedida
-                    // Ej: 3.90€/kg × 0.5 kg/bote = 1.95€/bote × 3 botes = 5.85€
-                    const precioPorFormato = precioIngrediente * formatoMult;
-                    total += precioPorFormato * cantidadInput;
+                    // Compra por formato: el precio introducido es el precio del LOTE completo
+                    // No multiplicar precio × formatoMult (eso está mal)
+                    // El usuario introduce: precio del lote × cantidad de lotes
+                    total += precioIngrediente * cantidadInput;
                 } else {
                     // Compra por unidad base (kg) directamente: precio × cantidad
                     total += precioIngrediente * cantidadInput;
