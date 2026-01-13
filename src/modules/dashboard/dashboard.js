@@ -191,8 +191,15 @@ export async function actualizarKPIs() {
             if (inventario.length > 0) {
                 const valorTotal = inventario.reduce((sum, ing) => {
                     const stock = parseFloat(ing.stock_virtual) || 0;
-                    const precioMedio = parseFloat(ing.precio_medio) || 0;
-                    return sum + (stock * precioMedio);
+                    // Usar precio_medio si existe, sino calcular precio unitario
+                    let precioUnitario = parseFloat(ing.precio_medio) || 0;
+                    if (!precioUnitario) {
+                        const precioBase = parseFloat(ing.precio) || 0;
+                        const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 0;
+                        // Si hay formato, dividir precio por cantidad_por_formato
+                        precioUnitario = (cantidadFormato > 0) ? precioBase / cantidadFormato : precioBase;
+                    }
+                    return sum + (stock * precioUnitario);
                 }, 0);
 
                 const valorStockEl = document.getElementById('kpi-valor-stock');
