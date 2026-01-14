@@ -594,10 +594,86 @@ window.procesarArchivoVentas = async function (input) {
     document.getElementById('loading-overlay').classList.add('active');
 
     try {
-        const data = await leerArchivoGenerico(file);
-        datosImportarVentas = validarDatosVentas(data);
-        mostrarPreviewVentas(datosImportarVentas);
-        document.getElementById('loading-overlay').classList.remove('active');
+        // Detectar si es PDF
+        const isPDF = file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+
+        if (isPDF) {
+            // Procesar PDF con IA (backend)
+            window.showToast('Procesando PDF con IA...', 'info');
+
+            // Convertir a base64
+            const base64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    // Quitar el prefijo "data:application/pdf;base64,"
+                    const result = reader.result.split(',')[1];
+                    resolve(result);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+
+            // Llamar al endpoint del backend
+            const response = await fetch(`${window.API_CONFIG?.baseUrl || 'https://lacaleta-api.mindloop.cloud'}/api/parse-pdf`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    pdfBase64: base64,
+                    filename: file.name
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error procesando PDF');
+            }
+
+            const result = await response.json();
+
+            // Establecer la fecha del documento
+            const fechaInput = document.getElementById('fecha-importar-ventas');
+            if (fechaInput && result.fecha) {
+                fechaInput.value = result.fecha;
+            }
+
+            // Convertir formato del backend al formato esperado
+            datosImportarVentas = result.ventas.map(v => {
+                // Buscar receta por código o nombre
+                let recetaEncontrada = null;
+                if (v.codigo_tpv) {
+                    recetaEncontrada = window.recetas.find(r => r.codigo && String(r.codigo) === String(v.codigo_tpv));
+                }
+                if (!recetaEncontrada && v.receta) {
+                    const nombreNorm = v.receta.toLowerCase().trim();
+                    recetaEncontrada = window.recetas.find(r => r.nombre.toLowerCase().trim() === nombreNorm);
+                }
+
+                return {
+                    codigo: v.codigo_tpv || '',
+                    nombre: v.receta || '',
+                    cantidad: v.cantidad || 0,
+                    total: v.total || 0,
+                    recetaId: recetaEncontrada ? recetaEncontrada.id : null,
+                    recetaNombre: recetaEncontrada ? recetaEncontrada.nombre : null,
+                    valido: v.cantidad > 0,
+                    error: !recetaEncontrada ? '⚠️ No vinculado (se registrará como genérico)' : null
+                };
+            });
+
+            mostrarPreviewVentas(datosImportarVentas);
+            document.getElementById('loading-overlay').classList.remove('active');
+            window.showToast(`✓ PDF procesado: ${result.totalVentas} ventas encontradas`, 'success');
+
+        } else {
+            // Procesar Excel/CSV (comportamiento original)
+            const data = await leerArchivoGenerico(file);
+            datosImportarVentas = validarDatosVentas(data);
+            mostrarPreviewVentas(datosImportarVentas);
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
     } catch (error) {
         document.getElementById('loading-overlay').classList.remove('active');
         window.showToast('Error procesando archivo: ' + error.message, 'error');

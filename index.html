@@ -2474,7 +2474,8 @@
 
       <div style="margin: 20px 0;">
         <p style="color: #64748b; margin-bottom: 15px;">
-          Sube un archivo Excel (.xlsx) o CSV con las columnas: <strong>Código</strong> (opcional),
+          Sube un archivo <strong>PDF del TPV</strong>, Excel (.xlsx) o CSV con las columnas: <strong>Código</strong>
+          (opcional),
           <strong>Nombre</strong>, <strong>Cantidad</strong>, <strong>Total</strong>
         </p>
 
@@ -2495,13 +2496,13 @@
 
         <div
           style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 30px; text-align: center; background: #f8fafc;">
-          <input type="file" id="file-importar-ventas" accept=".xlsx,.csv" style="display: none;"
+          <input type="file" id="file-importar-ventas" accept=".pdf,.xlsx,.csv" style="display: none;"
             onchange="window.procesarArchivoVentas(this)">
           <label for="file-importar-ventas" style="cursor: pointer;">
             <div style="font-size: 48px; margin-bottom: 10px;">📁</div>
             <div style="font-size: 16px; color: #475569; font-weight: 500;">Haz clic para seleccionar archivo
             </div>
-            <div style="font-size: 14px; color: #94a3b8; margin-top: 5px;">Excel (.xlsx) o CSV</div>
+            <div style="font-size: 14px; color: #94a3b8; margin-top: 5px;">📄 PDF del TPV, Excel (.xlsx) o CSV</div>
           </label>
         </div>
       </div>
