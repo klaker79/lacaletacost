@@ -270,6 +270,8 @@ window.confirmarMermasMultiples = MermaRapida.confirmarMermasMultiples;
 window.agregarLineaMerma = MermaRapida.agregarLineaMerma;
 window.eliminarLineaMerma = MermaRapida.eliminarLineaMerma;
 window.actualizarLineaMerma = MermaRapida.actualizarLineaMerma;
+window.procesarFotoMerma = MermaRapida.procesarFotoMerma;
+window.procesarFotoMermaInput = MermaRapida.procesarFotoMermaInput;
 
 // ============================================
 // MÓDULO: EXPORT PDF

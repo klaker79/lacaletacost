@@ -298,3 +298,193 @@ export async function confirmarMermasMultiples() {
 export async function confirmarMermaRapida() {
     return confirmarMermasMultiples();
 }
+
+/**
+ * Procesa una foto de mermas arrastrada (drag & drop)
+ */
+export async function procesarFotoMerma(event) {
+    event.preventDefault();
+
+    const files = event.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    if (!file.type.startsWith('image/')) {
+        window.showToast?.('Solo se permiten imágenes', 'warning');
+        return;
+    }
+
+    await procesarImagenMerma(file);
+}
+
+/**
+ * Procesa una foto seleccionada con input file
+ */
+export async function procesarFotoMermaInput(event) {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+
+    await procesarImagenMerma(file);
+}
+
+/**
+ * Procesa la imagen y llama a la API de IA
+ */
+async function procesarImagenMerma(file) {
+    // Mostrar loading
+    const dropzone = document.getElementById('merma-dropzone');
+    const contentDiv = document.getElementById('merma-dropzone-content');
+    const loadingDiv = document.getElementById('merma-dropzone-loading');
+
+    if (contentDiv) contentDiv.style.display = 'none';
+    if (loadingDiv) loadingDiv.style.display = 'block';
+    if (dropzone) dropzone.style.borderColor = '#3b82f6';
+
+    try {
+        // Convertir imagen a base64
+        const base64 = await fileToBase64(file);
+        const imageBase64 = base64.split(',')[1]; // Quitar el prefijo data:image/...
+
+        // Llamar a la API
+        const response = await window.api.request('/api/parse-merma-image', {
+            method: 'POST',
+            body: JSON.stringify({
+                imageBase64,
+                mediaType: file.type
+            })
+        });
+
+        if (!response.success || !response.mermas || response.mermas.length === 0) {
+            window.showToast?.('No se pudieron detectar productos en la imagen', 'warning');
+            resetDropzone();
+            return;
+        }
+
+        // Limpiar líneas existentes
+        const container = document.getElementById('merma-lineas-container');
+        if (container) container.innerHTML = '';
+        contadorLineas = 0;
+
+        // Añadir líneas detectadas
+        for (const merma of response.mermas) {
+            agregarLineaMermaConDatos(merma);
+        }
+
+        window.showToast?.(`✅ ${response.mermas.length} productos detectados`, 'success');
+
+    } catch (error) {
+        console.error('Error procesando imagen:', error);
+        window.showToast?.('Error procesando imagen: ' + error.message, 'error');
+    }
+
+    resetDropzone();
+}
+
+/**
+ * Resetea la zona de drop a su estado original
+ */
+function resetDropzone() {
+    const dropzone = document.getElementById('merma-dropzone');
+    const contentDiv = document.getElementById('merma-dropzone-content');
+    const loadingDiv = document.getElementById('merma-dropzone-loading');
+
+    if (contentDiv) contentDiv.style.display = 'block';
+    if (loadingDiv) loadingDiv.style.display = 'none';
+    if (dropzone) {
+        dropzone.style.borderColor = '#cbd5e1';
+        dropzone.style.background = '#f8fafc';
+    }
+}
+
+/**
+ * Convierte un archivo a base64
+ */
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+/**
+ * Añade una línea de merma con datos precargados
+ */
+function agregarLineaMermaConDatos(merma) {
+    const container = document.getElementById('merma-lineas-container');
+    if (!container) return;
+
+    const index = contadorLineas++;
+
+    // Buscar ingrediente por nombre similar
+    const ingredientes = window.ingredientes || [];
+    let ingredienteEncontrado = null;
+    const nombreBuscado = (merma.producto || '').toLowerCase();
+
+    for (const ing of ingredientes) {
+        if (ing.nombre.toLowerCase().includes(nombreBuscado) ||
+            nombreBuscado.includes(ing.nombre.toLowerCase())) {
+            ingredienteEncontrado = ing;
+            break;
+        }
+    }
+
+    // Mapear motivo
+    const motivoMap = {
+        'caducado': 'caduco',
+        'nevera': 'nevera',
+        'falta de venta': 'falta_venta',
+        'mal estado': 'mal_estado',
+        'accidente': 'accidente'
+    };
+    const motivoNormalizado = motivoMap[merma.motivo?.toLowerCase()] || 'otro';
+
+    const lineaHtml = `
+    <div class="merma-linea" data-index="${index}" style="background: ${ingredienteEncontrado ? '#f0fdf4' : '#fef3c7'}; border: 1px solid ${ingredienteEncontrado ? '#86efac' : '#fde68a'}; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: center;">
+            <select class="merma-producto" onchange="window.actualizarLineaMerma(${index})" 
+                style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                ${getIngredientesOptionsHtml()}
+            </select>
+            
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <input type="number" class="merma-cantidad" step="0.001" min="0" value="${merma.cantidad || 0}"
+                    onchange="window.actualizarLineaMerma(${index})" oninput="window.actualizarLineaMerma(${index})"
+                    style="width: 70px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                <span class="merma-unidad" style="color: #64748b; font-size: 12px; min-width: 25px;">${merma.unidad || 'ud'}</span>
+            </div>
+            
+            <select class="merma-motivo" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                <option value="caduco" ${motivoNormalizado === 'caduco' ? 'selected' : ''}>📅 Caducado</option>
+                <option value="nevera" ${motivoNormalizado === 'nevera' ? 'selected' : ''}>🌡️ Nevera</option>
+                <option value="falta_venta" ${motivoNormalizado === 'falta_venta' ? 'selected' : ''}>📉 Falta venta</option>
+                <option value="mal_estado" ${motivoNormalizado === 'mal_estado' ? 'selected' : ''}>🦠 Mal estado</option>
+                <option value="accidente" ${motivoNormalizado === 'accidente' ? 'selected' : ''}>💥 Accidente</option>
+                <option value="otro" ${motivoNormalizado === 'otro' ? 'selected' : ''}>📝 Otro</option>
+            </select>
+            
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="merma-valor" style="font-weight: 600; color: #dc2626; min-width: 60px; text-align: right;">0.00€</span>
+                <button type="button" onclick="window.eliminarLineaMerma(${index})" 
+                    style="background: #fee2e2; color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 16px;">×</button>
+            </div>
+        </div>
+        ${!ingredienteEncontrado ? `<div style="margin-top: 8px; font-size: 11px; color: #92400e;">⚠️ No se encontró "${merma.producto}" - selecciona manualmente</div>` : ''}
+    </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', lineaHtml);
+
+    // Seleccionar el ingrediente si se encontró
+    if (ingredienteEncontrado) {
+        const linea = document.querySelector(`.merma-linea[data-index="${index}"]`);
+        const select = linea?.querySelector('.merma-producto');
+        if (select) {
+            select.value = ingredienteEncontrado.id;
+            actualizarLineaMerma(index);
+        }
+    }
+
+    actualizarResumenMermas();
+}
