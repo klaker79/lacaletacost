@@ -82,24 +82,24 @@ export function agregarLineaMerma() {
     const index = contadorLineas++;
 
     const lineaHtml = `
-    <div class="merma-linea" data-index="${index}" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: center;">
+    <div class="merma-linea" data-index="${index}" style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 80px 110px 90px; gap: 8px; align-items: center;">
             <!-- Producto -->
             <select class="merma-producto" onchange="window.actualizarLineaMerma(${index})" 
-                style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
                 ${getIngredientesOptionsHtml()}
             </select>
             
             <!-- Cantidad -->
-            <div style="display: flex; align-items: center; gap: 5px;">
-                <input type="number" class="merma-cantidad" step="0.001" min="0" placeholder="0.00"
+            <div style="display: flex; align-items: center; gap: 3px;">
+                <input type="number" class="merma-cantidad" step="0.001" min="0" placeholder="0"
                     onchange="window.actualizarLineaMerma(${index})" oninput="window.actualizarLineaMerma(${index})"
-                    style="width: 70px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
-                <span class="merma-unidad" style="color: #64748b; font-size: 12px; min-width: 25px;">ud</span>
+                    style="width: 50px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; text-align: right;">
+                <span class="merma-unidad" style="color: #64748b; font-size: 11px; min-width: 20px;">ud</span>
             </div>
             
             <!-- Motivo -->
-            <select class="merma-motivo" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+            <select class="merma-motivo" style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;">
                 <option value="caduco">📅 Caducado</option>
                 <option value="nevera">🌡️ Nevera</option>
                 <option value="falta_venta">📉 Falta venta</option>
@@ -109,10 +109,10 @@ export function agregarLineaMerma() {
             </select>
             
             <!-- Valor + Eliminar -->
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="merma-valor" style="font-weight: 600; color: #dc2626; min-width: 60px; text-align: right;">0.00€</span>
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                <span class="merma-valor" style="font-weight: 600; color: #dc2626; font-size: 13px; width: 55px; text-align: right;">0.00€</span>
                 <button type="button" onclick="window.eliminarLineaMerma(${index})" 
-                    style="background: #fee2e2; color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 16px;">×</button>
+                    style="background: #fee2e2; color: #dc2626; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 14px; flex-shrink: 0;">×</button>
             </div>
         </div>
     </div>
@@ -441,21 +441,21 @@ function agregarLineaMermaConDatos(merma) {
     const motivoNormalizado = motivoMap[merma.motivo?.toLowerCase()] || 'otro';
 
     const lineaHtml = `
-    <div class="merma-linea" data-index="${index}" style="background: ${ingredienteEncontrado ? '#f0fdf4' : '#fef3c7'}; border: 1px solid ${ingredienteEncontrado ? '#86efac' : '#fde68a'}; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: center;">
+    <div class="merma-linea" data-index="${index}" style="background: ${ingredienteEncontrado ? '#f0fdf4' : '#fef3c7'}; border: 1px solid ${ingredienteEncontrado ? '#86efac' : '#fde68a'}; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 80px 110px 90px; gap: 8px; align-items: center;">
             <select class="merma-producto" onchange="window.actualizarLineaMerma(${index})" 
-                style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+                style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
                 ${getIngredientesOptionsHtml()}
             </select>
             
-            <div style="display: flex; align-items: center; gap: 5px;">
+            <div style="display: flex; align-items: center; gap: 3px;">
                 <input type="number" class="merma-cantidad" step="0.001" min="0" value="${merma.cantidad || 0}"
                     onchange="window.actualizarLineaMerma(${index})" oninput="window.actualizarLineaMerma(${index})"
-                    style="width: 70px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
-                <span class="merma-unidad" style="color: #64748b; font-size: 12px; min-width: 25px;">${merma.unidad || 'ud'}</span>
+                    style="width: 50px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; text-align: right;">
+                <span class="merma-unidad" style="color: #64748b; font-size: 11px; min-width: 20px;">${merma.unidad || 'ud'}</span>
             </div>
             
-            <select class="merma-motivo" style="padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;">
+            <select class="merma-motivo" style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;">
                 <option value="caduco" ${motivoNormalizado === 'caduco' ? 'selected' : ''}>📅 Caducado</option>
                 <option value="nevera" ${motivoNormalizado === 'nevera' ? 'selected' : ''}>🌡️ Nevera</option>
                 <option value="falta_venta" ${motivoNormalizado === 'falta_venta' ? 'selected' : ''}>📉 Falta venta</option>
@@ -464,13 +464,13 @@ function agregarLineaMermaConDatos(merma) {
                 <option value="otro" ${motivoNormalizado === 'otro' ? 'selected' : ''}>📝 Otro</option>
             </select>
             
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="merma-valor" style="font-weight: 600; color: #dc2626; min-width: 60px; text-align: right;">0.00€</span>
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                <span class="merma-valor" style="font-weight: 600; color: #dc2626; font-size: 13px; width: 55px; text-align: right;">0.00€</span>
                 <button type="button" onclick="window.eliminarLineaMerma(${index})" 
-                    style="background: #fee2e2; color: #dc2626; border: none; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 16px;">×</button>
+                    style="background: #fee2e2; color: #dc2626; border: none; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 14px; flex-shrink: 0;">×</button>
             </div>
         </div>
-        ${!ingredienteEncontrado ? `<div style="margin-top: 8px; font-size: 11px; color: #92400e;">⚠️ No se encontró "${merma.producto}" - selecciona manualmente</div>` : ''}
+        ${!ingredienteEncontrado ? `<div style="margin-top: 6px; font-size: 10px; color: #92400e;">⚠️ No se encontró "${merma.producto}" - selecciona manualmente</div>` : ''}
     </div>
     `;
 
