@@ -346,7 +346,7 @@ async function procesarImagenMerma(file) {
         const imageBase64 = base64.split(',')[1]; // Quitar el prefijo data:image/...
 
         // Llamar a la API
-        const response = await window.api.request('/api/parse-merma-image', {
+        const response = await window.API.fetch('/api/parse-merma-image', {
             method: 'POST',
             body: JSON.stringify({
                 imageBase64,
