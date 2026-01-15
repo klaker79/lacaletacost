@@ -249,6 +249,14 @@ window.confirmarInventarioMasivo = async function () {
         // Usar consolidación con finalStock
         await window.api.consolidateStock([], [], finalStock);
 
+        // Reset mermas del período (nuevo ciclo de inventario)
+        try {
+            await window.API?.resetMermas?.('subida_inventario');
+            console.log('✅ Mermas del período reseteadas');
+        } catch (mermaError) {
+            console.warn('⚠️ No se pudieron resetear las mermas:', mermaError.message);
+        }
+
         document.getElementById('loading-overlay').classList.remove('active');
         window.showToast(
             `✓ ${datosValidos.length} ingredientes actualizados y consolidados`,
@@ -1319,7 +1327,7 @@ function renderizarTablaVentasDiarias() {
     container.innerHTML = html;
 }
 
-// Renderizar P&L diario
+// Renderizar P&L diario - Estructura profesional
 async function renderizarTablaPLDiario() {
     const container = document.getElementById('tabla-pl-diario');
     if (!window.datosResumenMensual || !window.datosResumenMensual.dias?.length) {
@@ -1333,7 +1341,7 @@ async function renderizarTablaPLDiario() {
     // Calcular totales por día
     const totalesPorDia = {};
     dias.forEach(dia => {
-        totalesPorDia[dia] = { ingresos: 0, costes: 0, beneficio: 0 };
+        totalesPorDia[dia] = { ingresos: 0, costes: 0 };
     });
 
     for (const [nombre, data] of Object.entries(recetas)) {
@@ -1341,68 +1349,11 @@ async function renderizarTablaPLDiario() {
             if (totalesPorDia[dia]) {
                 totalesPorDia[dia].ingresos += diaData.ingresos;
                 totalesPorDia[dia].costes += diaData.coste;
-                totalesPorDia[dia].beneficio += diaData.beneficio;
             }
         }
     }
 
-    let html = '<table style="min-width: 100%; border-collapse: collapse;">';
-
-    // Header
-    html += '<thead><tr><th style="position: sticky; left: 0; background: #f8f8f8;">Concepto</th>';
-    dias.forEach(dia => {
-        const fecha = new Date(dia);
-        html += `<th style="min-width: 90px; text-align: center;">${fecha.getDate()}/${fecha.getMonth() + 1}</th>`;
-    });
-    html += '<th style="background: #1565c0; color: white;">TOTAL MES</th></tr></thead>';
-
-    // Fila Ingresos
-    let totalIngresos = 0,
-        totalCostes = 0,
-        totalCompras = 0,
-        totalBeneficio = 0;
-    html += '<tbody>';
-    html +=
-        '<tr style="background: #e8f5e9;"><td style="position: sticky; left: 0; background: #e8f5e9; font-weight: bold;">📈 INGRESOS</td>';
-    dias.forEach(dia => {
-        const val = totalesPorDia[dia].ingresos;
-        totalIngresos += val;
-        html += `<td style="text-align: center; font-weight: 500; color: #2e7d32;">${val.toFixed(2)}€</td>`;
-    });
-    html += `<td style="text-align: center; background: #1565c0; color: white; font-weight: bold;">${totalIngresos.toFixed(2)}€</td></tr>`;
-
-    // Fila Costes de Producción (Food Cost)
-    html +=
-        '<tr style="background: #ffebee;"><td style="position: sticky; left: 0; background: #ffebee; font-weight: bold;">📉 COSTES PROD.</td>';
-    dias.forEach(dia => {
-        const val = totalesPorDia[dia].costes;
-        totalCostes += val;
-        html += `<td style="text-align: center; color: #c62828;">${val.toFixed(2)}€</td>`;
-    });
-    html += `<td style="text-align: center; background: #1565c0; color: white; font-weight: bold;">${totalCostes.toFixed(2)}€</td></tr>`;
-
-    // Fila COMPRAS (compras reales a proveedores)
-    const comprasData = window.datosResumenMensual.compras?.ingredientes || {};
-    const comprasPorDia = {};
-    dias.forEach(dia => { comprasPorDia[dia] = 0; });
-    for (const [nombre, data] of Object.entries(comprasData)) {
-        for (const [dia, diaData] of Object.entries(data.dias || {})) {
-            if (comprasPorDia[dia] !== undefined) {
-                comprasPorDia[dia] += diaData.total || diaData.precio || 0;
-            }
-        }
-    }
-
-    html +=
-        '<tr style="background: #fff8e1;"><td style="position: sticky; left: 0; background: #fff8e1; font-weight: bold;">🛒 COMPRAS</td>';
-    dias.forEach(dia => {
-        const val = comprasPorDia[dia] || 0;
-        totalCompras += val;
-        html += `<td style="text-align: center; color: #f57c00;">${val.toFixed(2)}€</td>`;
-    });
-    html += `<td style="text-align: center; background: #1565c0; color: white; font-weight: bold;">${totalCompras.toFixed(2)}€</td></tr>`;
-
-    // Obtener gastos fijos mensuales desde API (misma fuente que Finanzas)
+    // Obtener gastos fijos mensuales
     let gastosFijosMes = 0;
     try {
         const gastosFijos = await window.api.getGastosFijos();
@@ -1411,7 +1362,6 @@ async function renderizarTablaPLDiario() {
         }
     } catch (error) {
         console.warn('Fallback a localStorage para gastos fijos:', error.message);
-        // Fallback a localStorage si API falla
         const opexData = JSON.parse(
             localStorage.getItem('opex_inputs') ||
             '{"alquiler":0,"personal":0,"suministros":0,"otros":0}'
@@ -1423,45 +1373,147 @@ async function renderizarTablaPLDiario() {
             parseFloat(opexData.otros || 0);
     }
 
-    // Calcular gastos fijos por día (días del mes calendario, no solo días con datos)
+    // Calcular gastos fijos por día
     const mesSeleccionado = parseInt(document.getElementById('diario-mes').value);
     const anoSeleccionado = parseInt(document.getElementById('diario-ano').value);
     const diasEnMes = new Date(anoSeleccionado, mesSeleccionado, 0).getDate();
     const gastosFijosDia = diasEnMes > 0 ? gastosFijosMes / diasEnMes : 0;
 
-    // Fila Beneficio BRUTO (antes de gastos fijos)
-    html +=
-        '<tr style="background: #fff3e0;"><td style="position: sticky; left: 0; background: #fff3e0; font-weight: bold;">💰 BENEFICIO BRUTO</td>';
-    dias.forEach(dia => {
-        const val = totalesPorDia[dia].beneficio;
-        totalBeneficio += val;
-        const color = val >= 0 ? '#f57c00' : '#c62828';
-        html += `<td style="text-align: center; font-weight: bold; color: ${color};">${val.toFixed(2)}€</td>`;
-    });
-    html += `<td style="text-align: center; background: #1565c0; color: white; font-weight: bold;">${totalBeneficio.toFixed(2)}€</td></tr>`;
+    // Calcular compras por día (para sección de flujo de caja)
+    const comprasData = window.datosResumenMensual.compras?.ingredientes || {};
+    const comprasPorDia = {};
+    dias.forEach(dia => { comprasPorDia[dia] = 0; });
+    for (const [nombre, data] of Object.entries(comprasData)) {
+        for (const [dia, diaData] of Object.entries(data.dias || {})) {
+            if (comprasPorDia[dia] !== undefined) {
+                comprasPorDia[dia] += diaData.total || diaData.precio || 0;
+            }
+        }
+    }
 
-    // Fila Gastos Fijos Diarios
-    html +=
-        '<tr style="background: #fce4ec;"><td style="position: sticky; left: 0; background: #fce4ec; font-weight: bold;">🏢 GASTOS FIJOS/DÍA</td>';
-    const totalGastosFijos = gastosFijosDia * dias.length;
+    // ═══════════════════════════════════════════════════════════
+    // 📊 TABLA P&L - CUENTA DE RESULTADOS
+    // ═══════════════════════════════════════════════════════════
+    let html = `
+    <div style="margin-bottom: 24px;">
+        <h3 style="margin: 0 0 16px 0; color: #1e293b; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+            📊 Cuenta de Resultados Diaria
+            <span style="font-size: 12px; color: #64748b; font-weight: normal;">(P&L Operativo)</span>
+        </h3>
+        <table style="width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+    `;
+
+    // Header
+    html += '<thead><tr><th style="position: sticky; left: 0; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); padding: 14px 16px; text-align: left; font-weight: 600; color: #334155; border-bottom: 2px solid #cbd5e1;">Concepto</th>';
+    dias.forEach(dia => {
+        const fecha = new Date(dia);
+        const diaSemana = fecha.toLocaleDateString('es-ES', { weekday: 'short' }).charAt(0).toUpperCase();
+        html += `<th style="min-width: 85px; text-align: center; padding: 14px 8px; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); border-bottom: 2px solid #cbd5e1; font-weight: 600; color: #334155;">${diaSemana} ${fecha.getDate()}/${fecha.getMonth() + 1}</th>`;
+    });
+    html += '<th style="background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%); color: white; padding: 14px 16px; font-weight: 700;">TOTAL MES</th></tr></thead>';
+
+    // Body
+    html += '<tbody>';
+
+    let totalIngresos = 0, totalCostes = 0;
+
+    // ── FILA: INGRESOS ──
+    html += '<tr style="background: #f0fdf4;"><td style="position: sticky; left: 0; background: #f0fdf4; padding: 16px; font-weight: 600; color: #166534; border-bottom: 1px solid #bbf7d0;">📈 INGRESOS</td>';
+    dias.forEach(dia => {
+        const val = totalesPorDia[dia].ingresos;
+        totalIngresos += val;
+        html += `<td style="text-align: center; padding: 16px 8px; font-weight: 600; color: #166534; border-bottom: 1px solid #bbf7d0;">${val.toFixed(2)}€</td>`;
+    });
+    html += `<td style="text-align: center; background: #1e40af; color: white; font-weight: 700; padding: 16px;">${totalIngresos.toFixed(2)}€</td></tr>`;
+
+    // ── FILA: COSTES DE PRODUCCIÓN ──
+    html += '<tr style="background: #fef2f2;"><td style="position: sticky; left: 0; background: #fef2f2; padding: 16px; font-weight: 600; color: #991b1b; border-bottom: 1px solid #fecaca;">📉 COSTES PROD.</td>';
+    dias.forEach(dia => {
+        const val = totalesPorDia[dia].costes;
+        totalCostes += val;
+        html += `<td style="text-align: center; padding: 16px 8px; color: #dc2626; border-bottom: 1px solid #fecaca;">${val.toFixed(2)}€</td>`;
+    });
+    html += `<td style="text-align: center; background: #1e40af; color: white; font-weight: 700; padding: 16px;">${totalCostes.toFixed(2)}€</td></tr>`;
+
+    // ── SEPARADOR ──
+    html += '<tr><td colspan="' + (dias.length + 2) + '" style="height: 3px; background: linear-gradient(90deg, #e2e8f0 0%, #94a3b8 50%, #e2e8f0 100%); padding: 0;"></td></tr>';
+
+    // ── FILA: MARGEN BRUTO (INGRESOS - COSTES PROD) ──
+    const totalMargenBruto = totalIngresos - totalCostes;
+    html += '<tr style="background: #fef3c7;"><td style="position: sticky; left: 0; background: #fef3c7; padding: 16px; font-weight: 700; color: #92400e; border-bottom: 1px solid #fcd34d;">💰 MARGEN BRUTO</td>';
+    dias.forEach(dia => {
+        const margenDia = totalesPorDia[dia].ingresos - totalesPorDia[dia].costes;
+        const color = margenDia >= 0 ? '#d97706' : '#dc2626';
+        html += `<td style="text-align: center; padding: 16px 8px; font-weight: 700; color: ${color}; border-bottom: 1px solid #fcd34d;">${margenDia.toFixed(2)}€</td>`;
+    });
+    html += `<td style="text-align: center; background: #1e40af; color: white; font-weight: 700; padding: 16px;">${totalMargenBruto.toFixed(2)}€</td></tr>`;
+
+    // ── FILA: GASTOS FIJOS / DÍA ──
+    const totalGastosFijosMostrados = gastosFijosDia * dias.length;
+    html += '<tr style="background: #fce7f3;"><td style="position: sticky; left: 0; background: #fce7f3; padding: 16px; font-weight: 600; color: #9d174d; border-bottom: 1px solid #f9a8d4;">🏢 GASTOS FIJOS/DÍA</td>';
     dias.forEach(() => {
-        html += `<td style="text-align: center; color: #c62828;">${gastosFijosDia.toFixed(2)}€</td>`;
+        html += `<td style="text-align: center; padding: 16px 8px; color: #be185d; border-bottom: 1px solid #f9a8d4;">${gastosFijosDia.toFixed(2)}€</td>`;
     });
-    html += `<td style="text-align: center; background: #1565c0; color: white; font-weight: bold;">${totalGastosFijos.toFixed(2)}€</td></tr>`;
+    html += `<td style="text-align: center; background: #1e40af; color: white; font-weight: 700; padding: 16px;">${totalGastosFijosMostrados.toFixed(2)}€</td></tr>`;
 
-    // Fila Beneficio NETO (después de gastos fijos)
-    html +=
-        '<tr style="background: #e3f2fd; border-top: 3px solid #1565c0;"><td style="position: sticky; left: 0; background: #e3f2fd; font-weight: bold; font-size: 16px;">✅ BENEFICIO NETO</td>';
+    // ── SEPARADOR GRUESO ──
+    html += '<tr><td colspan="' + (dias.length + 2) + '" style="height: 4px; background: linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%); padding: 0;"></td></tr>';
+
+    // ── FILA: BENEFICIO NETO (MARGEN BRUTO - GASTOS FIJOS) ──
     let totalBeneficioNeto = 0;
+    html += '<tr style="background: #dbeafe;"><td style="position: sticky; left: 0; background: #dbeafe; padding: 18px 16px; font-weight: 700; font-size: 15px; color: #1e40af; border-bottom: 2px solid #93c5fd;">✅ BENEFICIO NETO</td>';
     dias.forEach(dia => {
-        const beneficioNeto = totalesPorDia[dia].beneficio - gastosFijosDia;
+        const margenDia = totalesPorDia[dia].ingresos - totalesPorDia[dia].costes;
+        const beneficioNeto = margenDia - gastosFijosDia;
         totalBeneficioNeto += beneficioNeto;
-        const color = beneficioNeto >= 0 ? '#1565c0' : '#c62828';
-        html += `<td style="text-align: center; font-weight: bold; font-size: 15px; color: ${color};">${beneficioNeto.toFixed(2)}€</td>`;
+        const color = beneficioNeto >= 0 ? '#1e40af' : '#dc2626';
+        const bg = beneficioNeto >= 0 ? '#dbeafe' : '#fee2e2';
+        html += `<td style="text-align: center; padding: 18px 8px; font-weight: 700; font-size: 14px; color: ${color}; background: ${bg}; border-bottom: 2px solid #93c5fd;">${beneficioNeto.toFixed(2)}€</td>`;
     });
-    html += `<td style="text-align: center; background: #1565c0; color: white; font-weight: bold; font-size: 16px;">${totalBeneficioNeto.toFixed(2)}€</td></tr>`;
+    const colorTotal = totalBeneficioNeto >= 0 ? '#22c55e' : '#ef4444';
+    html += `<td style="text-align: center; background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%); color: ${colorTotal}; font-weight: 800; font-size: 16px; padding: 18px; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">${totalBeneficioNeto.toFixed(2)}€</td></tr>`;
 
-    html += '</tbody></table>';
+    html += '</tbody></table></div>';
+
+    // ═══════════════════════════════════════════════════════════
+    // 💳 SECCIÓN FLUJO DE CAJA (COMPRAS)
+    // ═══════════════════════════════════════════════════════════
+    let totalCompras = 0;
+    dias.forEach(dia => { totalCompras += comprasPorDia[dia] || 0; });
+
+    html += `
+    <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-radius: 12px; border: 1px solid #fcd34d;">
+        <h4 style="margin: 0 0 16px 0; color: #92400e; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+            💳 Flujo de Caja - Compras a Proveedores
+            <span style="font-size: 11px; color: #a16207; font-weight: normal; background: #fef9c3; padding: 2px 8px; border-radius: 4px;">⚠️ No afecta al P&L, va al inventario</span>
+        </h4>
+        <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+                <div style="font-size: 12px; color: #92400e; margin-bottom: 4px;">Total Compras del Período</div>
+                <div style="font-size: 28px; font-weight: 700; color: #d97706;">${totalCompras.toFixed(2)}€</div>
+            </div>
+            <div style="flex: 2; min-width: 300px;">
+                <div style="font-size: 12px; color: #92400e; margin-bottom: 8px;">Desglose por día:</div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    `;
+
+    dias.forEach(dia => {
+        const fecha = new Date(dia);
+        const val = comprasPorDia[dia] || 0;
+        if (val > 0) {
+            html += `<span style="background: white; padding: 4px 10px; border-radius: 6px; font-size: 12px; border: 1px solid #fcd34d;">${fecha.getDate()}/${fecha.getMonth() + 1}: <strong style="color: #d97706;">${val.toFixed(2)}€</strong></span>`;
+        }
+    });
+
+    html += `
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed #fcd34d; font-size: 12px; color: #92400e;">
+            💡 <strong>Nota:</strong> Las compras aumentan tu inventario (activo). El coste de producción refleja lo que realmente consumiste al vender.
+        </div>
+    </div>
+    `;
 
     container.innerHTML = html;
 }

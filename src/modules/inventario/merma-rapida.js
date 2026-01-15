@@ -239,6 +239,9 @@ export async function confirmarMermasMultiples() {
         let totalPerdida = 0;
         let productosAfectados = [];
 
+        // Preparar datos para enviar al backend
+        const mermasParaBackend = [];
+
         // Procesar cada merma
         for (const merma of mermasARegistrar) {
             const ingrediente = (window.ingredientes || []).find(i => i.id === merma.ingredienteId);
@@ -256,6 +259,18 @@ export async function confirmarMermasMultiples() {
             totalPerdida += merma.valorPerdida;
             productosAfectados.push(ingrediente.nombre);
 
+            // Añadir a array para backend
+            mermasParaBackend.push({
+                ingredienteId: merma.ingredienteId,
+                ingredienteNombre: ingrediente.nombre,
+                cantidad: merma.cantidad,
+                unidad: ingrediente.unidad || 'ud',
+                valorPerdida: merma.valorPerdida,
+                motivo: merma.motivo,
+                nota: '',
+                responsableId: parseInt(responsableId) || null
+            });
+
             // Log para auditoría
             console.log('📝 Merma registrada:', {
                 ingrediente: ingrediente.nombre,
@@ -268,6 +283,19 @@ export async function confirmarMermasMultiples() {
                 responsableId,
                 fecha: new Date().toISOString()
             });
+        }
+
+        // Enviar mermas al backend para KPI
+        if (mermasParaBackend.length > 0 && window.API?.fetch) {
+            try {
+                await window.API.fetch('/api/mermas', {
+                    method: 'POST',
+                    body: JSON.stringify({ mermas: mermasParaBackend })
+                });
+                console.log('✅ Mermas guardadas en servidor para KPI');
+            } catch (apiError) {
+                console.warn('⚠️ Mermas aplicadas localmente pero no guardadas en servidor:', apiError.message);
+            }
         }
 
         // Recargar datos

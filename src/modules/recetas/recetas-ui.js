@@ -384,7 +384,10 @@ export function exportarRecetas() {
     recetas.forEach(rec => {
         const coste = (rec.ingredientes || []).reduce((sum, item) => {
             const ing = ingredientesMap.get(item.ingredienteId);
-            return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
+            if (!ing) return sum;
+            const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+            const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+            return sum + (precioUnitario * parseFloat(item.cantidad));
         }, 0);
         costesCalculados.set(rec.id, coste);
     });

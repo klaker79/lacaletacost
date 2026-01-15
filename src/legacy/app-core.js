@@ -266,9 +266,10 @@
                     return (rec.ingredientes || [])
                         .reduce((sum, item) => {
                             const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-                            return (
-                                sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0)
-                            );
+                            if (!ing) return sum;
+                            const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                            const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                            return sum + (precioUnitario * parseFloat(item.cantidad));
                         }, 0)
                         .toFixed(2);
                 },
@@ -278,7 +279,10 @@
                 value: rec => {
                     const coste = (rec.ingredientes || []).reduce((sum, item) => {
                         const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-                        return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
+                        if (!ing) return sum;
+                        const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                        const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                        return sum + (precioUnitario * parseFloat(item.cantidad));
                     }, 0);
                     return (parseFloat(rec.precio_venta || 0) - coste).toFixed(2);
                 },
@@ -288,7 +292,10 @@
                 value: rec => {
                     const coste = (rec.ingredientes || []).reduce((sum, item) => {
                         const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-                        return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
+                        if (!ing) return sum;
+                        const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                        const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                        return sum + (precioUnitario * parseFloat(item.cantidad));
                     }, 0);
                     const margen =
                         rec.precio_venta > 0
@@ -420,7 +427,10 @@
             window.recetas.forEach(rec => {
                 const coste = rec.ingredientes.reduce((sum, item) => {
                     const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-                    return sum + (ing ? parseFloat(ing.precio) * item.cantidad : 0);
+                    if (!ing) return sum;
+                    const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                    const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                    return sum + (precioUnitario * item.cantidad);
                 }, 0);
                 const precioVenta = parseFloat(rec.precio_venta) || 0;
                 const margen = precioVenta > 0 ? ((precioVenta - coste) / precioVenta) * 100 : 0;
@@ -431,6 +441,19 @@
         } else {
             setElementText('kpi-margen', '0%');
         }
+
+        // 5. MERMAS DEL PERÍODO
+        window.API?.getMermasResumen?.()
+            .then(mermasData => {
+                setElementText('kpi-mermas', mermasData.totalPerdida.toFixed(2) + '€');
+                setElementText('kpi-mermas-msg', mermasData.totalProductos > 0
+                    ? `${mermasData.totalProductos} productos`
+                    : 'Sin pérdidas');
+            })
+            .catch(() => {
+                setElementText('kpi-mermas', '0.00€');
+                setElementText('kpi-mermas-msg', 'Sin datos');
+            });
     };
 
     // === GRÁFICO INGRESOS VS GASTOS ===
@@ -465,7 +488,10 @@
                         for (const item of receta.ingredientes) {
                             const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
                             if (ing) {
-                                costoDia += parseFloat(ing.precio) * item.cantidad * venta.cantidad;
+                                // Usar precio unitario real (precio / cantidad_por_formato)
+                                const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                                const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                                costoDia += precioUnitario * item.cantidad * venta.cantidad;
                             }
                         }
                     }
@@ -728,7 +754,10 @@
                 if (receta && receta.ingredientes) {
                     const costeReceta = receta.ingredientes.reduce((sum, item) => {
                         const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-                        return sum + (ing ? parseFloat(ing.precio) * item.cantidad : 0);
+                        if (!ing) return sum;
+                        const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                        const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                        return sum + (precioUnitario * item.cantidad);
                     }, 0);
                     cogs += costeReceta * venta.cantidad;
                 }
@@ -2199,6 +2228,30 @@
                 headers: getAuthHeaders(),
             });
             if (!res.ok) throw new Error('Error eliminando gasto fijo');
+            return await res.json();
+        },
+
+        // MERMAS (Pérdidas de producto) - Para KPI
+        async getMermasResumen() {
+            try {
+                const res = await fetch(API_BASE + '/mermas/resumen', {
+                    headers: getAuthHeaders(),
+                });
+                if (!res.ok) throw new Error('Error cargando resumen de mermas');
+                return await res.json();
+            } catch (error) {
+                console.warn('Error loading mermas resumen:', error);
+                return { totalPerdida: 0, totalProductos: 0, totalRegistros: 0 };
+            }
+        },
+
+        async resetMermas(motivo = 'subida_inventario') {
+            const res = await fetch(API_BASE + '/mermas/reset', {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ motivo }),
+            });
+            if (!res.ok) throw new Error('Error reseteando mermas');
             return await res.json();
         },
     };
