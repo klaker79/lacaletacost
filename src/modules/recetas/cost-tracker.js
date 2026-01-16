@@ -255,13 +255,13 @@ function actualizarDatosCostTracker() {
         const barColor = foodCost <= 33 ? '#10B981' : foodCost <= 38 ? '#F59E0B' : '#EF4444';
         const barWidth = Math.min(foodCost, 100);
 
-        // Build recipe name HTML - use white color for maximum visibility on dark background
+        // Build recipe name HTML - use yellow/gold color as originally designed
         const nombreReceta = receta.nombre || 'SIN NOMBRE';
 
         html += `
             <tr style="background:transparent">
                 <td style="width: 22%; padding:16px;border-bottom:1px solid rgba(255,255,255,0.08)">
-                    <div style="color:#FFFFFF;font-size:15px;font-weight:700">${nombreReceta}</div>
+                    <div style="color:#FFD700;font-size:15px;font-weight:700">${nombreReceta}</div>
                     <small style="color:#9CA3AF">${receta.numIngredientes} ingredientes</small>
                 </td>
                 <td style="width: 12%; padding: 16px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05);">
