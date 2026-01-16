@@ -66,7 +66,7 @@
       });
     }
   </script>
-  <script type="module" crossorigin src="/assets/main-C2u29ZzL.js"></script>
+  <script type="module" crossorigin src="/assets/main-w_FXRFoA.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/main-_e18OsjB.css">
 </head>
 
@@ -226,6 +226,8 @@
         </div>
         <div id="sparkline-margen" style="opacity: 0.8;"></div>
       </div>
+
+
     </div>
     <!-- 🎯 DASHBOARD PREMIUM - Full Width Grid -->
     <div id="dashboard-premium" style="margin: 0 20px 20px 20px;">
@@ -764,6 +766,12 @@
         </div>
         <div style="display: flex; gap: 10px;">
           <button class="btn btn-primary" data-action="mostrar-form-pedido">+ Nuevo Pedido</button>
+          <button class="btn" onclick="window.abrirCarrito()"
+            style="background: linear-gradient(135deg, #f97316, #ea580c); border: none; color: white; position: relative;">
+            🛒 Carrito
+            <span id="carrito-badge"
+              style="display: none; background: #22c55e; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; justify-content: center; align-items: center; position: absolute; top: -8px; right: -8px; font-weight: 700;"></span>
+          </button>
           <button class="btn btn-secondary" data-action="importar-pedidos">📤 Importar
             Pedidos</button>
         </div>
@@ -835,8 +843,33 @@
               Añadir ingrediente</button>
           </div>
 
-          <div id="total-pedido-form" style="display:none;" class="total-pedido">
-            Total: <strong id="total-pedido-value">0.00 €</strong>
+          <!-- IVA y Totales -->
+          <div id="total-pedido-form"
+            style="display:none; margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #10b981; border-radius: 12px;">
+            <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap; justify-content: flex-end;">
+              <!-- Campo IVA -->
+              <div style="flex: 0 0 auto;">
+                <label
+                  style="font-size: 12px; font-weight: 600; color: #047857; display: block; margin-bottom: 4px;">IVA
+                  %</label>
+                <input type="number" id="ped-iva" placeholder="0" step="0.5" min="0" max="21" value="0"
+                  style="width: 70px; padding: 10px; border: 2px solid #86efac; border-radius: 8px; text-align: center; font-weight: 600; font-size: 16px;"
+                  oninput="window.calcularTotalPedido()">
+              </div>
+
+              <!-- Desglose -->
+              <div style="flex: 1; min-width: 200px; text-align: right;">
+                <div style="display: flex; justify-content: flex-end; gap: 15px; font-size: 14px; color: #059669;">
+                  <span>Subtotal: <strong id="total-pedido-subtotal">0.00 €</strong></span>
+                  <span>IVA: <strong id="total-pedido-iva">0.00 €</strong></span>
+                </div>
+                <div style="margin-top: 8px;">
+                  <span style="font-size: 13px; color: #047857;">Total:</span>
+                  <strong id="total-pedido-value" style="font-size: 28px; color: #059669; margin-left: 10px;">0.00
+                    €</strong>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="form-actions" style="margin-top: 20px;">
@@ -2120,6 +2153,9 @@
       <div id="modal-ver-pedido-contenido"></div>
       <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
         <button class="btn btn-secondary" data-action="cerrar-modal-pedido">Cerrar</button>
+        <button class="btn" style="background: #25D366; color: white;" onclick="window.enviarPedidoWhatsApp()">
+          📱 WhatsApp
+        </button>
         <button class="btn btn-primary" data-action="descargar-pedido-pdf" id="btn-descargar-pdf">
           📄 Descargar PDF
         </button>
@@ -2255,56 +2291,89 @@
     </div>
   </div>
 
-  <!-- Modal: Merma Rápida -->
+  <!-- Modal: Registrar Mermas (Mejorado) -->
   <div id="modal-merma-rapida" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
       <span class="close" data-action="cerrar-modal-merma-rapida">&times;</span>
-      <h2 style="color: #ef4444; display: flex; align-items: center; gap: 10px;">🗑️ Registrar Merma</h2>
-      <p style="color: #64748b; margin-bottom: 20px;">Registra rápidamente una merma o pérdida de producto.</p>
 
-      <div class="form-group">
-        <label>Ingrediente:</label>
-        <select id="merma-ingrediente" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-          <option value="">Selecciona ingrediente...</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Cantidad a descontar:</label>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <input type="number" id="merma-cantidad" step="0.001" min="0" placeholder="0.00"
-            style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-          <span id="merma-unidad" style="color: #64748b; min-width: 40px;">kg</span>
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+          <h2 style="color: #ef4444; display: flex; align-items: center; gap: 10px; margin: 0;">
+            🗑️ Control de Mermas
+          </h2>
+          <p style="color: #64748b; margin: 5px 0 0; font-size: 14px;">
+            Registra pérdidas de producto (caducidad, averías, etc.)
+          </p>
+        </div>
+        <div style="text-align: right; color: #64748b; font-size: 13px;">
+          <div id="merma-fecha-actual"></div>
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Motivo:</label>
-        <select id="merma-motivo" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-          <option value="caduco">📅 Caducado / Vencido</option>
-          <option value="mal_estado">🦠 Mal estado</option>
-          <option value="accidente">💥 Accidente / Derrame</option>
-          <option value="merma_natural">📉 Merma natural</option>
-          <option value="otro">📝 Otro</option>
+      <!-- Responsable -->
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label style="font-weight: 600;">👤 Responsable:</label>
+        <select id="merma-responsable" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+          <option value="">Selecciona responsable...</option>
         </select>
       </div>
 
-      <div class="form-group">
-        <label>Nota (opcional):</label>
-        <input type="text" id="merma-nota" placeholder="Añade un comentario..."
-          style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+      <!-- Zona de escaneo de foto -->
+      <div id="merma-dropzone" ondrop="window.procesarFotoMerma(event)"
+        ondragover="event.preventDefault(); this.style.borderColor='#3b82f6'; this.style.background='#eff6ff';"
+        ondragleave="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc';"
+        style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px; margin-bottom: 15px; text-align: center; cursor: pointer; transition: all 0.2s;"
+        onclick="document.getElementById('merma-foto-input').click()">
+        <input type="file" id="merma-foto-input" accept="image/*" style="display: none;"
+          onchange="window.procesarFotoMermaInput(event)">
+        <div id="merma-dropzone-content">
+          <div style="font-size: 32px; margin-bottom: 8px;">📷</div>
+          <div style="font-weight: 600; color: #334155;">Arrastra una foto de la hoja de mermas</div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">o haz clic para seleccionar archivo</div>
+        </div>
+        <div id="merma-dropzone-loading" style="display: none;">
+          <div style="font-size: 24px; margin-bottom: 8px;">⏳</div>
+          <div style="font-weight: 600; color: #3b82f6;">Analizando imagen con IA...</div>
+        </div>
       </div>
 
-      <div id="merma-preview"
-        style="display: none; padding: 15px; background: #fef3c7; border-radius: 8px; margin: 15px 0;">
-        <div style="font-weight: 600; color: #92400e;">📊 Resultado del ajuste:</div>
-        <div id="merma-preview-text" style="margin-top: 8px; color: #78350f;"></div>
+      <!-- Líneas de merma -->
+      <div style="background: #f8fafc; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="font-weight: 600; color: #334155;">📋 Productos afectados</span>
+          <button type="button" onclick="window.agregarLineaMerma()"
+            style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;">
+            + Añadir producto
+          </button>
+        </div>
+
+        <!-- Contenedor de líneas -->
+        <div id="merma-lineas-container">
+          <!-- Las líneas se añaden dinámicamente -->
+        </div>
       </div>
 
-      <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+      <!-- Resumen -->
+      <div id="merma-resumen"
+        style="display: none; background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span style="font-weight: 600; color: #92400e;">📊 Resumen de mermas</span>
+            <div id="merma-resumen-detalle" style="color: #78350f; margin-top: 5px;"></div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 24px; font-weight: 700; color: #dc2626;" id="merma-total-perdida">0.00€</div>
+            <div style="font-size: 12px; color: #92400e;">Pérdida total</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
         <button class="btn btn-secondary" data-action="cerrar-modal-merma-rapida">Cancelar</button>
-        <button class="btn" style="background: #ef4444; color: white;" data-action="confirmar-merma-rapida">
-          🗑️ Registrar Merma
+        <button class="btn" style="background: #ef4444; color: white;" onclick="window.confirmarMermasMultiples()">
+          🗑️ Registrar Mermas
         </button>
       </div>
     </div>
@@ -2441,7 +2510,8 @@
 
       <div style="margin: 20px 0;">
         <p style="color: #64748b; margin-bottom: 15px;">
-          Sube un archivo Excel (.xlsx) o CSV con las columnas: <strong>Código</strong> (opcional),
+          Sube un archivo <strong>PDF del TPV</strong>, Excel (.xlsx) o CSV con las columnas: <strong>Código</strong>
+          (opcional),
           <strong>Nombre</strong>, <strong>Cantidad</strong>, <strong>Total</strong>
         </p>
 
@@ -2462,13 +2532,13 @@
 
         <div
           style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 30px; text-align: center; background: #f8fafc;">
-          <input type="file" id="file-importar-ventas" accept=".xlsx,.csv" style="display: none;"
+          <input type="file" id="file-importar-ventas" accept=".pdf,.xlsx,.csv" style="display: none;"
             onchange="window.procesarArchivoVentas(this)">
           <label for="file-importar-ventas" style="cursor: pointer;">
             <div style="font-size: 48px; margin-bottom: 10px;">📁</div>
             <div style="font-size: 16px; color: #475569; font-weight: 500;">Haz clic para seleccionar archivo
             </div>
-            <div style="font-size: 14px; color: #94a3b8; margin-top: 5px;">Excel (.xlsx) o CSV</div>
+            <div style="font-size: 14px; color: #94a3b8; margin-top: 5px;">📄 PDF del TPV, Excel (.xlsx) o CSV</div>
           </label>
         </div>
       </div>
@@ -2529,6 +2599,48 @@
   </script>
   </div>
   <script src="src/legacy/inventario-masivo.js"></script>
+
+  <!-- CARRITO DE PEDIDOS - El código está en src/modules/pedidos/pedidos-cart.js -->
+
+  <!-- MODAL CARRITO DE PEDIDOS -->
+  <div id="modal-carrito" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+          🛒 Carrito de Pedidos
+        </h2>
+        <button onclick="window.cerrarCarrito()"
+          style="background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b;">×</button>
+      </div>
+
+      <div id="carrito-contenido" style="min-height: 200px;">
+        <!-- Se renderiza dinámicamente -->
+      </div>
+
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+        <div>
+          <span style="color: #64748b; font-size: 14px;">Total estimado:</span>
+          <span id="carrito-total" style="font-size: 24px; font-weight: 700; color: #059669; margin-left: 10px;">0.00
+            €</span>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button onclick="window.vaciarCarrito()" class="btn btn-secondary"
+            style="background: #fee2e2; color: #dc2626; border: none;">
+            🗑️ Vaciar
+          </button>
+          <button onclick="window.seguirComprando()" class="btn btn-primary"
+            style="background: linear-gradient(135deg, #3B82F6, #2563EB);">
+            ➕ Añadir más productos
+          </button>
+          <button onclick="window.confirmarCarrito()" class="btn btn-primary"
+            style="background: linear-gradient(135deg, #10B981, #059669);">
+            ✅ Crear Pedido(s)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- MODAL DE CONFIRMACIÓN PROFESIONAL -->
   <div id="modal-confirmacion" class="modal-overlay-custom" style="display: none;">
     <div class="modal-confirmacion-container">

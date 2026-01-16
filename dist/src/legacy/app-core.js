@@ -266,9 +266,10 @@
                     return (rec.ingredientes || [])
                         .reduce((sum, item) => {
                             const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-                            return (
-                                sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0)
-                            );
+                            if (!ing) return sum;
+                            const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                            const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                            return sum + (precioUnitario * parseFloat(item.cantidad));
                         }, 0)
                         .toFixed(2);
                 },
@@ -278,7 +279,10 @@
                 value: rec => {
                     const coste = (rec.ingredientes || []).reduce((sum, item) => {
                         const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-                        return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
+                        if (!ing) return sum;
+                        const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                        const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                        return sum + (precioUnitario * parseFloat(item.cantidad));
                     }, 0);
                     return (parseFloat(rec.precio_venta || 0) - coste).toFixed(2);
                 },
@@ -288,7 +292,10 @@
                 value: rec => {
                     const coste = (rec.ingredientes || []).reduce((sum, item) => {
                         const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-                        return sum + (ing ? parseFloat(ing.precio) * parseFloat(item.cantidad) : 0);
+                        if (!ing) return sum;
+                        const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                        const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                        return sum + (precioUnitario * parseFloat(item.cantidad));
                     }, 0);
                     const margen =
                         rec.precio_venta > 0
@@ -420,7 +427,10 @@
             window.recetas.forEach(rec => {
                 const coste = rec.ingredientes.reduce((sum, item) => {
                     const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-                    return sum + (ing ? parseFloat(ing.precio) * item.cantidad : 0);
+                    if (!ing) return sum;
+                    const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                    const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                    return sum + (precioUnitario * item.cantidad);
                 }, 0);
                 const precioVenta = parseFloat(rec.precio_venta) || 0;
                 const margen = precioVenta > 0 ? ((precioVenta - coste) / precioVenta) * 100 : 0;
@@ -431,6 +441,19 @@
         } else {
             setElementText('kpi-margen', '0%');
         }
+
+        // 5. MERMAS DEL PERÍODO
+        window.API?.getMermasResumen?.()
+            .then(mermasData => {
+                setElementText('kpi-mermas', mermasData.totalPerdida.toFixed(2) + '€');
+                setElementText('kpi-mermas-msg', mermasData.totalProductos > 0
+                    ? `${mermasData.totalProductos} productos`
+                    : 'Sin pérdidas');
+            })
+            .catch(() => {
+                setElementText('kpi-mermas', '0.00€');
+                setElementText('kpi-mermas-msg', 'Sin datos');
+            });
     };
 
     // === GRÁFICO INGRESOS VS GASTOS ===
@@ -465,7 +488,10 @@
                         for (const item of receta.ingredientes) {
                             const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
                             if (ing) {
-                                costoDia += parseFloat(ing.precio) * item.cantidad * venta.cantidad;
+                                // Usar precio unitario real (precio / cantidad_por_formato)
+                                const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                                const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                                costoDia += precioUnitario * item.cantidad * venta.cantidad;
                             }
                         }
                     }
@@ -721,14 +747,20 @@
 
             const ingresos = ventasMes.reduce((sum, v) => sum + parseFloat(v.total), 0);
 
-            // Calcular COGS (Coste de lo vendido)
+            // Calcular COGS (Coste de lo vendido) - Optimizado con Maps O(1)
+            const recetasMap = new Map(window.recetas.map(r => [r.id, r]));
+            const ingredientesMap = new Map(window.ingredientes.map(i => [i.id, i]));
+
             let cogs = 0;
             ventasMes.forEach(venta => {
-                const receta = window.recetas.find(r => r.id === venta.receta_id);
+                const receta = recetasMap.get(venta.receta_id);
                 if (receta && receta.ingredientes) {
                     const costeReceta = receta.ingredientes.reduce((sum, item) => {
-                        const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-                        return sum + (ing ? parseFloat(ing.precio) * item.cantidad : 0);
+                        const ing = ingredientesMap.get(item.ingredienteId);
+                        if (!ing) return sum;
+                        const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                        const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+                        return sum + (precioUnitario * item.cantidad);
                     }, 0);
                     cogs += costeReceta * venta.cantidad;
                 }
@@ -1827,6 +1859,12 @@
             const recetaId = document.getElementById('venta-receta').value;
             const cantidad = parseInt(document.getElementById('venta-cantidad').value);
 
+            // ⚡ NUEVO: Capturar variante seleccionada (copa/botella)
+            const varianteSelect = document.getElementById('venta-variante');
+            const varianteId = varianteSelect?.value ? parseInt(varianteSelect.value) : null;
+            const varianteData = varianteSelect?.selectedOptions?.[0];
+            const precioVariante = varianteData?.dataset?.precio ? parseFloat(varianteData.dataset.precio) : null;
+
             // Validaciones
             if (!recetaId) {
                 showToast('Selecciona un plato', 'error');
@@ -1842,7 +1880,13 @@
             }
 
             try {
-                await api.createSale({ recetaId, cantidad });
+                // ⚡ CORREGIDO: Pasar variante y precio a createSale
+                await api.createSale({
+                    recetaId,
+                    cantidad,
+                    varianteId,
+                    precioVariante
+                });
                 await cargarDatos();
                 renderizarVentas();
                 renderizarInventario();
@@ -2201,6 +2245,30 @@
             if (!res.ok) throw new Error('Error eliminando gasto fijo');
             return await res.json();
         },
+
+        // MERMAS (Pérdidas de producto) - Para KPI
+        async getMermasResumen() {
+            try {
+                const res = await fetch(API_BASE + '/mermas/resumen', {
+                    headers: getAuthHeaders(),
+                });
+                if (!res.ok) throw new Error('Error cargando resumen de mermas');
+                return await res.json();
+            } catch (error) {
+                console.warn('Error loading mermas resumen:', error);
+                return { totalPerdida: 0, totalProductos: 0, totalRegistros: 0 };
+            }
+        },
+
+        async resetMermas(motivo = 'subida_inventario') {
+            const res = await fetch(API_BASE + '/mermas/reset', {
+                method: 'DELETE',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ motivo }),
+            });
+            if (!res.ok) throw new Error('Error reseteando mermas');
+            return await res.json();
+        },
     };
 
     // Crear alias en mayúsculas para compatibilidad
@@ -2487,7 +2555,7 @@
         document.getElementById('ing-precio').value = ing.precio || '';
         document.getElementById('ing-unidad').value = ing.unidad;
         document.getElementById('ing-familia').value = ing.familia || 'alimento';
-        document.getElementById('ing-stockActual').value = ing.stockActual || '';
+        document.getElementById('ing-stockActual').value = ing.stock_actual ?? ing.stockActual ?? '';
         document.getElementById('ing-stockMinimo').value = ing.stockMinimo || '';
 
         editandoIngredienteId = id;
@@ -2914,9 +2982,10 @@
             const ing = ingredientes.find(i => i.id === item.ingredienteId);
             if (ing) {
                 const necesario = item.cantidad * cant;
-                if (ing.stockActual < necesario) {
+                const stockIng = parseFloat(ing.stock_actual ?? ing.stockActual ?? 0);
+                if (stockIng < necesario) {
                     falta = true;
-                    msg += `- ${ing.nombre}: necesitas ${necesario}, tienes ${ing.stockActual}\n`;
+                    msg += `- ${ing.nombre}: necesitas ${necesario}, tienes ${stockIng}\n`;
                 }
             }
         });
@@ -2932,10 +3001,11 @@
             for (const item of rec.ingredientes) {
                 const ing = ingredientes.find(i => i.id === item.ingredienteId);
                 if (ing) {
-                    const nuevoStock = Math.max(0, ing.stockActual - (item.cantidad * cant));
+                    const stockIng = parseFloat(ing.stock_actual ?? ing.stockActual ?? 0);
+                    const nuevoStock = Math.max(0, stockIng - (item.cantidad * cant));
                     await api.updateIngrediente(ing.id, {
                         ...ing,
-                        stockActual: nuevoStock
+                        stock_actual: nuevoStock
                     });
                 }
             }
