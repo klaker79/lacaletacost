@@ -21,7 +21,7 @@ function getAuthHeaders() {
  */
 export async function cargarDatos() {
     try {
-        const [ingredientes, recetas, proveedores, pedidos, inventario] = await Promise.all([
+        const [ingredientes, recetas, proveedores, pedidos, inventario, ingredientesProveedores] = await Promise.all([
             fetch(API_BASE + '/ingredients', { headers: getAuthHeaders() }).then((r) =>
                 r.json()
             ),
@@ -37,6 +37,10 @@ export async function cargarDatos() {
             fetch(API_BASE + '/inventory/complete', { headers: getAuthHeaders() }).then((r) =>
                 r.ok ? r.json() : []
             ),
+            // 💰 Cargar precios de cada proveedor por ingrediente
+            fetch(API_BASE + '/ingredients-suppliers', { headers: getAuthHeaders() }).then((r) =>
+                r.ok ? r.json() : []
+            ),
         ]);
 
         window.ingredientes = Array.isArray(ingredientes) ? ingredientes : [];
@@ -46,6 +50,9 @@ export async function cargarDatos() {
 
         // 💰 Inventario con precio_medio para cálculo de costes de recetas
         window.inventarioCompleto = Array.isArray(inventario) ? inventario : [];
+
+        // 💰 Precios por proveedor (para calcular pedidos con precio correcto)
+        window.ingredientesProveedores = Array.isArray(ingredientesProveedores) ? ingredientesProveedores : [];
 
         // ⚡ Actualizar mapas de búsqueda optimizados
         if (window.dataMaps?.update) {

@@ -55,8 +55,9 @@ function actualizarBadgeCarrito() {
  * @param {number} ingredienteId - ID del ingrediente
  * @param {number} cantidad - Cantidad a pedir
  * @param {number} proveedorId - ID del proveedor
+ * @param {number} precioProveedor - Precio específico del proveedor (opcional)
  */
-window.agregarAlCarrito = function (ingredienteId, cantidad = 1, proveedorId = null) {
+window.agregarAlCarrito = function (ingredienteId, cantidad = 1, proveedorId = null, precioProveedor = null) {
     const ing = window.ingredientes.find(i => i.id === ingredienteId);
     if (!ing) {
         window.showToast('Ingrediente no encontrado', 'error');
@@ -65,6 +66,25 @@ window.agregarAlCarrito = function (ingredienteId, cantidad = 1, proveedorId = n
 
     // Determinar proveedor
     const provId = proveedorId || ing.proveedor_id || ing.proveedorId;
+
+    // ⚠️ CRÍTICO: Obtener el precio correcto del proveedor
+    let precioFormato = precioProveedor; // Primero usar precio pasado como parámetro
+
+    if (!precioFormato && provId && window.ingredientesProveedores) {
+        // Buscar precio del proveedor en ingredientes_proveedores (datos en memoria)
+        const rel = window.ingredientesProveedores.find(
+            ip => ip.ingrediente_id === ingredienteId && ip.proveedor_id === provId
+        );
+        if (rel && rel.precio) {
+            precioFormato = parseFloat(rel.precio);
+            console.log(`💰 Precio de proveedor ${provId} para ${ing.nombre}: ${precioFormato}€`);
+        }
+    }
+
+    // Fallback: usar precio del ingrediente
+    if (!precioFormato) {
+        precioFormato = parseFloat(ing.precio || 0);
+    }
 
     // Si el carrito está vacío, establecer el proveedor
     if (carrito.length === 0) {
@@ -91,7 +111,7 @@ window.agregarAlCarrito = function (ingredienteId, cantidad = 1, proveedorId = n
             nombre: ing.nombre,
             cantidad: cantidad,
             unidad: ing.unidad || 'ud',
-            precio: parseFloat(ing.precio || 0),
+            precio: precioFormato,  // Usar precio del proveedor
             proveedorId: provId,
             formatoCompra: ing.formato_compra,
             cantidadPorFormato: ing.cantidad_por_formato
