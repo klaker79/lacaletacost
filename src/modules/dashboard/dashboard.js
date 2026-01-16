@@ -185,36 +185,35 @@ export async function actualizarKPIs() {
             }
         }
 
-        // 5. VALOR STOCK TOTAL (nuevo KPI)
+        // 5. VALOR STOCK TOTAL - Usa window.ingredientes (fuente de verdad)
         try {
-            let inventario = window.inventarioCompleto || [];
-
-            // Si inventario está vacío, intentar cargarlo
-            if (inventario.length === 0 && window.api?.getInventoryComplete) {
-                try {
-                    inventario = await window.api.getInventoryComplete();
-                    window.inventarioCompleto = inventario;
-                } catch (loadErr) {
-                    console.warn('No se pudo cargar inventario para KPI:', loadErr);
-                }
-            }
+            const ingredientes = window.ingredientes || [];
 
             const valorStockEl = document.getElementById('kpi-valor-stock');
             const itemsStockEl = document.getElementById('kpi-items-stock');
 
-            if (inventario.length > 0) {
-                const valorTotal = inventario.reduce((sum, ing) => {
-                    const stock = parseFloat(ing.stock_virtual) || 0;
-                    // Usar precio_medio si existe, sino calcular precio unitario
-                    let precioUnitario = parseFloat(ing.precio_medio) || 0;
-                    if (!precioUnitario) {
-                        const precioBase = parseFloat(ing.precio) || 0;
-                        const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 0;
-                        // Si hay formato, dividir precio por cantidad_por_formato
-                        precioUnitario = (cantidadFormato > 0) ? precioBase / cantidadFormato : precioBase;
+            if (ingredientes.length > 0) {
+                const valorTotal = ingredientes.reduce((sum, ing) => {
+                    const stock = parseFloat(ing.stock_actual) || 0;
+                    const precio = parseFloat(ing.precio) || 0;
+                    const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 0;
+
+                    // Si cantidad_por_formato > 1, el precio es por formato (caja, pack)
+                    // Valor = (stock / cantidad_formato) × precio
+                    let valorIng;
+                    if (cantidadFormato > 1) {
+                        valorIng = (stock / cantidadFormato) * precio;
+                    } else {
+                        valorIng = stock * precio;
                     }
-                    return sum + (stock * precioUnitario);
+
+                    return sum + valorIng;
                 }, 0);
+
+                // Contar items con stock > 0
+                const itemsConStock = ingredientes.filter(i =>
+                    (parseFloat(i.stock_actual) || 0) > 0
+                ).length;
 
                 if (valorStockEl) {
                     valorStockEl.textContent = valorTotal.toLocaleString('es-ES', {
@@ -223,7 +222,7 @@ export async function actualizarKPIs() {
                 }
 
                 if (itemsStockEl) {
-                    itemsStockEl.textContent = inventario.length;
+                    itemsStockEl.textContent = itemsConStock;
                 }
             } else {
                 // Si no hay datos, mostrar 0 en vez de dejarlo vacío
