@@ -459,37 +459,24 @@ export async function confirmarRecepcionPedido() {
       };
     });
 
-    // Actualizar stock Y PRECIO de cada ingrediente recibido
+    // Actualizar stock de cada ingrediente recibido
+    // ⚠️ NO modificar el precio - el backend calcula precio_medio correctamente
     for (const item of ingredientesActualizados) {
       if (item.estado === 'no-entregado') continue;
 
       const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
       if (ing) {
         const stockAnterior = parseFloat(ing.stockActual || ing.stock_actual || 0);
-        const precioAnterior = parseFloat(ing.precio || 0);
         const cantidadRecibida = item.cantidadRecibida;
-        const precioNuevo = item.precioReal;
-
-        // 💰 CÁLCULO DE MEDIA PONDERADA DE PRECIOS
-        // Fórmula: (stock_anterior × precio_anterior + cantidad_nueva × precio_nuevo) / (stock_anterior + cantidad_nueva)
-        let precioMedioPonderado;
-        if (stockAnterior + cantidadRecibida > 0) {
-          precioMedioPonderado =
-            (stockAnterior * precioAnterior + cantidadRecibida * precioNuevo) /
-            (stockAnterior + cantidadRecibida);
-        } else {
-          precioMedioPonderado = precioNuevo; // Si no hay stock, usar precio nuevo
-        }
-
         const nuevoStock = stockAnterior + cantidadRecibida;
 
-        console.log(`📦 ${ing.nombre}: Stock ${stockAnterior} → ${nuevoStock}, Precio ${precioAnterior.toFixed(2)}€ → ${precioMedioPonderado.toFixed(2)}€ (media ponderada)`);
+        console.log(`📦 ${ing.nombre}: Stock ${stockAnterior} → ${nuevoStock}`);
 
         await window.api.updateIngrediente(item.ingredienteId, {
           ...ing,
           stockActual: nuevoStock,
-          stock_actual: nuevoStock,
-          precio: precioMedioPonderado  // ← AHORA SÍ ACTUALIZA EL PRECIO
+          stock_actual: nuevoStock
+          // NO tocar precio - el backend calcula precio_medio desde los pedidos
         });
       }
     }
