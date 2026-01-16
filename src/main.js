@@ -209,6 +209,7 @@ window.eliminarProveedor = ProveedoresCRUD.eliminarProveedor;
 // ============================================
 import * as PedidosUI from './modules/pedidos/pedidos-ui.js';
 import * as PedidosCRUD from './modules/pedidos/pedidos-crud.js';
+import './modules/pedidos/pedidos-cart.js'; // Carrito de pedidos - expone funciones en window
 
 // UI
 window.renderizarPedidos = PedidosUI.renderizarPedidos;
