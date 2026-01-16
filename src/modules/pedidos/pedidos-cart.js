@@ -283,14 +283,20 @@ window.confirmarCarrito = async function () {
         let pedidosCreados = 0;
 
         for (const [provId, items] of Object.entries(porProveedor)) {
-            const ingredientes = items.map(item => ({
-                ingredienteId: item.ingredienteId,
-                ingrediente_id: item.ingredienteId,
-                cantidad: item.cantidad,
-                precioUnitario: item.precio,
-                precio_unitario: item.precio,
-                precio: item.precio
-            }));
+            // Calcular precio unitario REAL (por unidad, no por formato)
+            const ingredientes = items.map(item => {
+                const cantFormato = parseFloat(item.cantidadPorFormato) || 1;
+                const precioUnitario = item.precio / cantFormato; // precio POR UNIDAD
+                return {
+                    ingredienteId: item.ingredienteId,
+                    ingrediente_id: item.ingredienteId,
+                    cantidad: item.cantidad,
+                    precioUnitario: precioUnitario,      // precio POR UNIDAD (ej: 1.38€/botella)
+                    precio_unitario: precioUnitario,
+                    precio: item.precio,                  // precio del formato original (ej: 33.12€/caja)
+                    cantidadPorFormato: cantFormato
+                };
+            });
 
             // Calcular total: cantidad / cantidadPorFormato * precio
             const total = items.reduce((sum, item) => {
