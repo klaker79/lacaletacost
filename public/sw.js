@@ -1,7 +1,7 @@
 // MindLoop CostOS - Service Worker
 // Requerido para PWA instalable
 
-const CACHE_NAME = 'mindloop-costos-v1';
+const CACHE_NAME = 'mindloop-costos-v2';
 const OFFLINE_URL = '/offline.html';
 
 // Archivos esenciales a cachear para funcionamiento offline básico
