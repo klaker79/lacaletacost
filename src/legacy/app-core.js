@@ -1859,6 +1859,12 @@
             const recetaId = document.getElementById('venta-receta').value;
             const cantidad = parseInt(document.getElementById('venta-cantidad').value);
 
+            // ⚡ NUEVO: Capturar variante seleccionada (copa/botella)
+            const varianteSelect = document.getElementById('venta-variante');
+            const varianteId = varianteSelect?.value ? parseInt(varianteSelect.value) : null;
+            const varianteData = varianteSelect?.selectedOptions?.[0];
+            const precioVariante = varianteData?.dataset?.precio ? parseFloat(varianteData.dataset.precio) : null;
+
             // Validaciones
             if (!recetaId) {
                 showToast('Selecciona un plato', 'error');
@@ -1874,7 +1880,13 @@
             }
 
             try {
-                await api.createSale({ recetaId, cantidad });
+                // ⚡ CORREGIDO: Pasar variante y precio a createSale
+                await api.createSale({
+                    recetaId,
+                    cantidad,
+                    varianteId,
+                    precioVariante
+                });
                 await cargarDatos();
                 renderizarVentas();
                 renderizarInventario();
