@@ -15,21 +15,51 @@ export function verEscandallo(recetaId) {
 
     const ingredientes = window.ingredientes || [];
     const inventario = window.inventarioCompleto || [];
+    const recetas = window.recetas || [];
 
-    // ⚡ OPTIMIZACIÓN: Crear Maps O(1) una vez, no .find() O(n) por cada ingrediente
+    // ⚡ OPTIMIZACIÓN: Crear Maps O(1) una vez
     const ingMap = new Map(ingredientes.map(i => [i.id, i]));
     const invMap = new Map(inventario.map(i => [i.id, i]));
+    // Map para sub-recetas (preparaciones base)
+    const recetaMap = new Map(recetas.filter(r => r.categoria === 'base').map(r => [r.id, r]));
 
     // Calculate cost breakdown per ingredient
     const desglose = [];
     let costeTotal = 0;
 
     (receta.ingredientes || []).forEach(item => {
-        const ing = ingMap.get(item.ingredienteId);  // O(1) lookup
-        const inv = invMap.get(item.ingredienteId);  // O(1) lookup
+        // Buscar primero en ingredientes
+        let ing = ingMap.get(item.ingredienteId);
+        let inv = invMap.get(item.ingredienteId);
+        let esSubreceta = false;
 
-        if (ing) {
-            // 💰 CORREGIDO: Precio unitario = precio_medio, o precio/cantidad_por_formato
+        // Si no se encuentra en ingredientes, buscar en recetas base
+        if (!ing) {
+            const subreceta = recetaMap.get(item.ingredienteId);
+            if (subreceta) {
+                esSubreceta = true;
+                // Para sub-recetas, usar el coste calculado como precio
+                const costeSubreceta = window.calcularCosteRecetaCompleto ?
+                    window.calcularCosteRecetaCompleto(subreceta) :
+                    parseFloat(subreceta.coste || 0);
+
+                const coste = costeSubreceta * item.cantidad;
+                costeTotal += coste;
+
+                desglose.push({
+                    nombre: `🧪 ${subreceta.nombre}`,
+                    cantidad: item.cantidad,
+                    unidad: 'porción',
+                    precioUnitario: costeSubreceta,
+                    coste: coste,
+                    porcentaje: 0,
+                    esSubreceta: true
+                });
+            }
+        }
+
+        if (ing && !esSubreceta) {
+            // 💰 Precio unitario = precio_medio, o precio/cantidad_por_formato
             let precio = 0;
             if (inv?.precio_medio) {
                 precio = parseFloat(inv.precio_medio);
@@ -47,7 +77,7 @@ export function verEscandallo(recetaId) {
                 unidad: ing.unidad || 'ud',
                 precioUnitario: precio,
                 coste: coste,
-                porcentaje: 0 // Calculated below
+                porcentaje: 0
             });
         }
     });
@@ -73,18 +103,21 @@ export function verEscandallo(recetaId) {
         modal.id = 'modal-escandallo';
         modal.className = 'modal';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 id="escandallo-titulo" style="margin: 0;">📊 Escandallo</h3>
                     <button onclick="document.getElementById('modal-escandallo').classList.remove('active')" 
                         style="background: none; border: none; font-size: 24px; cursor: pointer;">✕</button>
                 </div>
                 <div id="escandallo-resumen" style="margin-bottom: 20px;"></div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div style="position: relative; height: 250px;">
-                        <canvas id="chart-escandallo"></canvas>
+                <!-- Layout vertical: gráfico arriba, tabla abajo -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="display: flex; justify-content: center; align-items: center; height: 200px;">
+                        <div style="width: 200px; height: 200px;">
+                            <canvas id="chart-escandallo"></canvas>
+                        </div>
                     </div>
-                    <div id="escandallo-tabla" style="font-size: 13px; max-height: 250px; overflow-y: auto;"></div>
+                    <div id="escandallo-tabla" style="font-size: 13px;"></div>
                 </div>
                 <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                     <button id="btn-exportar-pdf-escandallo" class="btn btn-primary" style="background: linear-gradient(135deg, #EF4444, #DC2626);">
