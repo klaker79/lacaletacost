@@ -66,7 +66,7 @@
       });
     }
   </script>
-  <script type="module" crossorigin src="/assets/main-Cp1e1CWl.js"></script>
+  <script type="module" crossorigin src="/assets/main-Cf62C5cL.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/main-_e18OsjB.css">
 </head>
 
@@ -2114,7 +2114,7 @@
       <!-- Formulario para agregar nueva variante -->
       <div style="background: #F8FAFC; padding: 20px; border-radius: 12px; margin-top: 20px;">
         <h4 style="color: #1E293B; font-size: 15px; margin-bottom: 16px;">➕ Añadir variante</h4>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; align-items: end;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; align-items: end;">
           <div>
             <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #64748B;">Nombre</label>
             <input type="text" id="input-variante-nombre" class="form-input" placeholder="Ej: Copa, Botella"
@@ -2130,9 +2130,15 @@
             <input type="number" id="input-variante-factor" class="form-input" placeholder="1" step="0.1" min="0.1"
               value="1" style="width: 100%;">
           </div>
+          <div>
+            <label style="display: block; margin-bottom: 6px; font-size: 13px; color: #64748B;">Código TPV</label>
+            <input type="text" id="input-variante-codigo" class="form-input" placeholder="Ej: 1272"
+              style="width: 100%;">
+          </div>
         </div>
         <p style="font-size: 12px; color: #94A3B8; margin-top: 8px;">
-          💡 Factor = porción respecto a la unidad base (copa = 0.2, botella = 1)
+          💡 Factor = porción respecto a la unidad base (copa = 0.2, botella = 1) | Código TPV = ID del producto en el
+          TPV
         </p>
         <button class="btn btn-primary" onclick="window.agregarVarianteReceta()" style="margin-top: 12px; width: 100%;">
           ➕ Añadir Variante

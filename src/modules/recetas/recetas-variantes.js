@@ -95,7 +95,7 @@ function renderizarVariantes(variantes) {
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
-                    <button class="btn-sm" onclick="window.editarVariante(${recetaActualId}, ${v.id}, '${escapeHTML(v.nombre)}', ${v.precio_venta}, ${v.factor})" style="background: #3B82F6; color: white;">
+                    <button class="btn-sm" onclick="window.editarVariante(${recetaActualId}, ${v.id}, '${escapeHTML(v.nombre)}', ${v.precio_venta}, ${v.factor}, '${escapeHTML(v.codigo || '')}')" style="background: #3B82F6; color: white;">
                         ✏️ Editar
                     </button>
                     <button class="btn-sm" onclick="window.eliminarVariante(${recetaActualId}, ${v.id})" style="background: #EF4444; color: white;">
@@ -117,6 +117,7 @@ export async function agregarVarianteReceta() {
     const nombre = document.getElementById('input-variante-nombre')?.value;
     const precio = document.getElementById('input-variante-precio')?.value;
     const factor = document.getElementById('input-variante-factor')?.value || 1;
+    const codigo = document.getElementById('input-variante-codigo')?.value || null;
 
     if (!nombre) {
         showToast('Ingresa un nombre (ej: Copa, Botella)', 'warning');
@@ -137,6 +138,7 @@ export async function agregarVarianteReceta() {
                 nombre: nombre,
                 precio_venta: parseFloat(precio),
                 factor: parseFloat(factor),
+                codigo: codigo || null,
             }),
         });
 
@@ -146,6 +148,7 @@ export async function agregarVarianteReceta() {
         document.getElementById('input-variante-nombre').value = '';
         document.getElementById('input-variante-precio').value = '';
         document.getElementById('input-variante-factor').value = '1';
+        document.getElementById('input-variante-codigo').value = '';
 
         // Recargar lista
         await cargarVariantesReceta(recetaActualId);
@@ -159,36 +162,74 @@ export async function agregarVarianteReceta() {
 }
 
 /**
- * Edita una variante
+ * Edita una variante - ahora con código TPV
  */
-export async function editarVariante(recetaId, varianteId, nombreActual, precioActual, factorActual) {
-    const nuevoPrecio = prompt(`Nuevo precio para "${nombreActual}":`, precioActual);
-    if (nuevoPrecio === null) return;
+export async function editarVariante(recetaId, varianteId, nombreActual, precioActual, factorActual, codigoActual = '') {
+    // Mostrar modal de edición con todos los campos
+    const modal = document.createElement('div');
+    modal.id = 'modal-editar-variante';
+    modal.className = 'modal active';
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 style="margin-bottom: 20px;">✏️ Editar Variante: ${escapeHTML(nombreActual)}</h3>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <label style="display: block; margin-bottom: 4px; font-weight: 500;">Precio €</label>
+                    <input type="number" id="edit-variante-precio" value="${precioActual}" step="0.01" 
+                           style="width: 100%; padding: 10px; border: 1px solid #E2E8F0; border-radius: 8px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 4px; font-weight: 500;">Código TPV</label>
+                    <input type="text" id="edit-variante-codigo" value="${codigoActual}" placeholder="Ej: 1272"
+                           style="width: 100%; padding: 10px; border: 1px solid #E2E8F0; border-radius: 8px;">
+                    <small style="color: #64748B;">ID del producto en el TPV</small>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 12px;">
+                    <button onclick="document.getElementById('modal-editar-variante').remove()" 
+                            style="padding: 10px 20px; border-radius: 8px; border: 1px solid #E2E8F0; background: white;">
+                        Cancelar
+                    </button>
+                    <button id="btn-guardar-variante" style="padding: 10px 20px; border-radius: 8px; border: none; background: #10B981; color: white; font-weight: 600;">
+                        💾 Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
 
-    if (!nuevoPrecio || parseFloat(nuevoPrecio) <= 0) {
-        showToast('Precio inválido', 'error');
-        return;
-    }
+    // Handler para guardar
+    document.getElementById('btn-guardar-variante').onclick = async () => {
+        const nuevoPrecio = document.getElementById('edit-variante-precio').value;
+        const nuevoCodigo = document.getElementById('edit-variante-codigo').value;
 
-    try {
-        window.showLoading?.();
+        if (!nuevoPrecio || parseFloat(nuevoPrecio) <= 0) {
+            showToast('Precio inválido', 'error');
+            return;
+        }
 
-        await window.API.fetch(`/api/recipes/${recetaId}/variants/${varianteId}`, {
-            method: 'PUT',
-            body: JSON.stringify({
-                precio_venta: parseFloat(nuevoPrecio),
-            }),
-        });
+        try {
+            window.showLoading?.();
 
-        showToast('Variante actualizada', 'success');
-        await cargarVariantesReceta(recetaId);
+            await window.API.fetch(`/api/recipes/${recetaId}/variants/${varianteId}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    precio_venta: parseFloat(nuevoPrecio),
+                    codigo: nuevoCodigo || null,
+                }),
+            });
 
-        window.hideLoading?.();
-    } catch (error) {
-        window.hideLoading?.();
-        console.error('Error actualizando variante:', error);
-        showToast('Error actualizando variante', 'error');
-    }
+            showToast('Variante actualizada', 'success');
+            modal.remove();
+            await cargarVariantesReceta(recetaId);
+
+            window.hideLoading?.();
+        } catch (error) {
+            window.hideLoading?.();
+            console.error('Error actualizando variante:', error);
+            showToast('Error actualizando variante', 'error');
+        }
+    };
 }
 
 /**
