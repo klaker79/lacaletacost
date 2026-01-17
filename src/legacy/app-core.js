@@ -4802,14 +4802,15 @@
         const ctx = document.getElementById('chart-margen-categoria');
         if (!ctx) return;
 
-        // Agrupar recetas por categoría y calcular margen promedio
+        // Agrupar recetas por categoría REAL y calcular margen promedio
         const margenPorCategoria = {};
         const countPorCategoria = {};
 
         recetas.forEach(rec => {
-            // Agrupar en solo 2 categorías: Alimentos o Bebidas
-            const catOriginal = (rec.categoria || 'otros').toLowerCase();
-            const familia = catOriginal === 'bebida' ? 'Bebidas' : 'Alimentos';
+            // Usar la categoría REAL de la receta (normalizada a minúsculas)
+            const catOriginal = (rec.categoria || 'otros').toLowerCase().trim();
+            // Capitalizar primera letra para display
+            const familia = catOriginal.charAt(0).toUpperCase() + catOriginal.slice(1);
 
             const coste = calcularCosteRecetaCompleto(rec);
             const margenPct = rec.precio_venta > 0
@@ -4824,13 +4825,14 @@
             countPorCategoria[familia]++;
         });
 
-        // Calcular promedio y preparar datos (siempre mostrar ambas categorías)
-        const orden = ['Alimentos', 'Bebidas'];
-        const datos = orden.map(cat => ({
-            categoria: cat,
-            margen: margenPorCategoria[cat] ? margenPorCategoria[cat] / countPorCategoria[cat] : 0,
-            count: countPorCategoria[cat] || 0
-        }));
+        // Preparar datos ordenados por cantidad de recetas (descendente)
+        const datos = Object.keys(margenPorCategoria)
+            .map(cat => ({
+                categoria: cat,
+                margen: margenPorCategoria[cat] / countPorCategoria[cat],
+                count: countPorCategoria[cat]
+            }))
+            .sort((a, b) => b.count - a.count);
 
         // Destruir gráfico anterior si existe
         if (window.chartMargenCategoria) window.chartMargenCategoria.destroy();
