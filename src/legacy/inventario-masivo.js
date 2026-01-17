@@ -122,8 +122,10 @@ window.descargarPlantillaStock = function () {
             'Stock Real': '', // Dejar vacío para que lo rellenen
         }));
 
-        // Intentar con XLSX si está disponible
-        if (typeof XLSX !== 'undefined' && XLSX.utils && XLSX.writeFile) {
+        const filename = `Plantilla_Inventario_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Método más robusto: crear blob y forzar descarga
+        if (typeof XLSX !== 'undefined' && XLSX.utils && XLSX.write) {
             const ws = XLSX.utils.json_to_sheet(datos);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Plantilla Stock');
@@ -131,43 +133,56 @@ window.descargarPlantillaStock = function () {
             // Ajustar ancho
             ws['!cols'] = [{ wch: 30 }, { wch: 15 }];
 
-            const filename = `Plantilla_Inventario_${new Date().toISOString().split('T')[0]}.xlsx`;
-            XLSX.writeFile(wb, filename);
+            // Crear blob manualmente para evitar problemas con Service Worker
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+            // Método de descarga más robusto
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                // IE/Edge legacy
+                window.navigator.msSaveOrOpenBlob(blob, filename);
+            } else {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                // Añadir al body ANTES de click
+                document.body.appendChild(a);
+                // Simular click
+                a.click();
+                // Limpiar después de un delay
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+            }
+
             showToast('✓ Plantilla descargada: ' + filename, 'success');
         } else {
             // Fallback a CSV si XLSX no está disponible
             console.warn('XLSX no disponible, usando fallback CSV');
+            const csvFilename = `Plantilla_Inventario_${new Date().toISOString().split('T')[0]}.csv`;
             const csv = 'Ingrediente,Stock Real\n' + datos.map(d => `"${d.Ingrediente}","${d['Stock Real']}"`).join('\n');
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Plantilla_Inventario_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            showToast('✓ Plantilla descargada (CSV)', 'success');
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = csvFilename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+
+            showToast('✓ Plantilla descargada (CSV): ' + csvFilename, 'success');
         }
     } catch (error) {
         console.error('Error descargando plantilla:', error);
         showToast('Error descargando: ' + error.message, 'error');
-        
-        // Último fallback: CSV directo
-        try {
-            const csv = 'Ingrediente,Stock Real\n' + window.ingredientes.map(ing => `"${ing.nombre}",""`).join('\n');
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'Plantilla_Inventario.csv';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        } catch (e2) {
-            console.error('Fallback CSV también falló:', e2);
-        }
     }
 };
 
