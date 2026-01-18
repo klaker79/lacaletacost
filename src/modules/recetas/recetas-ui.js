@@ -63,8 +63,31 @@ export function agregarIngredienteReceta() {
     const lista = document.getElementById('lista-ingredientes-receta');
     const item = document.createElement('div');
     item.className = 'ingrediente-item';
-    item.style.cssText =
-        'display: flex; gap: 10px; align-items: center; margin-bottom: 10px; padding: 10px; background: #f8f9fa; border-radius: 8px;';
+
+    // Estilos profesionales mejorados
+    item.style.cssText = `
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 12px;
+        padding: 16px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #7c3aed;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s ease;
+    `;
+
+    // Hover effect via JavaScript
+    item.onmouseenter = () => {
+        item.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.15)';
+        item.style.borderLeftColor = '#a855f7';
+    };
+    item.onmouseleave = () => {
+        item.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.04)';
+        item.style.borderLeftColor = '#7c3aed';
+    };
 
     // Ordenar ingredientes alfabéticamente
     const ingredientesOrdenados = [...(window.ingredientes || [])].sort((a, b) =>
@@ -97,12 +120,53 @@ export function agregarIngredienteReceta() {
     }
 
     item.innerHTML = `
-    <select style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 6px;" onchange="window.calcularCosteReceta()">
-      ${optionsHtml}
-    </select>
-    <input type="number" step="0.001" min="0" placeholder="Cantidad" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px;" onchange="window.calcularCosteReceta()">
-    <button type="button" onclick="this.parentElement.remove(); window.calcularCosteReceta();" style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">✕</button>
-  `;
+        <div style="flex: 2; position: relative;">
+            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none;">🥬</span>
+            <select style="
+                width: 100%;
+                padding: 12px 12px 12px 40px;
+                border: 2px solid #e2e8f0;
+                border-radius: 10px;
+                font-size: 14px;
+                background: white;
+                cursor: pointer;
+                transition: border-color 0.2s;
+                appearance: none;
+                background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%236b7280%22><path d=%22M7 10l5 5 5-5z%22/></svg>');
+                background-repeat: no-repeat;
+                background-position: right 12px center;
+                background-size: 20px;
+            " onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'" onchange="window.calcularCosteReceta()">
+                ${optionsHtml}
+            </select>
+        </div>
+        <div style="flex: 1; position: relative;">
+            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px; color: #94a3b8; pointer-events: none;">📏</span>
+            <input type="number" step="0.001" min="0" placeholder="Cantidad" 
+                style="
+                    width: 100%;
+                    padding: 12px 12px 12px 40px;
+                    border: 2px solid #e2e8f0;
+                    border-radius: 10px;
+                    font-size: 14px;
+                    transition: border-color 0.2s;
+                " onfocus="this.style.borderColor='#7c3aed'" onblur="this.style.borderColor='#e2e8f0'" onchange="window.calcularCosteReceta()">
+        </div>
+        <button type="button" onclick="this.parentElement.remove(); window.calcularCosteReceta();" 
+            style="
+                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                color: white;
+                border: none;
+                padding: 12px 14px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-size: 16px;
+                transition: all 0.2s;
+                box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+            " onmouseenter="this.style.transform='scale(1.05)'" onmouseleave="this.style.transform='scale(1)'">
+            ✕
+        </button>
+    `;
 
     lista.appendChild(item);
 }
