@@ -1441,11 +1441,40 @@ function getCurrentTabContext() {
         // Incluir proveedores
         if (window.proveedores && Array.isArray(window.proveedores)) {
             context.proveedores = window.proveedores.map(p => ({
+                id: p.id,
                 nombre: p.nombre,
                 telefono: p.telefono || '',
                 email: p.email || '',
             }));
             context.totalProveedores = window.proveedores.length;
+        }
+
+        // 🆕 Incluir relación ingrediente → proveedores (para preguntas de múltiples proveedores)
+        if (window.ingredientes && window.proveedores) {
+            // Calcular ingredientes con múltiples proveedores
+            const ingredientesConProveedores = window.ingredientes
+                .filter(ing => ing.proveedores && Array.isArray(ing.proveedores) && ing.proveedores.length > 0)
+                .map(ing => {
+                    const proveedoresNombres = ing.proveedores.map(p => {
+                        const prov = window.proveedores.find(pr => pr.id === p.proveedor_id);
+                        return prov ? prov.nombre : 'Desconocido';
+                    });
+                    return {
+                        ingrediente: ing.nombre,
+                        numProveedores: ing.proveedores.length,
+                        proveedores: proveedoresNombres.join(', '),
+                    };
+                });
+
+            context.ingredientesMultiplesProveedores = ingredientesConProveedores.filter(i => i.numProveedores >= 2);
+            context.totalIngredientesConMultiplesProveedores = context.ingredientesMultiplesProveedores.length;
+
+            // Ingredientes sin proveedor asignado
+            context.ingredientesSinProveedor = window.ingredientes
+                .filter(ing => !ing.proveedores || ing.proveedores.length === 0)
+                .filter(ing => !ing.proveedor_id && !ing.proveedorId)
+                .map(ing => ing.nombre)
+                .slice(0, 20); // Limitar para no saturar el contexto
         }
 
         // Incluir ventas si existen
