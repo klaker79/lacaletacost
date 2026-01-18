@@ -176,6 +176,11 @@ import * as Escandallo from './modules/recetas/escandallo.js';
 window.verEscandallo = Escandallo.verEscandallo;
 window.exportarPDFEscandallo = Escandallo.exportarPDFEscandallo;
 
+// Dossier Técnico v2.4 (documentación profesional)
+import { abrirDossier } from './modules/docs/dossier-v24.js';
+window.abrirDossierV24 = abrirDossier;
+window.abrirManualFormulas = abrirDossier; // Alias para compatibilidad
+
 // Variantes de receta (botella/copa para vinos)
 import * as RecetasVariantes from './modules/recetas/recetas-variantes.js';
 window.gestionarVariantesReceta = RecetasVariantes.gestionarVariantesReceta;
