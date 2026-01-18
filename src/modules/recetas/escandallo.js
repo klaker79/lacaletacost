@@ -120,7 +120,7 @@ export function verEscandallo(recetaId) {
         modal.id = 'modal-escandallo';
         modal.className = 'modal';
         modal.innerHTML = `
-            <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;">
+            <div class="modal-content" style="max-width: 650px; max-height: 90vh; overflow-y: auto; overflow-x: auto;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 id="escandallo-titulo" style="margin: 0;">📊 Escandallo</h3>
                     <button onclick="document.getElementById('modal-escandallo').classList.remove('active')" 
