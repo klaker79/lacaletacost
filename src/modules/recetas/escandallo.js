@@ -28,29 +28,24 @@ export function verEscandallo(recetaId) {
     let costeTotal = 0;
 
     (receta.ingredientes || []).forEach(item => {
-        // Buscar primero en ingredientes por ID
-        let ing = ingMap.get(item.ingredienteId);
-        let inv = invMap.get(item.ingredienteId);
+        let ing = null;
+        let inv = null;
         let esSubreceta = false;
 
-        // Si no se encuentra por ID, buscar por nombre (para ingredientes con ID incorrecto)
-        if (!ing && item.nombre) {
-            const nombreBuscado = item.nombre.toLowerCase().trim();
-            ing = ingredientes.find(i => i.nombre.toLowerCase().trim() === nombreBuscado);
-            if (ing) {
-                inv = invMap.get(ing.id);
-            }
-        }
+        // 🧪 DETECTAR SUB-RECETAS: ingredienteId > 100000 significa receta base
+        if (item.ingredienteId > 100000) {
+            esSubreceta = true;
+            const recetaBaseId = item.ingredienteId - 100000;
+            const subreceta = recetas.find(r => r.id === recetaBaseId);
 
-        // Si no se encuentra en ingredientes, buscar en recetas base
-        if (!ing) {
-            const subreceta = recetaMap.get(item.ingredienteId);
             if (subreceta) {
-                esSubreceta = true;
-                // Para sub-recetas, usar el coste calculado como precio
-                const costeSubreceta = window.calcularCosteRecetaCompleto ?
-                    window.calcularCosteRecetaCompleto(subreceta) :
-                    parseFloat(subreceta.coste || 0);
+                // Calcular coste de la sub-receta
+                let costeSubreceta = parseFloat(subreceta.coste || 0);
+
+                // Si tiene función de cálculo, usarla
+                if (window.calcularCosteRecetaCompleto) {
+                    costeSubreceta = window.calcularCosteRecetaCompleto(subreceta);
+                }
 
                 const coste = costeSubreceta * item.cantidad;
                 costeTotal += coste;
@@ -64,6 +59,19 @@ export function verEscandallo(recetaId) {
                     porcentaje: 0,
                     esSubreceta: true
                 });
+            }
+        } else {
+            // Buscar en ingredientes por ID
+            ing = ingMap.get(item.ingredienteId);
+            inv = invMap.get(item.ingredienteId);
+
+            // Si no se encuentra por ID, buscar por nombre
+            if (!ing && item.nombre) {
+                const nombreBuscado = item.nombre.toLowerCase().trim();
+                ing = ingredientes.find(i => i.nombre.toLowerCase().trim() === nombreBuscado);
+                if (ing) {
+                    inv = invMap.get(ing.id);
+                }
             }
         }
 
@@ -170,24 +178,24 @@ export function verEscandallo(recetaId) {
         </div>
     `;
 
-    // Table section - Columnas más compactas
-    let tablaHtml = '<table style="width: 100%; border-collapse: collapse; font-size: 12px;">';
+    // Table section - Tabla compacta sin cortes
+    let tablaHtml = '<table style="width: 100%; border-collapse: collapse; font-size: 11px; table-layout: fixed;">';
     tablaHtml += '<thead><tr style="background: #F8FAFC;">';
-    tablaHtml += '<th style="text-align: left; padding: 6px; border-bottom: 2px solid #E2E8F0;">Ingrediente</th>';
-    tablaHtml += '<th style="text-align: right; padding: 6px; border-bottom: 2px solid #E2E8F0; width: 70px;">Cant.</th>';
-    tablaHtml += '<th style="text-align: right; padding: 6px; border-bottom: 2px solid #E2E8F0; width: 60px;">Coste</th>';
-    tablaHtml += '<th style="text-align: right; padding: 6px; border-bottom: 2px solid #E2E8F0; width: 45px;">%</th>';
+    tablaHtml += '<th style="text-align: left; padding: 6px; border-bottom: 2px solid #E2E8F0; width: 45%;">Ingrediente</th>';
+    tablaHtml += '<th style="text-align: right; padding: 6px; border-bottom: 2px solid #E2E8F0; width: 20%;">Cant.</th>';
+    tablaHtml += '<th style="text-align: right; padding: 6px; border-bottom: 2px solid #E2E8F0; width: 18%;">Coste</th>';
+    tablaHtml += '<th style="text-align: right; padding: 6px; border-bottom: 2px solid #E2E8F0; width: 17%;">%</th>';
     tablaHtml += '</tr></thead><tbody>';
 
     desglose.forEach((item, i) => {
         const bgColor = i === 0 ? '#FEE2E2' : i === 1 ? '#FEF3C7' : 'transparent';
         // Truncar nombre si es muy largo
-        const nombreCorto = item.nombre.length > 30 ? item.nombre.substring(0, 28) + '...' : item.nombre;
+        const nombreCorto = item.nombre.length > 25 ? item.nombre.substring(0, 23) + '...' : item.nombre;
         tablaHtml += `<tr style="background: ${bgColor};">`;
-        tablaHtml += `<td style="padding: 5px 6px; border-bottom: 1px solid #E2E8F0;" title="${item.nombre}">${nombreCorto}</td>`;
-        tablaHtml += `<td style="text-align: right; padding: 5px 6px; border-bottom: 1px solid #E2E8F0; white-space: nowrap;">${item.cantidad} ${item.unidad}</td>`;
-        tablaHtml += `<td style="text-align: right; padding: 5px 6px; border-bottom: 1px solid #E2E8F0; font-weight: 600;">${item.coste.toFixed(2)}€</td>`;
-        tablaHtml += `<td style="text-align: right; padding: 5px 6px; border-bottom: 1px solid #E2E8F0;">${item.porcentaje.toFixed(0)}%</td>`;
+        tablaHtml += `<td style="padding: 5px; border-bottom: 1px solid #E2E8F0; overflow: hidden; text-overflow: ellipsis;" title="${item.nombre}">${nombreCorto}</td>`;
+        tablaHtml += `<td style="text-align: right; padding: 5px; border-bottom: 1px solid #E2E8F0;">${item.cantidad} ${item.unidad}</td>`;
+        tablaHtml += `<td style="text-align: right; padding: 5px; border-bottom: 1px solid #E2E8F0; font-weight: 600;">${item.coste.toFixed(2)}€</td>`;
+        tablaHtml += `<td style="text-align: right; padding: 5px; border-bottom: 1px solid #E2E8F0;">${item.porcentaje.toFixed(0)}%</td>`;
         tablaHtml += '</tr>';
     });
 
