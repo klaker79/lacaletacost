@@ -2653,7 +2653,9 @@
 
                 html += '<tr>';
                 html += `<td><strong style="cursor: pointer;" onclick="window.editarIngrediente(${ing.id})">${escapeHTML(ing.nombre)}</strong></td>`;
-                html += `<td><span class="badge ${ing.familia === 'bebida' ? 'badge-info' : 'badge-success'}">${ing.familia || 'alimento'}</span></td>`;
+                const familiaLower = (ing.familia || 'alimento').toLowerCase();
+                const esBebida = familiaLower === 'bebida' || familiaLower === 'bebidas';
+                html += `<td><span class="badge ${esBebida ? 'badge-info' : 'badge-success'}">${ing.familia || 'alimento'}</span></td>`;
                 html += `<td>${getNombreProveedor(ing.proveedor_id)}</td>`;
                 html += `<td>${ing.precio ? parseFloat(ing.precio).toFixed(2) + ' €/' + ing.unidad + ' -' : ''}</td>`;
                 html += `<td>`;
