@@ -370,12 +370,37 @@ export function onIngredientePedidoChange(selectElement, rowId) {
     const precioGeneral = parseFloat(selectedOption?.dataset?.precio || 0);
 
     if (formato && cantidadFormato && formatoContainer && formatoSelect) {
-        // Mostrar selector de formato - SOLO el formato, sin opción de kg
+        // Mostrar selector de formato - CAJA + UNIDAD suelta
         formatoContainer.style.display = 'block';
+
+        // Calcular precio por unidad (precio del formato / cantidad por formato)
+        const precioUnidad = precioGeneral > 0 && parseFloat(cantidadFormato) > 1
+            ? (precioGeneral / parseFloat(cantidadFormato)).toFixed(2)
+            : precioGeneral.toFixed(2);
+
         formatoSelect.innerHTML = `
-            <option value="formato" data-multiplicador="${cantidadFormato}" data-formato-mult="${cantidadFormato}">${escapeHTML(formato)} (${cantidadFormato} ${unidad})</option>
+            <option value="formato" data-multiplicador="${cantidadFormato}" data-formato-mult="${cantidadFormato}" data-precio-formato="${precioGeneral}">${escapeHTML(formato)} (${cantidadFormato} ${unidad})</option>
+            <option value="unidad" data-multiplicador="1" data-formato-mult="1" data-precio-unidad="${precioUnidad}">${escapeHTML(unidad)} (unidad suelta ~${precioUnidad}€)</option>
         `;
         formatoSelect.value = 'formato';
+
+        // Listener para cambiar precio automáticamente según formato seleccionado
+        formatoSelect.onchange = function () {
+            const selectedOpt = this.options[this.selectedIndex];
+            const precioInputEl = this.closest('.ingrediente-item')?.querySelector('.precio-input');
+            if (precioInputEl) {
+                if (this.value === 'unidad') {
+                    precioInputEl.value = selectedOpt.dataset.precioUnidad || '';
+                    precioInputEl.style.borderColor = '#f59e0b';
+                    precioInputEl.style.background = '#fffbeb';
+                } else {
+                    precioInputEl.value = selectedOpt.dataset.precioFormato || '';
+                    precioInputEl.style.borderColor = '#ddd';
+                    precioInputEl.style.background = 'white';
+                }
+            }
+            window.calcularTotalPedido();
+        };
     } else if (formatoContainer) {
         formatoContainer.style.display = 'none';
     }
