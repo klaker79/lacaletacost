@@ -104,8 +104,15 @@ export async function guardarPedido(event) {
     ingredientesPedido.forEach(item => {
       const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
       if (ing && typeof window.agregarAlCarrito === 'function') {
-        // Usar la función del carrito para añadir
-        window.agregarAlCarrito(item.ingredienteId, item.cantidad, proveedorId);
+        // 🆕 Pasar precio y flag de si es unitario (compra por botella vs caja)
+        const esUnidadSuelta = item.formatoUsado === 'unidad';
+        window.agregarAlCarrito(
+          item.ingredienteId,
+          item.cantidad,
+          proveedorId,
+          item.precio_unitario,  // Precio (unitario si es botella, formato si es caja)
+          esUnidadSuelta         // true = compra por botella, false = compra por caja
+        );
       }
     });
 

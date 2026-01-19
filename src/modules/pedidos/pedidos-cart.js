@@ -56,8 +56,9 @@ function actualizarBadgeCarrito() {
  * @param {number} cantidad - Cantidad a pedir
  * @param {number} proveedorId - ID del proveedor
  * @param {number} precioProveedor - Precio específico del proveedor (opcional)
+ * @param {boolean} esUnidadSuelta - Si es compra por unidad (botella) en lugar de formato (caja)
  */
-window.agregarAlCarrito = function (ingredienteId, cantidad = 1, proveedorId = null, precioProveedor = null) {
+window.agregarAlCarrito = function (ingredienteId, cantidad = 1, proveedorId = null, precioProveedor = null, esUnidadSuelta = false) {
     const ing = window.ingredientes.find(i => i.id === ingredienteId);
     if (!ing) {
         window.showToast('Ingrediente no encontrado', 'error');
@@ -69,7 +70,8 @@ window.agregarAlCarrito = function (ingredienteId, cantidad = 1, proveedorId = n
 
     // ⚠️ CRÍTICO: Obtener el precio correcto del proveedor
     let precioFormato = precioProveedor; // Primero usar precio pasado como parámetro
-    let precioYaEsUnitario = false; // Flag para indicar si el precio ya está por unidad
+    // 🆕 Si es compra por unidad suelta (botella), marcar como unitario
+    let precioYaEsUnitario = esUnidadSuelta; // Flag para indicar si el precio ya está por unidad
 
     if (!precioFormato && provId && window.ingredientesProveedores) {
         // Buscar precio del proveedor en ingredientes_proveedores (datos en memoria)
@@ -233,9 +235,15 @@ function renderizarCarrito() {
             };
         }
         porProveedor[provId].items.push(item);
-        // Calcular total: cantidad / cantidadPorFormato * precio (cuando hay formato)
-        const cantFormato = parseFloat(item.cantidadPorFormato) || 1;
-        total += (item.cantidad / cantFormato) * item.precio;
+        // 🆕 CORREGIDO: Si el precio ya es unitario (compra por botella), multiplicar directamente
+        if (item.precioYaEsUnitario) {
+            // Compra por unidad: cantidad × precio unitario
+            total += item.cantidad * item.precio;
+        } else {
+            // Compra por formato: cantidad / cantidadPorFormato × precio formato
+            const cantFormato = parseFloat(item.cantidadPorFormato) || 1;
+            total += (item.cantidad / cantFormato) * item.precio;
+        }
     });
 
     let html = '';
@@ -260,9 +268,16 @@ function renderizarCarrito() {
     `;
 
         data.items.forEach(item => {
-            // Calcular subtotal: cantidad / cantidadPorFormato * precio
-            const cantFormato = parseFloat(item.cantidadPorFormato) || 1;
-            const subtotal = (item.cantidad / cantFormato) * item.precio;
+            // 🆕 CORREGIDO: Si el precio ya es unitario (compra por botella), multiplicar directamente
+            let subtotal;
+            if (item.precioYaEsUnitario) {
+                // Compra por unidad
+                subtotal = item.cantidad * item.precio;
+            } else {
+                // Compra por formato
+                const cantFormato = parseFloat(item.cantidadPorFormato) || 1;
+                subtotal = (item.cantidad / cantFormato) * item.precio;
+            }
             html += `
         <tr style="border-bottom: 1px solid #e2e8f0;">
           <td style="padding: 12px;">
