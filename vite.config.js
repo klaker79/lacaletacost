@@ -18,6 +18,10 @@ export default defineConfig({
                 {
                     src: 'src/legacy/*',
                     dest: 'src/legacy'
+                },
+                {
+                    src: 'src/modules/inteligencia/*',
+                    dest: 'src/modules/inteligencia'
                 }
             ]
         })
