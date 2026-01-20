@@ -174,10 +174,8 @@ function actualizarDatosCostTracker() {
     const inventarioMap = new Map(inventario.map(i => [i.id, i]));
     const ingredientesMap = new Map(ingredientes.map(i => [i.id, i]));
 
-    // Filtrar recetas: excluir "base" (preparaciones que no se venden)
-    const recetasVendibles = recetas.filter(r =>
-        r.categoria?.toLowerCase() !== 'base' && parseFloat(r.precio_venta) > 0
-    );
+    // Filtrar recetas: solo mostrar las que tienen precio de venta
+    const recetasVendibles = recetas.filter(r => parseFloat(r.precio_venta) > 0);
 
     const recetasConCoste = recetasVendibles.map(receta => {
         let costeActual = 0;
