@@ -8,7 +8,7 @@ async function fetchIntelligence(endpoint) {
         const apiBase = window.getApiUrl ? window.getApiUrl() : 'https://lacaleta-api.mindloop.cloud';
         const token = localStorage.getItem('token');
 
-        const response = await fetch(`${apiBase}/api/intelligence/${endpoint}`, {
+        const response = await fetch(`${apiBase}/intelligence/${endpoint}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
