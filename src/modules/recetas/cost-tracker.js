@@ -174,7 +174,12 @@ function actualizarDatosCostTracker() {
     const inventarioMap = new Map(inventario.map(i => [i.id, i]));
     const ingredientesMap = new Map(ingredientes.map(i => [i.id, i]));
 
-    const recetasConCoste = recetas.map(receta => {
+    // Filtrar recetas: excluir "base" (preparaciones que no se venden)
+    const recetasVendibles = recetas.filter(r =>
+        r.categoria?.toLowerCase() !== 'base' && parseFloat(r.precio_venta) > 0
+    );
+
+    const recetasConCoste = recetasVendibles.map(receta => {
         let costeActual = 0;
 
         // Los ingredientes ya vienen como array (verificado con browser debug)
