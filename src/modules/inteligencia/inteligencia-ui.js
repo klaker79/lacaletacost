@@ -217,14 +217,11 @@ async function renderizarInteligencia() {
 
     container.innerHTML = `<div class="intel-dashboard"><div style="text-align:center;padding:60px;"><div style="font-size:40px;">⏳</div><div style="color:#64748b;">Cargando...</div></div></div>`;
 
-    const [fresh, purchase, over, price] = await Promise.all([
+    const [fresh, price] = await Promise.all([
         fetchIntelligence('freshness'),
-        fetchIntelligence('purchase-plan?day=6'),
-        fetchIntelligence('overstock'),
         fetchIntelligence('price-check')
     ]);
 
-    window._purchaseDay = 6;
     const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
     container.innerHTML = `
@@ -236,27 +233,13 @@ async function renderizarInteligencia() {
                 </div>
                 <button class="intel-btn" onclick="window.renderizarInteligencia()">🔄 Actualizar</button>
             </div>
-            <div class="intel-grid">
+            <div class="intel-grid" style="grid-template-columns: 1fr 1fr;">
                 <div class="intel-panel panel-fresh">
                     <div class="intel-panel-header">
                         <div class="intel-panel-icon">🧊</div>
-                        <div><div class="intel-panel-title">Frescura del Stock</div><div class="intel-panel-sub">Productos a revisar (vida útil marisco: 2 días)</div></div>
+                        <div><div class="intel-panel-title">Frescura del Stock</div><div class="intel-panel-sub">Productos frescos a revisar</div></div>
                     </div>
                     ${renderFreshness(fresh)}
-                </div>
-                <div class="intel-panel panel-buy" id="panel-purchase">
-                    <div class="intel-panel-header">
-                        <div class="intel-panel-icon">📅</div>
-                        <div><div class="intel-panel-title">Plan de Compras</div><div class="intel-panel-sub">Basado en ventas históricas por día</div></div>
-                    </div>
-                    <div id="purchase-content">${renderPurchase(purchase, 6)}</div>
-                </div>
-                <div class="intel-panel panel-stop">
-                    <div class="intel-panel-header">
-                        <div class="intel-panel-icon">🛑</div>
-                        <div><div class="intel-panel-title">No Compres Más</div><div class="intel-panel-sub">Stock excesivo para consumo actual</div></div>
-                    </div>
-                    ${renderOverstock(over)}
                 </div>
                 <div class="intel-panel panel-price">
                     <div class="intel-panel-header">
