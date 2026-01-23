@@ -950,11 +950,23 @@ window.confirmarImportarVentas = async function () {
         return;
     }
 
-    if (
-        !confirm(
-            `¿Importar ${datosValidos.length} registros de venta?\nSe actualizará el stock de los artículos vinculados.`
-        )
-    ) {
+    // 📅 Usar fecha seleccionada o fecha actual
+    const fechaInput = document.getElementById('fecha-importar-ventas');
+    let fechaVentas;
+    if (fechaInput && fechaInput.value) {
+        // Usuario seleccionó fecha específica (retroactiva)
+        // Formato: YYYY-MM-DD del input type="date"
+        fechaVentas = new Date(fechaInput.value + 'T12:00:00').toISOString();
+        console.log('📅 Usando fecha seleccionada por usuario:', fechaInput.value, '→', fechaVentas);
+    } else {
+        // Fecha actual por defecto
+        fechaVentas = new Date().toISOString();
+        console.log('📅 Usando fecha actual:', fechaVentas);
+    }
+
+    // Mostrar confirmación del usuario con la fecha
+    const fechaDisplay = fechaInput && fechaInput.value ? fechaInput.value : new Date().toISOString().split('T')[0];
+    if (!confirm(`¿Importar ${datosValidos.length} registros de venta para la fecha ${fechaDisplay}?\nSe actualizará el stock de los artículos vinculados.`)) {
         return;
     }
 
@@ -962,17 +974,6 @@ window.confirmarImportarVentas = async function () {
 
     try {
         let importados = 0;
-
-        // 📅 Usar fecha seleccionada o fecha actual
-        const fechaInput = document.getElementById('fecha-importar-ventas');
-        let fechaVentas;
-        if (fechaInput && fechaInput.value) {
-            // Usuario seleccionó fecha específica (retroactiva)
-            fechaVentas = new Date(fechaInput.value + 'T12:00:00').toISOString();
-        } else {
-            // Fecha actual por defecto
-            fechaVentas = new Date().toISOString();
-        }
 
         // Procesar en lotes o uno a uno (por ahora uno a uno para simplicidad, idealmente batch en backend)
         // Nota: La API actual de createSale espera un solo objeto.
