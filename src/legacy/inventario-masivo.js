@@ -743,17 +743,44 @@ window.procesarArchivoVentas = async function (input) {
                 fechaInput.value = result.fecha;
             }
 
+            // Asegurar que tenemos las variantes cargadas
+            if (!window.recetasVariantes && window.API?.fetch) {
+                try {
+                    window.recetasVariantes = await window.API.fetch('/api/recipes-variants');
+                } catch (e) {
+                    console.warn('No se pudieron cargar variantes:', e);
+                    window.recetasVariantes = [];
+                }
+            }
+
             // Convertir formato del backend al formato esperado
             datosImportarVentas = result.ventas.map(v => {
                 // Buscar receta por código o nombre
                 let recetaEncontrada = null;
+                let varianteEncontrada = null;
+
                 if (v.codigo_tpv) {
+                    // 1. Buscar en recetas principales
                     recetaEncontrada = window.recetas.find(r => r.codigo && String(r.codigo) === String(v.codigo_tpv));
+
+                    // 2. Si no encuentra, buscar en variantes (BOTELLA/COPA)
+                    if (!recetaEncontrada && window.recetasVariantes) {
+                        varianteEncontrada = window.recetasVariantes.find(va => va.codigo && String(va.codigo) === String(v.codigo_tpv));
+                        if (varianteEncontrada) {
+                            // Encontrar la receta padre de la variante
+                            recetaEncontrada = window.recetas.find(r => r.id === varianteEncontrada.receta_id);
+                        }
+                    }
                 }
                 if (!recetaEncontrada && v.receta) {
                     const nombreNorm = v.receta.toLowerCase().trim();
                     recetaEncontrada = window.recetas.find(r => r.nombre.toLowerCase().trim() === nombreNorm);
                 }
+
+                // Nombre para mostrar: variante o receta
+                const nombreMostrar = varianteEncontrada
+                    ? `${recetaEncontrada?.nombre || ''} (${varianteEncontrada.nombre})`
+                    : recetaEncontrada?.nombre || null;
 
                 return {
                     codigo: v.codigo_tpv || '',
@@ -761,7 +788,8 @@ window.procesarArchivoVentas = async function (input) {
                     cantidad: v.cantidad || 0,
                     total: v.total || 0,
                     recetaId: recetaEncontrada ? recetaEncontrada.id : null,
-                    recetaNombre: recetaEncontrada ? recetaEncontrada.nombre : null,
+                    varianteId: varianteEncontrada ? varianteEncontrada.id : null,
+                    recetaNombre: nombreMostrar,
                     valido: v.cantidad > 0,
                     error: !recetaEncontrada ? '⚠️ No vinculado (se registrará como genérico)' : null
                 };
@@ -804,15 +832,24 @@ function validarDatosVentas(data) {
 
         // Intentar vincular con receta existente
         let recetaEncontrada = null;
+        let varianteEncontrada = null;
 
         // 1. Buscar por código exacto si existe
         if (codigo) {
             recetaEncontrada = window.recetas.find(
                 r => r.codigo && String(r.codigo) === String(codigo)
             );
+
+            // 2. Si no encuentra, buscar en variantes (BOTELLA/COPA)
+            if (!recetaEncontrada && window.recetasVariantes) {
+                varianteEncontrada = window.recetasVariantes.find(va => va.codigo && String(va.codigo) === String(codigo));
+                if (varianteEncontrada) {
+                    recetaEncontrada = window.recetas.find(r => r.id === varianteEncontrada.receta_id);
+                }
+            }
         }
 
-        // 2. Si no, buscar por nombre (exacto o aproximado)
+        // 3. Si no, buscar por nombre (exacto o aproximado)
         if (!recetaEncontrada && nombre) {
             const nombreNorm = nombre.toLowerCase().trim();
             recetaEncontrada = window.recetas.find(
@@ -827,13 +864,19 @@ function validarDatosVentas(data) {
 
         const valido = cantidad > 0 && (recetaEncontrada || nombre.length > 0);
 
+        // Nombre para mostrar
+        const nombreMostrar = varianteEncontrada
+            ? `${recetaEncontrada?.nombre || ''} (${varianteEncontrada.nombre})`
+            : recetaEncontrada?.nombre || null;
+
         return {
             codigo: codigo,
             nombre: nombre,
             cantidad: isNaN(cantidad) ? 0 : cantidad,
             total: isNaN(total) ? 0 : total,
             recetaId: recetaEncontrada ? recetaEncontrada.id : null,
-            recetaNombre: recetaEncontrada ? recetaEncontrada.nombre : null,
+            varianteId: varianteEncontrada ? varianteEncontrada.id : null,
+            recetaNombre: nombreMostrar,
             valido: valido,
             error: !valido
                 ? 'Cantidad inválida'
