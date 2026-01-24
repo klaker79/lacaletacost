@@ -178,7 +178,7 @@ export function agregarIngredienteReceta() {
  */
 export function calcularCosteReceta() {
     const items = document.querySelectorAll('#lista-ingredientes-receta .ingrediente-item');
-    let costeTotal = 0;
+    let costeTotalLote = 0;
     const ingredientes = Array.isArray(window.ingredientes) ? window.ingredientes : [];
     const inventario = Array.isArray(window.inventarioCompleto) ? window.inventarioCompleto : [];
     const recetas = Array.isArray(window.recetas) ? window.recetas : [];
@@ -201,7 +201,7 @@ export function calcularCosteReceta() {
                 if (recetaBase && window.calcularCosteRecetaCompleto) {
                     // Calcular coste de la receta base
                     const costeRecetaBase = window.calcularCosteRecetaCompleto(recetaBase);
-                    costeTotal += costeRecetaBase * cantidad;
+                    costeTotalLote += costeRecetaBase * cantidad;
                 }
             } else {
                 // Ingrediente normal
@@ -215,10 +215,14 @@ export function calcularCosteReceta() {
                     ? parseFloat(invItem.precio_medio)
                     : parseFloat(ing?.precio || 0);
 
-                costeTotal += precio * cantidad;
+                costeTotalLote += precio * cantidad;
             }
         }
     });
+
+    // 🔧 FIX: Dividir por porciones para obtener coste POR PORCIÓN
+    const porciones = parseInt(document.getElementById('rec-porciones')?.value || 1) || 1;
+    const costeTotal = costeTotalLote / porciones;
 
     const costeDiv = document.getElementById('coste-calculado-form');
     if (costeDiv) {
