@@ -3774,11 +3774,14 @@
     // Función auxiliar para calcular coste completo de receta
     window.calcularCosteRecetaCompleto = function (receta) {
         if (!receta || !receta.ingredientes) return 0;
-        return receta.ingredientes.reduce((total, item) => {
+        const costeTotalLote = receta.ingredientes.reduce((total, item) => {
             const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
             const precio = ing ? parseFloat(ing.precio) : 0;
             return total + precio * item.cantidad;
         }, 0);
+        // 🔧 FIX: Dividir por porciones para obtener coste POR PORCIÓN
+        const porciones = parseInt(receta.porciones) || 1;
+        return parseFloat((costeTotalLote / porciones).toFixed(2));
     };
 
     window.descargarPedidoPDF = function () {

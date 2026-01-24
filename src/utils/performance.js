@@ -259,8 +259,8 @@ export class TTLCache {
 export function calcularCosteRecetaMemoizado(receta) {
     if (!receta || !receta.ingredientes) return 0;
 
-    // Usar ID + hash de ingredientes como clave
-    const key = `${receta.id}-${JSON.stringify(receta.ingredientes.map(i => [i.ingredienteId, i.cantidad]))}`;
+    // Usar ID + hash de ingredientes + porciones como clave
+    const key = `${receta.id}-${receta.porciones || 1}-${JSON.stringify(receta.ingredientes.map(i => [i.ingredienteId, i.cantidad]))}`;
 
     const cached = costeRecetasCache.get(key);
     if (cached !== null) return cached;
@@ -269,7 +269,7 @@ export function calcularCosteRecetaMemoizado(receta) {
     const inventario = window.inventarioCompleto || [];
     const invMap = new Map(inventario.map(i => [i.id, i]));
 
-    const coste = receta.ingredientes.reduce((total, item) => {
+    const costeTotalLote = receta.ingredientes.reduce((total, item) => {
         const ing = dataMaps.getIngrediente(item.ingredienteId);
         const invItem = invMap.get(item.ingredienteId);
 
@@ -285,8 +285,12 @@ export function calcularCosteRecetaMemoizado(receta) {
         return total + precio * (item.cantidad || 0);
     }, 0);
 
-    costeRecetasCache.set(key, coste);
-    return coste;
+    // 🔧 FIX: Dividir por porciones para obtener coste POR PORCIÓN
+    const porciones = parseInt(receta.porciones) || 1;
+    const costePorPorcion = parseFloat((costeTotalLote / porciones).toFixed(2));
+
+    costeRecetasCache.set(key, costePorPorcion);
+    return costePorPorcion;
 }
 
 // Cache específico para costes de recetas
