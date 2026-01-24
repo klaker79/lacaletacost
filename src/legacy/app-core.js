@@ -3774,11 +3774,31 @@
     // Función auxiliar para calcular coste completo de receta
     window.calcularCosteRecetaCompleto = function (receta) {
         if (!receta || !receta.ingredientes) return 0;
+
+        // 💰 Crear maps para búsquedas O(1)
+        const inventario = window.inventarioCompleto || [];
+        const invMap = new Map(inventario.map(i => [i.id, i]));
+
         const costeTotalLote = receta.ingredientes.reduce((total, item) => {
             const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-            const precio = ing ? parseFloat(ing.precio) : 0;
-            return total + precio * item.cantidad;
+            if (!ing) return total;
+
+            const invItem = invMap.get(item.ingredienteId);
+
+            // 💰 Prioridad: precio_medio del inventario, luego precio/cantidad_por_formato
+            let precioUnitario = 0;
+            if (invItem?.precio_medio) {
+                precioUnitario = parseFloat(invItem.precio_medio);
+            } else {
+                const precioFormato = parseFloat(ing.precio) || 0;
+                // 🔧 FIX: Usar 1 como default si cantidad_por_formato es NULL/0
+                const cantidadPorFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                precioUnitario = precioFormato / cantidadPorFormato;
+            }
+
+            return total + precioUnitario * (item.cantidad || 0);
         }, 0);
+
         // 🔧 FIX: Dividir por porciones para obtener coste POR PORCIÓN
         const porciones = parseInt(receta.porciones) || 1;
         return parseFloat((costeTotalLote / porciones).toFixed(2));
