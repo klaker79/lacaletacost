@@ -4269,11 +4269,15 @@
         });
 
         try {
-            const menuAnalysis = await api.getMenuEngineering(); // Nueva llamada a la API
+            const menuAnalysisRaw = await api.getMenuEngineering(); // Nueva llamada a la API
+
+            // 🔧 FILTRO: Solo mostrar items con coste > 0 (alimentos con ingredientes)
+            // Esto excluye vinos, bebidas, envases del análisis
+            const menuAnalysis = menuAnalysisRaw.filter(item => item.coste > 0);
 
             let totalMargen = 0;
             let totalCoste = 0;
-            const datosRecetas = recetas.map(rec => {
+            const datosRecetasRaw = recetas.map(rec => {
                 const coste = calcularCosteRecetaCompleto(rec);
                 const margen = rec.precio_venta - coste;
                 const margenPct = rec.precio_venta > 0 ? (margen / rec.precio_venta) * 100 : 0;
@@ -4282,8 +4286,11 @@
                 return { ...rec, coste, margen, margenPct };
             });
 
-            const margenPromedio = (totalMargen / recetas.length).toFixed(1);
-            const costePromedio = (totalCoste / recetas.length).toFixed(2);
+            // 🔧 FILTRO: Solo items con coste > 0 para tabla de rentabilidad
+            const datosRecetas = datosRecetasRaw.filter(rec => rec.coste > 0);
+
+            const margenPromedio = datosRecetas.length > 0 ? (datosRecetas.reduce((sum, r) => sum + r.margenPct, 0) / datosRecetas.length).toFixed(1) : '0';
+            const costePromedio = datosRecetas.length > 0 ? (datosRecetas.reduce((sum, r) => sum + r.coste, 0) / datosRecetas.length).toFixed(2) : '0';
 
             document.getElementById('stat-total-recetas').textContent = menuAnalysis.length;
             document.getElementById('stat-margen-promedio').textContent = margenPromedio + '%';
