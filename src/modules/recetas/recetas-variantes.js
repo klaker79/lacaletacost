@@ -78,26 +78,41 @@ function renderizarVariantes(variantes) {
 
     // Obtener coste base de la receta para calcular KPIs
     const receta = window.recetas?.find(r => r.id === recetaActualId);
+    const porciones = parseInt(receta?.porciones) || 1;
 
     // Calcular coste real sumando ingredientes (igual que el escandallo)
-    let costeBase = 0;
+    let costeLote = 0;
     if (receta && receta.ingredientes && Array.isArray(receta.ingredientes)) {
+        // Crear map de inventario para precio_medio
+        const inventarioMap = new Map((window.inventarioCompleto || []).map(inv => [inv.ingrediente_id, inv]));
+
         receta.ingredientes.forEach(item => {
             const cantidad = parseFloat(item.cantidad) || 0;
 
             // Buscar el ingrediente para obtener precio unitario
             const ingrediente = window.ingredientes?.find(i => i.id === item.ingredienteId);
             if (ingrediente) {
-                const precioFormato = parseFloat(ingrediente.precio) || 0;
-                const cantidadFormato = parseFloat(ingrediente.cantidad_por_formato) || 1;
-                const precioUnitario = precioFormato / cantidadFormato;
-                costeBase += cantidad * precioUnitario;
+                // 🔧 FIX: Priorizar precio_medio del inventario (WAP)
+                const invItem = inventarioMap.get(item.ingredienteId);
+                let precioUnitario = 0;
+                if (invItem?.precio_medio) {
+                    precioUnitario = parseFloat(invItem.precio_medio);
+                } else {
+                    const precioFormato = parseFloat(ingrediente.precio) || 0;
+                    const cantidadFormato = parseFloat(ingrediente.cantidad_por_formato) || 1;
+                    precioUnitario = precioFormato / cantidadFormato;
+                }
+                costeLote += cantidad * precioUnitario;
             }
         });
     }
+
+    // 🔧 FIX: Dividir por porciones para obtener coste por porción
+    let costeBase = costeLote / porciones;
+
     // Fallback al campo coste si existe
     if (costeBase === 0 && receta?.coste) {
-        costeBase = parseFloat(receta.coste);
+        costeBase = parseFloat(receta.coste) / porciones;
     }
 
     let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';

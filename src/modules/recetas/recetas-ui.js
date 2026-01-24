@@ -476,20 +476,31 @@ export function exportarRecetas() {
     const recetas = Array.isArray(window.recetas) ? window.recetas : [];
     const ingredientes = Array.isArray(window.ingredientes) ? window.ingredientes : [];
 
-    // ⚡ OPTIMIZACIÓN: Crear Map O(1) una vez, pre-calcular costes
+    // ⚡ OPTIMIZACIÓN: Crear Maps O(1) una vez
     const ingredientesMap = new Map(ingredientes.map(i => [i.id, i]));
+    const inventarioMap = new Map((window.inventarioCompleto || []).map(inv => [inv.ingrediente_id, inv]));
 
     // Pre-calcular coste de cada receta UNA SOLA VEZ
     const costesCalculados = new Map();
     recetas.forEach(rec => {
-        const coste = (rec.ingredientes || []).reduce((sum, item) => {
+        const porciones = parseInt(rec.porciones) || 1;
+        const costeLote = (rec.ingredientes || []).reduce((sum, item) => {
             const ing = ingredientesMap.get(item.ingredienteId);
             if (!ing) return sum;
-            const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
-            const precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+
+            // 🔧 FIX: Priorizar precio_medio del inventario (WAP)
+            const invItem = inventarioMap.get(item.ingredienteId);
+            let precioUnitario = 0;
+            if (invItem?.precio_medio) {
+                precioUnitario = parseFloat(invItem.precio_medio);
+            } else {
+                const cantidadFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                precioUnitario = parseFloat(ing.precio) / cantidadFormato;
+            }
+
             return sum + (precioUnitario * parseFloat(item.cantidad));
         }, 0);
-        costesCalculados.set(rec.id, coste);
+        costesCalculados.set(rec.id, costeLote / porciones);
     });
 
     const columnas = [
