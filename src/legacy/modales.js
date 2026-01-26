@@ -6,6 +6,14 @@ window.confirmarEliminacion = function (config) {
         const mensaje = document.getElementById('confirm-mensaje');
         const btnConfirmar = document.getElementById('btn-confirmar-eliminar');
 
+        // 🔒 FIX: Verificar que elementos existan antes de usarlos
+        if (!modal || !titulo || !mensaje || !btnConfirmar) {
+            console.error('❌ Error: Elementos del modal de confirmación no encontrados');
+            window.showToast?.('Error mostrando confirmación', 'error');
+            resolve(false);
+            return;
+        }
+
         titulo.textContent = config.titulo || 'Confirmar Eliminación';
         mensaje.innerHTML = `
       ¿Estás seguro de eliminar <strong>${escapeHTML(config.tipo || 'este elemento')}</strong>?
@@ -626,34 +634,59 @@ function parseJwt(token) {
     }
 }
 
-setInterval(
-    async () => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        try {
-            const decoded = parseJwt(token);
-            if (!decoded?.exp) return;
-            const expiresIn = decoded.exp * 1000 - Date.now();
-            if (expiresIn < 5 * 60 * 1000 && expiresIn > 0) {
-                // Renovando token
-                const API_BASE =
-                    window.API_CONFIG?.baseUrl || 'https://lacaleta-api.mindloop.cloud';
-                const response = await fetch(API_BASE + '/api/auth/refresh', {
-                    method: 'POST',
-                    headers: { Authorization: 'Bearer ' + token },
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    localStorage.setItem('token', data.token);
-                    window.showToast('Sesión renovada', 'info');
+// 🔒 FIX: Guardar referencia del interval para poder limpiarlo
+// Esto previene memory leaks si el usuario navega o hace logout
+window._tokenRefreshInterval = null;
+
+function startTokenRefresh() {
+    // Limpiar interval anterior si existe
+    if (window._tokenRefreshInterval) {
+        clearInterval(window._tokenRefreshInterval);
+    }
+
+    window._tokenRefreshInterval = setInterval(
+        async () => {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                const decoded = parseJwt(token);
+                if (!decoded?.exp) return;
+                const expiresIn = decoded.exp * 1000 - Date.now();
+                if (expiresIn < 5 * 60 * 1000 && expiresIn > 0) {
+                    // Renovando token
+                    const API_BASE =
+                        window.API_CONFIG?.baseUrl || 'https://lacaleta-api.mindloop.cloud';
+                    const response = await fetch(API_BASE + '/api/auth/refresh', {
+                        method: 'POST',
+                        headers: { Authorization: 'Bearer ' + token },
+                        credentials: 'include'
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        localStorage.setItem('token', data.token);
+                        window.showToast('Sesión renovada', 'info');
+                    }
                 }
+            } catch (e) {
+                /* Auto-refresh no disponible */
             }
-        } catch (e) {
-            /* Auto-refresh no disponible */
-        }
-    },
-    4 * 60 * 1000
-);
+        },
+        4 * 60 * 1000
+    );
+}
+
+// 🔒 FIX: Función para limpiar el interval al logout
+window.stopTokenRefresh = function() {
+    if (window._tokenRefreshInterval) {
+        clearInterval(window._tokenRefreshInterval);
+        window._tokenRefreshInterval = null;
+    }
+};
+
+// Iniciar token refresh solo si hay token
+if (localStorage.getItem('token')) {
+    startTokenRefresh();
+}
 
 // Limpiar campos de búsqueda al cargar (combate autocompletado de Chrome)
 setTimeout(function () {

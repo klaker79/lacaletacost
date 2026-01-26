@@ -968,10 +968,23 @@ export function descargarPedidoPDF() {
     </html>
     `;
 
+  // 🔒 FIX: Verificar que window.open no fue bloqueado por popup blocker
   const ventana = window.open('', '', 'width=900,height=700');
-  ventana.document.write(html);
-  ventana.document.close();
-  ventana.print();
+
+  if (!ventana) {
+    window.showToast('⚠️ Pop-ups bloqueados. Permite pop-ups para descargar PDF.', 'warning');
+    return;
+  }
+
+  try {
+    ventana.document.write(html);
+    ventana.document.close();
+    ventana.print();
+  } catch (error) {
+    console.error('Error generando PDF:', error);
+    window.showToast('Error generando PDF', 'error');
+    ventana.close();
+  }
 }
 
 /**

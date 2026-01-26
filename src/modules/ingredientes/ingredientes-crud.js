@@ -10,8 +10,16 @@ import { setEditandoIngredienteId } from './ingredientes-ui.js';
 /**
  * Guarda un ingrediente (crear o actualizar)
  */
+let _guardandoIngrediente = false; // 🔒 FIX: Prevenir doble submit
 export async function guardarIngrediente(event) {
     event.preventDefault();
+
+    // 🔒 FIX: Prevenir múltiples clicks
+    if (_guardandoIngrediente) {
+        console.warn('⚠️ Operación en curso, ignorando click duplicado');
+        return;
+    }
+    _guardandoIngrediente = true;
 
     // 🔒 FIX CRÍTICO: Solo incluir stock si el campo tiene valor
     // Antes: stockActual: parseFloat(x) || 0 → convertía vacío a 0
@@ -39,19 +47,23 @@ export async function guardarIngrediente(event) {
     // Validaciones
     if (!ingrediente.nombre || ingrediente.nombre.trim() === '') {
         showToast('El nombre es obligatorio', 'error');
+        _guardandoIngrediente = false; // 🔒 Liberar flag en early return
         return;
     }
     if (ingrediente.precio < 0) {
         showToast('El precio no puede ser negativo', 'error');
+        _guardandoIngrediente = false;
         return;
     }
     // Solo validar si el campo tiene valor (undefined = no modificar)
     if (ingrediente.stockActual !== undefined && ingrediente.stockActual < 0) {
         showToast('El stock no puede ser negativo', 'error');
+        _guardandoIngrediente = false;
         return;
     }
     if (ingrediente.stockMinimo !== undefined && ingrediente.stockMinimo < 0) {
         showToast('El stock mínimo no puede ser negativo', 'error');
+        _guardandoIngrediente = false;
         return;
     }
 
@@ -170,6 +182,9 @@ export async function guardarIngrediente(event) {
         if (typeof window.hideLoading === 'function') window.hideLoading();
         console.error('Error:', error);
         showToast('Error guardando ingrediente: ' + error.message, 'error');
+    } finally {
+        // 🔒 FIX: Siempre liberar el flag para permitir nuevos guardados
+        _guardandoIngrediente = false;
     }
 }
 
