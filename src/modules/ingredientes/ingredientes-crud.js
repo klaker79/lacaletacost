@@ -73,7 +73,12 @@ export async function guardarIngrediente(event) {
         const editandoId = window.editandoIngredienteId;
         let ingredienteId;
 
+        // 🔍 DEBUG: Ver qué se envía al backend
+        console.log('📤 Guardando ingrediente:', JSON.stringify(ingrediente, null, 2));
+        console.log('📤 Stock enviado:', ingrediente.stockActual, '(tipo:', typeof ingrediente.stockActual, ')');
+
         if (editandoId !== null) {
+            console.log('📤 Actualizando ID:', editandoId);
             await window.api.updateIngrediente(editandoId, ingrediente);
             ingredienteId = editandoId;
         } else {
