@@ -2653,7 +2653,9 @@
 
                 html += '<tr>';
                 html += `<td><strong style="cursor: pointer;" onclick="window.editarIngrediente(${ing.id})">${escapeHTML(ing.nombre)}</strong></td>`;
-                html += `<td><span class="badge ${ing.familia === 'bebida' ? 'badge-info' : 'badge-success'}">${ing.familia || 'alimento'}</span></td>`;
+                const familiaLower = (ing.familia || 'alimento').toLowerCase();
+                const esBebida = familiaLower === 'bebida' || familiaLower === 'bebidas';
+                html += `<td><span class="badge ${esBebida ? 'badge-info' : 'badge-success'}">${ing.familia || 'alimento'}</span></td>`;
                 html += `<td>${getNombreProveedor(ing.proveedor_id)}</td>`;
                 html += `<td>${ing.precio ? parseFloat(ing.precio).toFixed(2) + ' €/' + ing.unidad + ' -' : ''}</td>`;
                 html += `<td>`;
@@ -3772,11 +3774,34 @@
     // Función auxiliar para calcular coste completo de receta
     window.calcularCosteRecetaCompleto = function (receta) {
         if (!receta || !receta.ingredientes) return 0;
-        return receta.ingredientes.reduce((total, item) => {
+
+        // 💰 Crear maps para búsquedas O(1)
+        const inventario = window.inventarioCompleto || [];
+        const invMap = new Map(inventario.map(i => [i.id, i]));
+
+        const costeTotalLote = receta.ingredientes.reduce((total, item) => {
             const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
-            const precio = ing ? parseFloat(ing.precio) : 0;
-            return total + precio * item.cantidad;
+            if (!ing) return total;
+
+            const invItem = invMap.get(item.ingredienteId);
+
+            // 💰 Prioridad: precio_medio del inventario, luego precio/cantidad_por_formato
+            let precioUnitario = 0;
+            if (invItem?.precio_medio) {
+                precioUnitario = parseFloat(invItem.precio_medio);
+            } else {
+                const precioFormato = parseFloat(ing.precio) || 0;
+                // 🔧 FIX: Usar 1 como default si cantidad_por_formato es NULL/0
+                const cantidadPorFormato = parseFloat(ing.cantidad_por_formato) || 1;
+                precioUnitario = precioFormato / cantidadPorFormato;
+            }
+
+            return total + precioUnitario * (item.cantidad || 0);
         }, 0);
+
+        // 🔧 FIX: Dividir por porciones para obtener coste POR PORCIÓN
+        const porciones = parseInt(receta.porciones) || 1;
+        return parseFloat((costeTotalLote / porciones).toFixed(2));
     };
 
     window.descargarPedidoPDF = function () {
@@ -4244,11 +4269,18 @@
         });
 
         try {
-            const menuAnalysis = await api.getMenuEngineering(); // Nueva llamada a la API
+            const menuAnalysisRaw = await api.getMenuEngineering(); // Nueva llamada a la API
+
+            // 🔧 FILTRO: Solo mostrar items con food cost > 15% (excluye vinos/bebidas)
+            // Los vinos tienen ~5-12% food cost, los alimentos reales tienen >20%
+            const menuAnalysis = menuAnalysisRaw.filter(item => {
+                const foodCost = item.precio_venta > 0 ? (item.coste / item.precio_venta) * 100 : 0;
+                return foodCost > 15;
+            });
 
             let totalMargen = 0;
             let totalCoste = 0;
-            const datosRecetas = recetas.map(rec => {
+            const datosRecetasRaw = recetas.map(rec => {
                 const coste = calcularCosteRecetaCompleto(rec);
                 const margen = rec.precio_venta - coste;
                 const margenPct = rec.precio_venta > 0 ? (margen / rec.precio_venta) * 100 : 0;
@@ -4257,8 +4289,14 @@
                 return { ...rec, coste, margen, margenPct };
             });
 
-            const margenPromedio = (totalMargen / recetas.length).toFixed(1);
-            const costePromedio = (totalCoste / recetas.length).toFixed(2);
+            // 🔧 FILTRO: Solo items con food cost > 15% para tabla de rentabilidad
+            const datosRecetas = datosRecetasRaw.filter(rec => {
+                const foodCost = rec.precio_venta > 0 ? (rec.coste / rec.precio_venta) * 100 : 0;
+                return foodCost > 15;
+            });
+
+            const margenPromedio = datosRecetas.length > 0 ? (datosRecetas.reduce((sum, r) => sum + r.margenPct, 0) / datosRecetas.length).toFixed(1) : '0';
+            const costePromedio = datosRecetas.length > 0 ? (datosRecetas.reduce((sum, r) => sum + r.coste, 0) / datosRecetas.length).toFixed(2) : '0';
 
             document.getElementById('stat-total-recetas').textContent = menuAnalysis.length;
             document.getElementById('stat-margen-promedio').textContent = margenPromedio + '%';

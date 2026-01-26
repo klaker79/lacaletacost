@@ -743,17 +743,44 @@ window.procesarArchivoVentas = async function (input) {
                 fechaInput.value = result.fecha;
             }
 
+            // Asegurar que tenemos las variantes cargadas
+            if (!window.recetasVariantes && window.API?.fetch) {
+                try {
+                    window.recetasVariantes = await window.API.fetch('/api/recipes-variants');
+                } catch (e) {
+                    console.warn('No se pudieron cargar variantes:', e);
+                    window.recetasVariantes = [];
+                }
+            }
+
             // Convertir formato del backend al formato esperado
             datosImportarVentas = result.ventas.map(v => {
                 // Buscar receta por código o nombre
                 let recetaEncontrada = null;
+                let varianteEncontrada = null;
+
                 if (v.codigo_tpv) {
+                    // 1. Buscar en recetas principales
                     recetaEncontrada = window.recetas.find(r => r.codigo && String(r.codigo) === String(v.codigo_tpv));
+
+                    // 2. Si no encuentra, buscar en variantes (BOTELLA/COPA)
+                    if (!recetaEncontrada && window.recetasVariantes) {
+                        varianteEncontrada = window.recetasVariantes.find(va => va.codigo && String(va.codigo) === String(v.codigo_tpv));
+                        if (varianteEncontrada) {
+                            // Encontrar la receta padre de la variante
+                            recetaEncontrada = window.recetas.find(r => r.id === varianteEncontrada.receta_id);
+                        }
+                    }
                 }
                 if (!recetaEncontrada && v.receta) {
                     const nombreNorm = v.receta.toLowerCase().trim();
                     recetaEncontrada = window.recetas.find(r => r.nombre.toLowerCase().trim() === nombreNorm);
                 }
+
+                // Nombre para mostrar: variante o receta
+                const nombreMostrar = varianteEncontrada
+                    ? `${recetaEncontrada?.nombre || ''} (${varianteEncontrada.nombre})`
+                    : recetaEncontrada?.nombre || null;
 
                 return {
                     codigo: v.codigo_tpv || '',
@@ -761,7 +788,8 @@ window.procesarArchivoVentas = async function (input) {
                     cantidad: v.cantidad || 0,
                     total: v.total || 0,
                     recetaId: recetaEncontrada ? recetaEncontrada.id : null,
-                    recetaNombre: recetaEncontrada ? recetaEncontrada.nombre : null,
+                    varianteId: varianteEncontrada ? varianteEncontrada.id : null,
+                    recetaNombre: nombreMostrar,
                     valido: v.cantidad > 0,
                     error: !recetaEncontrada ? '⚠️ No vinculado (se registrará como genérico)' : null
                 };
@@ -804,15 +832,24 @@ function validarDatosVentas(data) {
 
         // Intentar vincular con receta existente
         let recetaEncontrada = null;
+        let varianteEncontrada = null;
 
         // 1. Buscar por código exacto si existe
         if (codigo) {
             recetaEncontrada = window.recetas.find(
                 r => r.codigo && String(r.codigo) === String(codigo)
             );
+
+            // 2. Si no encuentra, buscar en variantes (BOTELLA/COPA)
+            if (!recetaEncontrada && window.recetasVariantes) {
+                varianteEncontrada = window.recetasVariantes.find(va => va.codigo && String(va.codigo) === String(codigo));
+                if (varianteEncontrada) {
+                    recetaEncontrada = window.recetas.find(r => r.id === varianteEncontrada.receta_id);
+                }
+            }
         }
 
-        // 2. Si no, buscar por nombre (exacto o aproximado)
+        // 3. Si no, buscar por nombre (exacto o aproximado)
         if (!recetaEncontrada && nombre) {
             const nombreNorm = nombre.toLowerCase().trim();
             recetaEncontrada = window.recetas.find(
@@ -827,13 +864,19 @@ function validarDatosVentas(data) {
 
         const valido = cantidad > 0 && (recetaEncontrada || nombre.length > 0);
 
+        // Nombre para mostrar
+        const nombreMostrar = varianteEncontrada
+            ? `${recetaEncontrada?.nombre || ''} (${varianteEncontrada.nombre})`
+            : recetaEncontrada?.nombre || null;
+
         return {
             codigo: codigo,
             nombre: nombre,
             cantidad: isNaN(cantidad) ? 0 : cantidad,
             total: isNaN(total) ? 0 : total,
             recetaId: recetaEncontrada ? recetaEncontrada.id : null,
-            recetaNombre: recetaEncontrada ? recetaEncontrada.nombre : null,
+            varianteId: varianteEncontrada ? varianteEncontrada.id : null,
+            recetaNombre: nombreMostrar,
             valido: valido,
             error: !valido
                 ? 'Cantidad inválida'
@@ -907,11 +950,23 @@ window.confirmarImportarVentas = async function () {
         return;
     }
 
-    if (
-        !confirm(
-            `¿Importar ${datosValidos.length} registros de venta?\nSe actualizará el stock de los artículos vinculados.`
-        )
-    ) {
+    // 📅 Usar fecha seleccionada o fecha actual
+    const fechaInput = document.getElementById('fecha-importar-ventas');
+    let fechaVentas;
+    if (fechaInput && fechaInput.value) {
+        // Usuario seleccionó fecha específica (retroactiva)
+        // Formato: YYYY-MM-DD del input type="date"
+        fechaVentas = new Date(fechaInput.value + 'T12:00:00').toISOString();
+        console.log('📅 Usando fecha seleccionada por usuario:', fechaInput.value, '→', fechaVentas);
+    } else {
+        // Fecha actual por defecto
+        fechaVentas = new Date().toISOString();
+        console.log('📅 Usando fecha actual:', fechaVentas);
+    }
+
+    // Mostrar confirmación del usuario con la fecha
+    const fechaDisplay = fechaInput && fechaInput.value ? fechaInput.value : new Date().toISOString().split('T')[0];
+    if (!confirm(`¿Importar ${datosValidos.length} registros de venta para la fecha ${fechaDisplay}?\nSe actualizará el stock de los artículos vinculados.`)) {
         return;
     }
 
@@ -919,17 +974,6 @@ window.confirmarImportarVentas = async function () {
 
     try {
         let importados = 0;
-
-        // 📅 Usar fecha seleccionada o fecha actual
-        const fechaInput = document.getElementById('fecha-importar-ventas');
-        let fechaVentas;
-        if (fechaInput && fechaInput.value) {
-            // Usuario seleccionó fecha específica (retroactiva)
-            fechaVentas = new Date(fechaInput.value + 'T12:00:00').toISOString();
-        } else {
-            // Fecha actual por defecto
-            fechaVentas = new Date().toISOString();
-        }
 
         // Procesar en lotes o uno a uno (por ahora uno a uno para simplicidad, idealmente batch en backend)
         // Nota: La API actual de createSale espera un solo objeto.
@@ -943,6 +987,7 @@ window.confirmarImportarVentas = async function () {
                     cantidad: venta.cantidad,
                     total: venta.total, // Opcional si el backend lo recalcula, pero útil si el precio TPV varía
                     fecha: fechaVentas,
+                    varianteId: venta.varianteId, // 🔧 FIX: Pasar variante para usar precio correcto
                 });
             } else {
                 // Si NO está vinculado, solo registramos financieramente (TODO: Backend support for generic sales)

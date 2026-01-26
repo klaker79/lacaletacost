@@ -353,8 +353,13 @@ async function cargarValoresGastosFijos() {
     }
 }
 
-// Llamar al cargar la página
-setTimeout(cargarValoresGastosFijos, 1000);
+// Llamar al cargar la página SOLO si hay sesión activa
+setTimeout(function () {
+    const token = localStorage.getItem('token');
+    if (token) {
+        cargarValoresGastosFijos();
+    }
+}, 1000);
 
 // ✅ Renderizar beneficio neto ACUMULADO por día (VERSIÓN PRO con Punto de Equilibrio)
 async function renderizarBeneficioNetoDiario() {
