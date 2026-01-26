@@ -252,9 +252,21 @@ export async function confirmarMermasMultiples() {
             const stockActualValue = parseFloat(ingrediente.stock_actual ?? ingrediente.stockActual ?? 0);
             const nuevoStock = Math.max(0, stockActualValue - merma.cantidad);
 
-            // Actualizar stock del ingrediente
+            console.log(`📉 Merma: ${ingrediente.nombre} - Stock anterior: ${stockActualValue}, Restando: ${merma.cantidad}, Nuevo stock: ${nuevoStock}`);
+
+            // 🔒 FIX CRÍTICO: No hacer spread completo del ingrediente
+            // El spread incluía stockActual:0 que sobrescribía stock_actual en backend
+            // Backend usa: body.stockActual ?? body.stock_actual → 0 ?? nuevoStock = 0
             await window.api.updateIngrediente(merma.ingredienteId, {
-                ...ingrediente,
+                nombre: ingrediente.nombre,
+                unidad: ingrediente.unidad,
+                precio: ingrediente.precio,
+                proveedor_id: ingrediente.proveedor_id || ingrediente.proveedorId,
+                familia: ingrediente.familia,
+                formato_compra: ingrediente.formato_compra,
+                cantidad_por_formato: ingrediente.cantidad_por_formato,
+                stock_minimo: ingrediente.stock_minimo ?? ingrediente.stockMinimo,
+                // Solo enviar stock_actual, NO stockActual
                 stock_actual: nuevoStock
             });
 
