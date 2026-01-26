@@ -2255,13 +2255,26 @@
             try {
                 const mesParam = mes || (new Date().getMonth() + 1);
                 const anoParam = ano || new Date().getFullYear();
-                const res = await fetch(API_BASE + `/mermas?mes=${mesParam}&ano=${anoParam}`, {
+                const url = API_BASE + `/mermas?mes=${mesParam}&ano=${anoParam}`;
+                console.log('📡 GET getMermas URL:', url);
+
+                const res = await fetch(url, {
                     headers: getAuthHeaders(),
                 });
-                if (!res.ok) throw new Error('Error cargando mermas');
-                return await res.json();
+
+                console.log('📡 GET getMermas response status:', res.status);
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error('❌ Error getMermas:', res.status, errorText);
+                    throw new Error('Error cargando mermas: ' + res.status);
+                }
+
+                const data = await res.json();
+                console.log('✅ getMermas data:', data);
+                return data;
             } catch (error) {
-                console.warn('Error loading mermas:', error);
+                console.error('❌ getMermas exception:', error);
                 return [];
             }
         },
