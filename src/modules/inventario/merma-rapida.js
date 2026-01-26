@@ -238,6 +238,14 @@ export async function confirmarMermasMultiples() {
     if (typeof window.showLoading === 'function') window.showLoading();
 
     try {
+        // 🔒 FIX CRÍTICO: Recargar ingredientes ANTES de procesar mermas
+        // Evita usar datos stale si el usuario acaba de editar el stock
+        console.log('🔄 Recargando ingredientes antes de procesar mermas...');
+        if (window.api?.getIngredientes) {
+            window.ingredientes = await window.api.getIngredientes();
+            console.log('✅ Ingredientes actualizados:', window.ingredientes.length);
+        }
+
         let totalPerdida = 0;
         let productosAfectados = [];
 
