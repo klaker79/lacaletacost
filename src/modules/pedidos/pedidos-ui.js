@@ -573,7 +573,9 @@ export function renderizarPedidos() {
             html += `<td>${ped.ingredientes?.length || 0}</td>`;
         }
 
-        html += `<td>${parseFloat(ped.total || 0).toFixed(2)}€</td>`;
+        // 🔧 FIX: Mostrar total_recibido si el pedido está recibido, si no el total original
+        const totalMostrar = ped.estado === 'recibido' && ped.total_recibido ? ped.total_recibido : ped.total;
+        html += `<td>${parseFloat(totalMostrar || 0).toFixed(2)}€</td>`;
 
         const estadoClass = ped.estado === 'recibido' ? 'badge-success' : 'badge-warning';
         html += `<td><span class="badge ${estadoClass}">${ped.estado}</span></td>`;
