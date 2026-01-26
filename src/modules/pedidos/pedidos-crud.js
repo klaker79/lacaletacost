@@ -138,7 +138,8 @@ export async function guardarPedido(event) {
       for (const item of ingredientesPedido) {
         const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
         if (ing) {
-          const stockAnterior = parseFloat(ing.stockActual || ing.stock_actual || 0);
+          // 🔒 FIX: Usar stock_actual primero (snake_case del backend)
+          const stockAnterior = parseFloat(ing.stock_actual ?? ing.stockActual ?? 0);
           const precioAnterior = parseFloat(ing.precio || 0);
           const cantidadRecibida = parseFloat(item.cantidad || 0);
           const precioNuevo = parseFloat(item.precio_unitario || item.precio || 0);
@@ -157,9 +158,16 @@ export async function guardarPedido(event) {
 
           console.log(`🏪 Mercado - ${ing.nombre}: Stock ${stockAnterior} → ${nuevoStock}, Precio ${precioAnterior.toFixed(2)}€ → ${precioMedioPonderado.toFixed(2)}€`);
 
+          // 🔒 FIX CRÍTICO: No hacer spread de ...ing
+          // El spread incluía stockActual que podía sobrescribir stock_actual en backend
           await window.api.updateIngrediente(item.ingredienteId, {
-            ...ing,
-            stockActual: nuevoStock,
+            nombre: ing.nombre,
+            unidad: ing.unidad,
+            proveedor_id: ing.proveedor_id || ing.proveedorId,
+            familia: ing.familia,
+            formato_compra: ing.formato_compra,
+            cantidad_por_formato: ing.cantidad_por_formato,
+            stock_minimo: ing.stock_minimo ?? ing.stockMinimo,
             stock_actual: nuevoStock,
             precio: precioMedioPonderado
           });
@@ -477,15 +485,25 @@ export async function confirmarRecepcionPedido() {
 
       const ing = window.ingredientes.find(i => i.id === item.ingredienteId);
       if (ing) {
-        const stockAnterior = parseFloat(ing.stockActual || ing.stock_actual || 0);
+        // 🔒 FIX: Usar stock_actual primero (snake_case del backend)
+        const stockAnterior = parseFloat(ing.stock_actual ?? ing.stockActual ?? 0);
         const cantidadRecibida = item.cantidadRecibida;
         const nuevoStock = stockAnterior + cantidadRecibida;
 
         console.log(`📦 ${ing.nombre}: Stock ${stockAnterior} → ${nuevoStock}`);
 
+        // 🔒 FIX CRÍTICO: No hacer spread de ...ing
+        // El spread incluía stockActual que podía sobrescribir stock_actual en backend
+        // Enviar solo campos específicos, usando SOLO stock_actual (no stockActual)
         await window.api.updateIngrediente(item.ingredienteId, {
-          ...ing,
-          stockActual: nuevoStock,
+          nombre: ing.nombre,
+          unidad: ing.unidad,
+          precio: ing.precio,
+          proveedor_id: ing.proveedor_id || ing.proveedorId,
+          familia: ing.familia,
+          formato_compra: ing.formato_compra,
+          cantidad_por_formato: ing.cantidad_por_formato,
+          stock_minimo: ing.stock_minimo ?? ing.stockMinimo,
           stock_actual: nuevoStock
           // ⚠️ PROHIBIDO tocar precio - el backend calcula precio_medio ⚠️
         });

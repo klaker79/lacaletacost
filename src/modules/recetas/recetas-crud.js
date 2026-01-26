@@ -297,8 +297,18 @@ export async function confirmarProduccion() {
             if (ing) {
                 const stockIng = parseFloat(ing.stock_actual ?? ing.stockActual ?? 0);
                 const nuevoStock = Math.max(0, stockIng - item.cantidad * cant);
+                // 🔒 FIX CRÍTICO: No hacer spread de ...ing
+                // El spread incluía stockActual que podía sobrescribir stock_actual en backend
+                // Enviar solo campos específicos para evitar conflictos
                 return window.api.updateIngrediente(ing.id, {
-                    ...ing,
+                    nombre: ing.nombre,
+                    unidad: ing.unidad,
+                    precio: ing.precio,
+                    proveedor_id: ing.proveedor_id || ing.proveedorId,
+                    familia: ing.familia,
+                    formato_compra: ing.formato_compra,
+                    cantidad_por_formato: ing.cantidad_por_formato,
+                    stock_minimo: ing.stock_minimo ?? ing.stockMinimo,
                     stock_actual: nuevoStock,
                 });
             }

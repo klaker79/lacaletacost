@@ -862,8 +862,20 @@ async function executeAction(actionData) {
                 return false;
             }
 
-            // Preparar actualización
-            const updates = { ...ing };
+            // 🔒 FIX CRÍTICO: No hacer spread de ...ing
+            // El spread incluía stockActual que podía sobrescribir stock_actual en backend
+            // Preparar actualización con campos específicos
+            const updates = {
+                nombre: ing.nombre,
+                unidad: ing.unidad,
+                precio: ing.precio,
+                proveedor_id: ing.proveedor_id || ing.proveedorId,
+                familia: ing.familia,
+                formato_compra: ing.formato_compra,
+                cantidad_por_formato: ing.cantidad_por_formato,
+                stock_minimo: ing.stock_minimo ?? ing.stockMinimo,
+                stock_actual: ing.stock_actual ?? ing.stockActual
+            };
             if (field === 'precio') updates.precio = parseFloat(value);
             if (field === 'stock') updates.stock_actual = parseFloat(value);
 
@@ -1025,8 +1037,17 @@ async function executeAction(actionData) {
             }
 
             const nuevoStock = Math.max(0, (parseFloat(ing.stock_actual) || 0) - cantidad);
+            // 🔒 FIX CRÍTICO: No hacer spread de ...ing
+            // El spread incluía stockActual que podía sobrescribir stock_actual en backend
             await window.api.updateIngrediente(ing.id, {
-                ...ing,
+                nombre: ing.nombre,
+                unidad: ing.unidad,
+                precio: ing.precio,
+                proveedor_id: ing.proveedor_id || ing.proveedorId,
+                familia: ing.familia,
+                formato_compra: ing.formato_compra,
+                cantidad_por_formato: ing.cantidad_por_formato,
+                stock_minimo: ing.stock_minimo ?? ing.stockMinimo,
                 stock_actual: nuevoStock
             });
 
