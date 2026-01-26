@@ -232,55 +232,64 @@ export function editarIngrediente(id) {
 
 /**
  * Elimina un ingrediente
+ * 🔧 FIX: Añadido lock para prevenir múltiples eliminaciones por clicks rápidos
  */
+let _eliminandoIngrediente = false;
+
 export async function eliminarIngrediente(id) {
-    // Debug: eliminarIngrediente llamado con id
+    // 🔧 FIX: Prevenir múltiples eliminaciones simultáneas
+    if (_eliminandoIngrediente) {
+        console.warn('⚠️ Eliminación ya en progreso, ignorando click adicional');
+        return;
+    }
 
-    // Usar setTimeout para que el confirm no sea bloqueado por Chrome
-    setTimeout(async () => {
-        const confirmar = window.confirm('¿Eliminar este ingrediente?');
-        if (!confirmar) return;
+    const confirmar = window.confirm('¿Eliminar este ingrediente?');
+    if (!confirmar) return;
 
-        if (typeof window.showLoading === 'function') window.showLoading();
+    _eliminandoIngrediente = true;
 
-        try {
-            await window.api.deleteIngrediente(id);
+    if (typeof window.showLoading === 'function') window.showLoading();
 
-            // ⚡ OPTIMIZACIÓN: Actualización optimista - Filtrar del array local
-            window.ingredientes = (window.ingredientes || []).filter(ing => ing.id !== id);
+    try {
+        await window.api.deleteIngrediente(id);
 
-            // Actualizar maps de búsqueda
-            if (window.dataMaps) {
-                window.dataMaps.ingredientesMap.delete(id);
-            }
+        // ⚡ OPTIMIZACIÓN: Actualización optimista - Filtrar del array local
+        window.ingredientes = (window.ingredientes || []).filter(ing => ing.id !== id);
 
-            // Invalidar cache
-            if (window.Performance?.invalidarCacheIngredientes) {
-                window.Performance.invalidarCacheIngredientes();
-            }
-
-            window.renderizarIngredientes();
-            if (typeof window.renderizarInventario === 'function') window.renderizarInventario();
-            window._forceRecalcStock = true; // Forzar recálculo porque se eliminó ingrediente
-            if (typeof window.actualizarKPIs === 'function') window.actualizarKPIs();
-            if (typeof window.actualizarDashboardExpandido === 'function')
-                window.actualizarDashboardExpandido();
-
-            if (typeof window.hideLoading === 'function') window.hideLoading();
-            if (typeof showToast === 'function') {
-                showToast('Ingrediente eliminado', 'success');
-            } else if (typeof window.showToast === 'function') {
-                window.showToast('Ingrediente eliminado', 'success');
-            }
-        } catch (error) {
-            if (typeof window.hideLoading === 'function') window.hideLoading();
-            console.error('Error eliminando ingrediente:', error);
-            const toastFn = typeof showToast === 'function' ? showToast : window.showToast;
-            if (typeof toastFn === 'function') {
-                toastFn('Error eliminando ingrediente: ' + error.message, 'error');
-            }
+        // Actualizar maps de búsqueda
+        if (window.dataMaps) {
+            window.dataMaps.ingredientesMap.delete(id);
         }
-    }, 10);
+
+        // Invalidar cache
+        if (window.Performance?.invalidarCacheIngredientes) {
+            window.Performance.invalidarCacheIngredientes();
+        }
+
+        window.renderizarIngredientes();
+        if (typeof window.renderizarInventario === 'function') window.renderizarInventario();
+        window._forceRecalcStock = true; // Forzar recálculo porque se eliminó ingrediente
+        if (typeof window.actualizarKPIs === 'function') window.actualizarKPIs();
+        if (typeof window.actualizarDashboardExpandido === 'function')
+            window.actualizarDashboardExpandido();
+
+        if (typeof window.hideLoading === 'function') window.hideLoading();
+        if (typeof showToast === 'function') {
+            showToast('Ingrediente eliminado', 'success');
+        } else if (typeof window.showToast === 'function') {
+            window.showToast('Ingrediente eliminado', 'success');
+        }
+    } catch (error) {
+        if (typeof window.hideLoading === 'function') window.hideLoading();
+        console.error('Error eliminando ingrediente:', error);
+        const toastFn = typeof showToast === 'function' ? showToast : window.showToast;
+        if (typeof toastFn === 'function') {
+            toastFn('Error eliminando ingrediente: ' + error.message, 'error');
+        }
+    } finally {
+        // 🔧 FIX: Liberar lock después de completar (éxito o error)
+        _eliminandoIngrediente = false;
+    }
 }
 
 /**
