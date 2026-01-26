@@ -15,11 +15,39 @@ function getAuthHeaders() {
     };
 }
 
+// 🔧 FIX: Lock para prevenir llamadas concurrentes a cargarDatos()
+// Esto evita condiciones de carrera cuando múltiples operaciones
+// intentan recargar datos simultáneamente
+let _cargarDatosLock = false;
+let _cargarDatosPromise = null;
+
 /**
  * Carga todos los datos iniciales de la API
  * ⚡ OPTIMIZADO: Carga paralela con Promise.all()
+ * 🔧 FIX: Con lock para prevenir llamadas concurrentes
  */
 export async function cargarDatos() {
+    // 🔧 FIX: Si ya hay una carga en progreso, esperar a que termine
+    if (_cargarDatosLock && _cargarDatosPromise) {
+        console.log('⏳ cargarDatos() ya en progreso, esperando...');
+        return _cargarDatosPromise;
+    }
+
+    _cargarDatosLock = true;
+    _cargarDatosPromise = _cargarDatosInternal();
+
+    try {
+        await _cargarDatosPromise;
+    } finally {
+        _cargarDatosLock = false;
+        _cargarDatosPromise = null;
+    }
+}
+
+/**
+ * Implementación interna de cargarDatos (sin lock)
+ */
+async function _cargarDatosInternal() {
     try {
         const [ingredientes, recetas, proveedores, pedidos, inventario, ingredientesProveedores] = await Promise.all([
             fetch(API_BASE + '/ingredients', { headers: getAuthHeaders() }).then((r) =>

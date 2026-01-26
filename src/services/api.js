@@ -146,19 +146,36 @@ async function fetchAPI(endpoint, options = {}, retries = 2) {
     } catch (networkError) {
         clearTimeout(timeout);
 
-        // MEJORA: Retry logic con backoff exponencial para errores de red
+        // 🔧 FIX CRÍTICO: Retry logic con backoff exponencial para errores de red
+        // PERO: No reintentar mutaciones (POST/PUT/DELETE) - causaría operaciones duplicadas
+        const method = (options.method || 'GET').toUpperCase();
+        const isMutation = ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
+
         if (networkError.name === 'AbortError') {
             console.error(`Timeout en ${endpoint} (15s)`);
             AppState.lastError = {
                 code: 'TIMEOUT',
                 message: 'La solicitud tardó demasiado. Intenta de nuevo.',
             };
-        } else if (retries > 0) {
-            // Reintentar con backoff exponencial
+            // 🔧 FIX: Si es mutación con timeout, lanzar error para que el usuario reintente manualmente
+            if (isMutation) {
+                throw new Error('La operación tardó demasiado. Por favor, verifica los datos e intenta de nuevo.');
+            }
+        } else if (retries > 0 && !isMutation) {
+            // 🔧 FIX: Solo reintentar operaciones GET - las mutaciones NO son idempotentes
+            // Reintentar DELETE podría eliminar datos múltiples veces
             const delay = (3 - retries) * 1000; // 1s, 2s
-            console.warn(`Reintentando ${endpoint} en ${delay}ms... (${retries} intentos restantes)`);
+            console.warn(`Reintentando GET ${endpoint} en ${delay}ms... (${retries} intentos restantes)`);
             await new Promise(resolve => setTimeout(resolve, delay));
             return fetchAPI(endpoint, options, retries - 1);
+        } else if (isMutation) {
+            // 🔧 FIX: Error de red en mutación - NO reintentar, lanzar error
+            console.error(`Error de red en ${method} ${endpoint} - NO reintentando (no idempotente)`);
+            AppState.lastError = {
+                code: 'NETWORK_ERROR',
+                message: 'Error de conexión. La operación no se completó.',
+            };
+            throw new Error('Error de conexión. La operación no se completó. Por favor, verifica e intenta de nuevo.');
         } else {
             console.error(`Error de red en ${endpoint}:`, networkError);
             AppState.lastError = {

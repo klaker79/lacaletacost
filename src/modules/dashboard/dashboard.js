@@ -82,12 +82,23 @@ export function cambiarPeriodoVista(periodo) {
 
 /**
  * Actualiza KPIs filtrados por período
+ * 🔧 FIX: NO sobrescribir window.ventas - usar datos existentes
+ * El fetch de datos frescos debe hacerse SOLO desde cargarDatos()
  */
 async function actualizarKPIsPorPeriodo(periodo) {
     try {
-        // Obtener ventas de la API (datos frescos)
-        const ventas = await window.api.getSales();
-        window.ventas = ventas; // Actualizar global
+        // 🔧 FIX CRÍTICO: Usar datos existentes en lugar de hacer fetch
+        // Esto previene que datos editados por el usuario se pierdan
+        // cuando el dashboard se actualiza automáticamente
+        let ventas = window.ventas;
+
+        // Solo hacer fetch si no hay datos cargados (primera vez)
+        if (!ventas || ventas.length === 0) {
+            ventas = await window.api.getSales();
+            window.ventas = ventas;
+            console.log('📊 Dashboard: Cargando ventas iniciales');
+        }
+        // 🔧 FIX: Ya no sobrescribimos window.ventas en cada actualización
 
         // Filtrar por período
         let ventasFiltradas = ventas;

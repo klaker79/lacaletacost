@@ -99,32 +99,33 @@ export async function guardarIngrediente(event) {
             }
         }
 
-        // 🆕 Auto-asociar proveedor con precio (no bloqueante)
+        // 🆕 Auto-asociar proveedor con precio
+        // 🔧 FIX: Ejecutar de forma síncrona (await) en lugar de setTimeout
+        // El setTimeout causaba condiciones de carrera con otras operaciones
         if (nuevoProveedorId && ingrediente.precio > 0) {
             const idIngrediente = ingredienteId;
             const idProveedor = parseInt(nuevoProveedorId);
             const precioProveedor = parseFloat(ingrediente.precio);
 
-            setTimeout(async () => {
-                try {
-                    const proveedoresAsociados = await window.API.fetch(`/api/ingredients/${idIngrediente}/suppliers`) || [];
-                    const yaAsociado = Array.isArray(proveedoresAsociados) && proveedoresAsociados.some(p => p.proveedor_id === idProveedor);
+            try {
+                const proveedoresAsociados = await window.API.fetch(`/api/ingredients/${idIngrediente}/suppliers`) || [];
+                const yaAsociado = Array.isArray(proveedoresAsociados) && proveedoresAsociados.some(p => p.proveedor_id === idProveedor);
 
-                    if (!yaAsociado) {
-                        await window.API.fetch(`/api/ingredients/${idIngrediente}/suppliers`, {
-                            method: 'POST',
-                            body: JSON.stringify({
-                                proveedor_id: idProveedor,
-                                precio: precioProveedor,
-                                es_proveedor_principal: true,
-                            }),
-                        });
-                        console.log(`✅ Proveedor ${idProveedor} asociado al ingrediente ${idIngrediente}`);
-                    }
-                } catch (err) {
-                    console.warn('Auto-asociar proveedor (no crítico):', err?.message);
+                if (!yaAsociado) {
+                    await window.API.fetch(`/api/ingredients/${idIngrediente}/suppliers`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            proveedor_id: idProveedor,
+                            precio: precioProveedor,
+                            es_proveedor_principal: true,
+                        }),
+                    });
+                    console.log(`✅ Proveedor ${idProveedor} asociado al ingrediente ${idIngrediente}`);
                 }
-            }, 100);
+            } catch (err) {
+                // No bloqueante - solo warning si falla
+                console.warn('Auto-asociar proveedor (no crítico):', err?.message);
+            }
         }
 
         // Recargar proveedores para tener datos actualizados

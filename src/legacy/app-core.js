@@ -2275,7 +2275,29 @@
     // Crear alias en mayúsculas para compatibilidad
     window.API = window.api;
 
+    // 🔧 FIX: Lock para prevenir llamadas concurrentes a cargarDatos()
+    let _legacyCargarDatosLock = false;
+    let _legacyCargarDatosPromise = null;
+
     async function cargarDatos() {
+        // 🔧 FIX: Si ya hay una carga en progreso, esperar a que termine
+        if (_legacyCargarDatosLock && _legacyCargarDatosPromise) {
+            console.log('⏳ [legacy] cargarDatos() ya en progreso, esperando...');
+            return _legacyCargarDatosPromise;
+        }
+
+        _legacyCargarDatosLock = true;
+        _legacyCargarDatosPromise = _cargarDatosInternal();
+
+        try {
+            await _legacyCargarDatosPromise;
+        } finally {
+            _legacyCargarDatosLock = false;
+            _legacyCargarDatosPromise = null;
+        }
+    }
+
+    async function _cargarDatosInternal() {
         try {
             // ⚡ OPTIMIZACIÓN: Carga paralela con Promise.all() - 75% más rápido
             const [ingredientes, recetas, proveedores, pedidos] = await Promise.all([
