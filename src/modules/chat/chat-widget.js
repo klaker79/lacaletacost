@@ -1526,6 +1526,47 @@ function getCurrentTabContext() {
                 .filter(e => !idsTrabajan.has(e.id))
                 .map(e => e.nombre);
         }
+
+        // 🆕 Incluir datos del P&L/Diario (datosResumenMensual)
+        if (window.datosResumenMensual) {
+            const resumen = window.datosResumenMensual;
+            context.diario = {
+                dias: resumen.dias || [],
+                totalCompras: resumen.compras?.total || 0,
+                totalIngresos: resumen.ventas?.totalIngresos || 0,
+                totalCostes: resumen.ventas?.totalCostes || 0,
+                beneficioBruto: resumen.ventas?.beneficioBruto || 0,
+                foodCost: resumen.resumen?.foodCost || 0,
+                margenPromedio: resumen.resumen?.margenPromedio || 0,
+            };
+
+            // Incluir datos por día (últimos 7 días para no saturar)
+            if (resumen.ventas?.recetas) {
+                const datosPorDia = {};
+                for (const [nombre, recetaData] of Object.entries(resumen.ventas.recetas)) {
+                    for (const [fecha, diaData] of Object.entries(recetaData.dias || {})) {
+                        if (!datosPorDia[fecha]) {
+                            datosPorDia[fecha] = { ingresos: 0, costes: 0, vendidas: 0 };
+                        }
+                        datosPorDia[fecha].ingresos += diaData.ingresos || 0;
+                        datosPorDia[fecha].costes += diaData.coste || 0;
+                        datosPorDia[fecha].vendidas += diaData.vendidas || 0;
+                    }
+                }
+                // Convertir a array ordenado por fecha (últimos 7)
+                context.diario.porDia = Object.entries(datosPorDia)
+                    .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                    .slice(0, 7)
+                    .map(([fecha, data]) => ({
+                        fecha,
+                        ingresos: Math.round(data.ingresos * 100) / 100,
+                        costes: Math.round(data.costes * 100) / 100,
+                        margenBruto: Math.round((data.ingresos - data.costes) * 100) / 100,
+                        foodCost: data.ingresos > 0 ? Math.round((data.costes / data.ingresos) * 1000) / 10 : 0,
+                        vendidas: data.vendidas
+                    }));
+            }
+        }
     } catch (e) {
         logger.warn('Error obteniendo contexto:', e);
     }
