@@ -210,10 +210,12 @@ export function editarIngrediente(id) {
     if (unidadEl) unidadEl.value = ing.unidad;
 
     const stockEl = getElement('ing-stockActual');
-    if (stockEl) stockEl.value = ing.stockActual || '';
+    // 🔒 FIX CRÍTICO: Backend devuelve stock_actual, frontend usaba stockActual
+    if (stockEl) stockEl.value = ing.stock_actual ?? ing.stockActual ?? '';
 
     const minEl = getElement('ing-stockMinimo');
-    if (minEl) minEl.value = ing.stockMinimo || '';
+    // 🔒 FIX: También usar ambos nombres para stock mínimo
+    if (minEl) minEl.value = ing.stock_minimo ?? ing.stockMinimo ?? '';
 
     // Cargar familia
     const familiaEl = getElement('ing-familia');
