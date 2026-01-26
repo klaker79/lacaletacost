@@ -100,12 +100,12 @@ export function agregarLineaMerma() {
             
             <!-- Motivo -->
             <select class="merma-motivo" style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;">
-                <option value="caduco">📅 Caducado</option>
-                <option value="nevera">🌡️ Nevera</option>
-                <option value="falta_venta">📉 Falta venta</option>
-                <option value="mal_estado">🦠 Mal estado</option>
-                <option value="accidente">💥 Accidente</option>
-                <option value="otro">📝 Otro</option>
+                <option value="Caduco">📅 Caduco</option>
+                <option value="Invitacion">🎁 Invitación</option>
+                <option value="Accidente">💥 Accidente</option>
+                <option value="Error Cocina">👨‍🍳 Error Cocina</option>
+                <option value="Error Inventario">📊 Error Conteo</option>
+                <option value="Otros">📝 Otros</option>
             </select>
             
             <!-- Valor + Eliminar -->
@@ -212,7 +212,8 @@ export async function confirmarMermasMultiples() {
         const select = linea.querySelector('.merma-producto');
         const ingredienteId = parseInt(select.value);
         const cantidad = parseFloat(linea.querySelector('.merma-cantidad')?.value) || 0;
-        const motivo = linea.querySelector('.merma-motivo')?.value || 'otro';
+        const motivo = linea.querySelector('.merma-motivo')?.value || 'Otros';
+        const nota = linea.querySelector('.merma-nota')?.value || '';
         const medida = linea.querySelector('.merma-medida')?.value || 'tirar';
         const valorText = linea.querySelector('.merma-valor')?.textContent || '0.00€';
         const valor = parseFloat(valorText.replace('€', '')) || 0;
@@ -222,6 +223,7 @@ export async function confirmarMermasMultiples() {
                 ingredienteId,
                 cantidad,
                 motivo,
+                nota,
                 medidaCorrectora: medida,
                 valorPerdida: valor
             });
@@ -267,7 +269,7 @@ export async function confirmarMermasMultiples() {
                 unidad: ingrediente.unidad || 'ud',
                 valorPerdida: merma.valorPerdida,
                 motivo: merma.motivo,
-                nota: '',
+                nota: merma.nota || '',
                 responsableId: parseInt(responsableId) || null
             });
 
@@ -462,13 +464,16 @@ function agregarLineaMermaConDatos(merma) {
         }
     }
 
-    // Mapear motivo
+    // Mapear motivo (para fotos procesadas con IA)
     const motivoMap = {
         'caducado': 'caduco',
-        'nevera': 'nevera',
-        'falta de venta': 'falta_venta',
-        'mal estado': 'mal_estado',
-        'accidente': 'accidente'
+        'caduco': 'caduco',
+        'invitacion': 'invitacion',
+        'accidente': 'accidente',
+        'error cocina': 'error_cocina',
+        'error conteo': 'error_inventario',
+        'error inventario': 'error_inventario',
+        'otros': 'otros'
     };
     const motivoNormalizado = motivoMap[merma.motivo?.toLowerCase()] || 'otro';
 
@@ -488,12 +493,12 @@ function agregarLineaMermaConDatos(merma) {
             </div>
             
             <select class="merma-motivo" style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px;">
-                <option value="caduco" ${motivoNormalizado === 'caduco' ? 'selected' : ''}>📅 Caducado</option>
-                <option value="nevera" ${motivoNormalizado === 'nevera' ? 'selected' : ''}>🌡️ Nevera</option>
-                <option value="falta_venta" ${motivoNormalizado === 'falta_venta' ? 'selected' : ''}>📉 Falta venta</option>
-                <option value="mal_estado" ${motivoNormalizado === 'mal_estado' ? 'selected' : ''}>🦠 Mal estado</option>
-                <option value="accidente" ${motivoNormalizado === 'accidente' ? 'selected' : ''}>💥 Accidente</option>
-                <option value="otro" ${motivoNormalizado === 'otro' ? 'selected' : ''}>📝 Otro</option>
+                <option value="Caduco" ${motivoNormalizado === 'caduco' ? 'selected' : ''}>📅 Caduco</option>
+                <option value="Invitacion" ${motivoNormalizado === 'invitacion' ? 'selected' : ''}>🎁 Invitación</option>
+                <option value="Accidente" ${motivoNormalizado === 'accidente' ? 'selected' : ''}>💥 Accidente</option>
+                <option value="Error Cocina" ${motivoNormalizado === 'error_cocina' ? 'selected' : ''}>👨‍🍳 Error Cocina</option>
+                <option value="Error Inventario" ${motivoNormalizado === 'error_inventario' ? 'selected' : ''}>📊 Error Conteo</option>
+                <option value="Otros" ${motivoNormalizado === 'otros' ? 'selected' : ''}>📝 Otros</option>
             </select>
             
             <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
