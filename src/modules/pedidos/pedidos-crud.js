@@ -483,6 +483,9 @@ export async function confirmarRecepcionPedido() {
      *
      * 🔒 FIX: Procesamiento secuencial con tracking para evitar datos inconsistentes
      */
+    // 🔒 FIX: Recargar ingredientes frescos para evitar stock stale
+    window.ingredientes = await window.api.getIngredientes();
+
     const actualizacionesExitosas = [];
     const actualizacionesFallidas = [];
 
