@@ -1682,113 +1682,630 @@ test.describe('Ingredients Module', () => {
 
 ---
 
-## 6. RECOMENDACIONES PARA BACKEND (lacaleta-api)
+---
 
-> **Nota:** El backend no está incluido en este repositorio, pero basándome en los endpoints utilizados por el frontend, aquí están las recomendaciones arquitectónicas.
+# PARTE 3: AUDITORÍA COMPLETA DEL BACKEND (lacaleta-api)
 
-### 6.1 Estructura Recomendada para Backend (Node.js)
+## 6. ANÁLISIS DEL BACKEND
+
+### 6.1 Stack Tecnológico del Backend
+
+| Componente | Tecnología | Versión | Estado |
+|------------|------------|---------|--------|
+| **Framework** | Express.js | 4.18.2 | Estable |
+| **Base de Datos** | PostgreSQL | pg 8.11.3 | Robusto |
+| **Autenticación** | JWT | jsonwebtoken 9.0.2 | Seguro |
+| **Hashing** | bcryptjs | 2.4.3 | Seguro |
+| **CORS** | cors | 2.8.5 | Configurado |
+| **Rate Limiting** | express-rate-limit | 7.1.5 | Implementado |
+| **Email** | Resend | 6.6.0 | Opcional |
+| **Cookies** | cookie-parser | 1.4.7 | httpOnly |
+| **Node.js** | >= 16.0.0 | - | Requerido |
+
+### 6.2 Estructura Actual del Backend
+
+```
+lacaleta-api/
+├── server.js                      # 4,192 líneas - MONOLÍTICO ⚠️
+├── package.json                   # v2.3.0
+├── package-lock.json
+├── .env                           # Configuración (sensible)
+├── .gitignore
+├── Dockerfile                     # Contenedor Docker
+├── healthcheck.js                 # Health checks Docker
+├── SCRIPTS-README.md              # Documentación de scripts
+├── server.log                     # Logs JSON
+├── scripts/
+│   ├── daily-health-check.js      # Validación diaria
+│   └── validate-data-integrity.js # Validación integridad
+├── tests/
+│   └── test-stock-calculation.js  # Tests de stock
+└── backups/
+    └── 2026-01-25/                # Backups versionados
+```
+
+### 6.3 Esquema de Base de Datos (17 Tablas)
+
+#### Tablas Principales
+
+| Tabla | Propósito | Campos Clave |
+|-------|-----------|--------------|
+| `restaurantes` | Multi-tenancy | id, nombre, email |
+| `usuarios` | Autenticación | id, email, password_hash, rol, restaurante_id |
+| `ingredientes` | Inventario base | id, nombre, precio, stock_actual, stock_minimo, familia, activo |
+| `proveedores` | Suppliers | id, nombre, contacto, telefono, email |
+| `ingredientes_proveedores` | Relación M:M | ingrediente_id, proveedor_id, precio, es_proveedor_principal |
+| `recetas` | Platos/productos | id, nombre, categoria, precio_venta, porciones, ingredientes (JSONB) |
+| `recetas_variantes` | Tamaños (copa/botella) | id, receta_id, nombre, factor |
+| `empleados` | Staff | id, nombre, puesto, horas_contrato, color |
+| `horarios` | Turnos | id, empleado_id, fecha, hora_inicio, hora_fin |
+| `pedidos` | Órdenes de compra | id, proveedor_id, fecha, estado, ingredientes (JSONB), total |
+| `ventas` | Registro de ventas | id, receta_id, cantidad, variante_id, factor_aplicado, deleted_at |
+| `mermas` | Control de pérdidas | id, ingrediente_id, cantidad, motivo, valor_perdida |
+| `inventory_snapshots_v2` | Histórico de stock | id, ingrediente_id, stock_virtual, stock_real, fecha |
+| `precios_compra_diarios` | Costos de compra | ingrediente_id, fecha, precio (UNIQUE) |
+| `api_tokens` | Tokens para n8n | id, token_hash, nombre, expires_at |
+| `gastos_fijos` | Gastos recurrentes | id, nombre, monto, frecuencia |
+
+#### Índices Implementados
+
+```sql
+idx_ventas_fecha
+idx_ventas_receta
+idx_usuarios_email
+idx_ingredientes_restaurante
+idx_precios_compra_fecha
+idx_ventas_diarias_fecha
+```
+
+### 6.4 Endpoints del API (81 Total)
+
+#### Autenticación (6)
+```
+POST   /api/auth/login              # Login + set cookie httpOnly
+POST   /api/auth/register           # Registro (requiere código invitación)
+POST   /api/auth/logout             # Clear cookie
+GET    /api/auth/verify             # Verificar JWT
+GET    /api/auth/verify-email       # Verificación de email
+POST   /api/auth/api-token          # Generar token para n8n/Zapier
+```
+
+#### Ingredientes (11)
+```
+GET    /api/ingredients             # Lista (con matching engine)
+POST   /api/ingredients             # Crear
+PUT    /api/ingredients/:id         # Actualizar
+DELETE /api/ingredients/:id         # Soft delete
+PATCH  /api/ingredients/:id/toggle-active
+GET    /api/ingredients-suppliers   # Relación M:M
+GET    /api/ingredients/:id/suppliers
+POST   /api/ingredients/:id/suppliers
+PUT    /api/ingredients/:id/suppliers/:supplierId
+DELETE /api/ingredients/:id/suppliers/:supplierId
+POST   /api/ingredients/match       # ML matching
+```
+
+#### Recetas (9)
+```
+GET    /api/recipes                 # Lista
+POST   /api/recipes                 # Crear
+PUT    /api/recipes/:id             # Actualizar
+DELETE /api/recipes/:id             # Soft delete
+GET    /api/recipes-variants        # Todas las variantes
+GET    /api/recipes/:id/variants    # Variantes de una receta
+POST   /api/recipes/:id/variants    # Crear variante
+PUT    /api/recipes/:id/variants/:variantId
+DELETE /api/recipes/:id/variants/:variantId
+```
+
+#### Inventario (4)
+```
+GET    /api/inventory/complete      # Stock completo
+PUT    /api/inventory/:id/stock-real
+PUT    /api/inventory/bulk-update-stock
+POST   /api/inventory/consolidate   # Snapshot
+```
+
+#### Pedidos (4)
+```
+GET    /api/orders
+POST   /api/orders                  # Crear pedido
+PUT    /api/orders/:id              # Recibir (registra costos)
+DELETE /api/orders/:id              # Revierte stock
+```
+
+#### Ventas (4)
+```
+GET    /api/sales?fecha=YYYY-MM-DD
+POST   /api/sales                   # Descuenta stock automáticamente
+POST   /api/sales/bulk              # Carga masiva (n8n compatible)
+DELETE /api/sales/:id               # Restaura stock (soft delete)
+```
+
+#### Análisis y Reportes (11)
+```
+GET    /api/balance/mes             # Resumen mensual
+GET    /api/balance/comparativa     # Mes vs anterior
+GET    /api/daily/purchases         # Compras del día
+POST   /api/daily/purchases/bulk    # Carga masiva
+GET    /api/daily/sales             # Ventas del día
+GET    /api/monthly/summary         # Resumen mes
+GET    /api/intelligence/freshness  # Productos próximos a vencer
+GET    /api/intelligence/purchase-plan
+GET    /api/intelligence/overstock
+GET    /api/intelligence/price-check
+GET    /api/intelligence/waste-stats
+GET    /api/analysis/menu-engineering # Matriz BCG
+```
+
+#### Mermas (5)
+```
+POST   /api/mermas                  # Registrar pérdida
+GET    /api/mermas                  # Listar
+GET    /api/mermas/resumen          # Resumen mensual
+DELETE /api/mermas/:id              # Borrar + restaurar stock
+DELETE /api/mermas/reset            # Reset completo
+```
+
+#### Empleados y Horarios (10)
+```
+GET    /api/empleados
+POST   /api/empleados
+PUT    /api/empleados/:id
+DELETE /api/empleados/:id
+GET    /api/horarios
+POST   /api/horarios
+DELETE /api/horarios/:id
+DELETE /api/horarios/empleado/:empleadoId/fecha/:fecha
+DELETE /api/horarios/all
+POST   /api/horarios/copiar-semana
+```
+
+### 6.5 Lógica de Negocio Crítica
+
+#### Descuento de Stock en Ventas
+```javascript
+// Fórmula: (cantidad_receta ÷ porciones) × cantidad_vendida × factor_variante
+const cantidadADescontar = ((ing.cantidad || 0) / porciones)
+                          * cantidadValidada
+                          * factorVariante;
+
+// Ejemplo: Vino en botella (1L) vendido en copa (0.2)
+// - Receta: 1 botella por porción
+// - Porciones: 1
+// - Venta: 1 copa
+// - Factor: 0.2
+// Resultado: (1/1) × 1 × 0.2 = 0.2 botellas consumidas
+```
+
+#### Menu Engineering - Matriz BCG
+```javascript
+// Clasificación de platos:
+// ESTRELLA:  popular=true  + rentable=true   → Mantener/Promocionar
+// CABALLO:   popular=true  + rentable=false  → Reducir costos
+// PUZZLE:    popular=false + rentable=true   → Marketing
+// PERRO:     popular=false + rentable=false  → Eliminar/Rediseñar
+
+// Métricas:
+// - Food Cost % = (coste_ingredientes / precio_venta) × 100
+// - Popularidad = cantidad_vendida vs promedio
+// - Rentabilidad = margen_contribución vs promedio
+```
+
+### 6.6 Seguridad Implementada
+
+#### ✅ Controles Presentes
+
+| Control | Implementación | Estado |
+|---------|----------------|--------|
+| JWT Authentication | Cookie httpOnly | ✅ Seguro |
+| Password Hashing | bcryptjs | ✅ Seguro |
+| Rate Limiting | 1000 req/15min global, 50/15min auth | ✅ Implementado |
+| CORS | Whitelist de orígenes | ✅ Configurado |
+| Input Validation | validateNumber, validatePrecio, validateCantidad | ✅ Parcial |
+| Soft Delete | deleted_at en tablas críticas | ✅ Implementado |
+| Transactions | BEGIN/COMMIT/ROLLBACK | ✅ En operaciones críticas |
+| Error Handling | Global handlers para uncaughtException | ✅ Implementado |
+| Logging | JSON estructurado a server.log | ✅ Persistente |
+
+#### ⚠️ Vulnerabilidades/Mejoras Pendientes
+
+| Problema | Severidad | Descripción | Solución |
+|----------|-----------|-------------|----------|
+| Archivo monolítico | 🔴 ALTA | 4,192 líneas en un solo archivo | Refactorizar a módulos |
+| Sin schema validation | 🟡 MEDIA | Solo validación numérica básica | Implementar Joi/Zod |
+| Pool max=10 | 🟡 MEDIA | Podría ser insuficiente bajo carga | Monitorear y ajustar |
+| Console.log en producción | 🟡 MEDIA | Debug logs visibles | Usar niveles de log |
+| Sin versionado de API | 🟡 MEDIA | Dificulta breaking changes | Añadir `/v1/` prefix |
+| Sin test automation | 🔴 ALTA | Solo scripts manuales | Implementar Jest |
+
+### 6.7 Integraciones Externas
+
+| Integración | Propósito | Estado |
+|-------------|-----------|--------|
+| **n8n** | Automatización via API tokens | ✅ Funcional |
+| **Resend** | Notificaciones por email | ⚠️ Opcional (falla silencioso si no hay API key) |
+| **Uptime Kuma** | Monitoreo de disponibilidad | ✅ Heartbeat cada 60s |
+| **Docker** | Containerización | ✅ Dockerfile incluido |
+
+### 6.8 Scripts de Mantenimiento
+
+```bash
+# Health Check Diario
+node scripts/daily-health-check.js
+# Verifica: Conexión BD, tablas críticas, stock calculado, alertas
+
+# Validación de Integridad
+node scripts/validate-data-integrity.js
+# Detecta: Recetas sin ingredientes, stock negativo, variantes sin factor
+
+# Tests de Stock
+node tests/test-stock-calculation.js
+# Valida: Fórmulas de descuento, factores de variantes
+```
+
+---
+
+## 7. PLAN DE REFACTORIZACIÓN DEL BACKEND
+
+### 7.1 Estructura Objetivo (Clean Architecture)
 
 ```
 lacaleta-api/
 ├── src/
-│   ├── domain/
+│   ├── domain/                    # Entidades y reglas de negocio
 │   │   ├── entities/
+│   │   │   ├── Ingredient.js
+│   │   │   ├── Recipe.js
+│   │   │   ├── Order.js
+│   │   │   └── Sale.js
 │   │   ├── value-objects/
-│   │   ├── events/
-│   │   └── repositories/
+│   │   │   ├── Money.js
+│   │   │   ├── Quantity.js
+│   │   │   └── OrderStatus.js
+│   │   └── services/
+│   │       ├── StockCalculator.js
+│   │       └── CostCalculator.js
 │   │
-│   ├── application/
-│   │   ├── services/
+│   ├── application/               # Casos de uso
 │   │   ├── use-cases/
-│   │   └── dto/
+│   │   │   ├── ingredients/
+│   │   │   ├── recipes/
+│   │   │   ├── orders/
+│   │   │   └── sales/
+│   │   └── services/
+│   │       ├── IngredientService.js
+│   │       ├── RecipeService.js
+│   │       └── AnalyticsService.js
 │   │
-│   ├── infrastructure/
-│   │   ├── persistence/
+│   ├── infrastructure/            # Implementaciones externas
+│   │   ├── database/
 │   │   │   ├── repositories/
-│   │   │   └── migrations/
+│   │   │   │   ├── IngredientRepository.js
+│   │   │   │   ├── RecipeRepository.js
+│   │   │   │   └── OrderRepository.js
+│   │   │   ├── migrations/
+│   │   │   └── pool.js
 │   │   ├── http/
 │   │   │   ├── controllers/
-│   │   │   ├── middleware/
-│   │   │   └── routes/
+│   │   │   │   ├── IngredientController.js
+│   │   │   │   ├── RecipeController.js
+│   │   │   │   └── SaleController.js
+│   │   │   ├── routes/
+│   │   │   │   ├── ingredientRoutes.js
+│   │   │   │   ├── recipeRoutes.js
+│   │   │   │   └── index.js
+│   │   │   └── middleware/
+│   │   │       ├── auth.js
+│   │   │       ├── validation.js
+│   │   │       └── errorHandler.js
 │   │   └── external/
+│   │       ├── ResendService.js
+│   │       └── UptimeKumaService.js
 │   │
 │   ├── config/
-│   └── shared/
+│   │   ├── database.js
+│   │   ├── cors.js
+│   │   └── index.js
+│   │
+│   └── app.js                     # Bootstrap
 │
 ├── tests/
-└── docker/
+│   ├── unit/
+│   │   ├── domain/
+│   │   └── application/
+│   ├── integration/
+│   └── e2e/
+│
+├── scripts/
+├── server.js                      # Entry point (minimal)
+├── package.json
+└── Dockerfile
 ```
 
-### 6.2 Endpoints a Optimizar
+### 7.2 Fases de Refactorización del Backend
 
-| Endpoint Actual | Problema | Recomendación |
-|-----------------|----------|---------------|
-| `GET /api/ingredients` | Retorna todos siempre | Añadir paginación, filtros |
-| `GET /api/recipes` | Sin include de ingredientes | Añadir `?include=ingredients` |
-| `GET /api/orders` | Sin filtros de fecha | Añadir `?from=&to=` |
-| `PATCH /api/orders/:id/received` | Lógica compleja en frontend | Mover cálculo de varianza al backend |
+#### Fase B1: Separación de Rutas (Semana 1)
 
-### 6.3 Nuevos Endpoints Sugeridos
+**Objetivo:** Dividir server.js en archivos de rutas modulares
 
-```
-# Bulk operations
-POST /api/ingredients/bulk-update     # Actualizar múltiples precios
-POST /api/stock/adjustments           # Ajustes de inventario
+```javascript
+// Antes (server.js - 4,192 líneas)
+app.get('/api/ingredients', authMiddleware, async (req, res) => {...});
+app.post('/api/ingredients', authMiddleware, async (req, res) => {...});
+// ... 81 endpoints más
 
-# Analytics
-GET /api/analytics/cost-trends        # Evolución de costes
-GET /api/analytics/low-stock-forecast # Predicción de stock bajo
+// Después (routes/ingredientRoutes.js)
+const router = express.Router();
+router.get('/', IngredientController.getAll);
+router.post('/', IngredientController.create);
+module.exports = router;
 
-# Real-time
-WS /api/ws/stock-updates              # WebSocket para actualizaciones
-
-# Reports
-GET /api/reports/monthly-costs        # Reporte mensual
-GET /api/reports/supplier-analysis    # Análisis de proveedores
+// server.js (minimal)
+app.use('/api/ingredients', authMiddleware, ingredientRoutes);
 ```
 
-### 6.4 Validaciones a Implementar en Backend
+**Archivos a crear:**
+- `routes/authRoutes.js` (6 endpoints)
+- `routes/ingredientRoutes.js` (11 endpoints)
+- `routes/recipeRoutes.js` (9 endpoints)
+- `routes/orderRoutes.js` (4 endpoints)
+- `routes/saleRoutes.js` (4 endpoints)
+- `routes/inventoryRoutes.js` (4 endpoints)
+- `routes/analyticsRoutes.js` (11 endpoints)
+- `routes/employeeRoutes.js` (10 endpoints)
+- `routes/mermaRoutes.js` (5 endpoints)
 
-```typescript
-// Validación de precio medio ponderado
-function calculateWeightedAveragePrice(
-  currentStock: number,
-  currentPrice: number,
-  incomingStock: number,
-  incomingPrice: number
-): number {
-  const totalStock = currentStock + incomingStock;
-  if (totalStock === 0) return incomingPrice;
+#### Fase B2: Controladores (Semana 2)
 
-  return (
-    (currentStock * currentPrice + incomingStock * incomingPrice) / totalStock
-  );
-}
+**Objetivo:** Extraer lógica de request/response a controllers
 
-// Validación de recepción de pedido
-function validateOrderReception(order: Order, reception: ReceptionData): ValidationResult {
-  const errors: string[] = [];
+```javascript
+// controllers/IngredientController.js
+class IngredientController {
+  static async getAll(req, res, next) {
+    try {
+      const { restauranteId } = req;
+      const { include_inactive } = req.query;
 
-  for (const item of reception.items) {
-    const orderItem = order.items.find(i => i.ingredientId === item.ingredientId);
+      const ingredients = await IngredientService.findAll(
+        restauranteId,
+        { includeInactive: include_inactive === 'true' }
+      );
 
-    if (!orderItem) {
-      errors.push(`Item ${item.ingredientId} no está en el pedido original`);
-      continue;
-    }
-
-    if (item.cantidadRecibida < 0) {
-      errors.push(`Cantidad negativa para item ${item.ingredientId}`);
-    }
-
-    if (item.precioReal < 0) {
-      errors.push(`Precio negativo para item ${item.ingredientId}`);
+      res.json(ingredients);
+    } catch (error) {
+      next(error);
     }
   }
 
-  return { isValid: errors.length === 0, errors };
+  static async create(req, res, next) {
+    try {
+      const { restauranteId } = req;
+      const data = req.body;
+
+      // Validación con schema
+      const validated = IngredientSchema.parse(data);
+
+      const ingredient = await IngredientService.create(restauranteId, validated);
+      res.status(201).json(ingredient);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 ```
+
+#### Fase B3: Servicios de Dominio (Semana 3)
+
+**Objetivo:** Extraer lógica de negocio a servicios
+
+```javascript
+// services/SaleService.js
+class SaleService {
+  constructor(saleRepository, ingredientRepository, recipeRepository) {
+    this.saleRepository = saleRepository;
+    this.ingredientRepository = ingredientRepository;
+    this.recipeRepository = recipeRepository;
+  }
+
+  async create(restauranteId, saleData) {
+    const { recetaId, cantidad, varianteId } = saleData;
+
+    // 1. Obtener receta con ingredientes
+    const receta = await this.recipeRepository.findById(recetaId);
+    if (!receta) throw new NotFoundError('Receta no encontrada');
+
+    // 2. Obtener factor de variante
+    const factor = varianteId
+      ? await this.getVariantFactor(recetaId, varianteId)
+      : 1.0;
+
+    // 3. Calcular descuentos de stock
+    const stockUpdates = this.calculateStockDeductions(
+      receta.ingredientes,
+      receta.porciones,
+      cantidad,
+      factor
+    );
+
+    // 4. Ejecutar en transacción
+    return await this.executeInTransaction(async (client) => {
+      // Crear venta
+      const venta = await this.saleRepository.create(client, {
+        recetaId,
+        cantidad,
+        varianteId,
+        factorAplicado: factor,
+        restauranteId
+      });
+
+      // Actualizar stocks
+      for (const update of stockUpdates) {
+        await this.ingredientRepository.updateStock(
+          client,
+          update.ingredienteId,
+          -update.cantidad
+        );
+      }
+
+      return venta;
+    });
+  }
+
+  calculateStockDeductions(ingredientes, porciones, cantidad, factor) {
+    return ingredientes.map(ing => ({
+      ingredienteId: ing.ingredienteId,
+      cantidad: ((ing.cantidad || 0) / porciones) * cantidad * factor
+    }));
+  }
+}
+```
+
+#### Fase B4: Validación con Schemas (Semana 4)
+
+**Objetivo:** Implementar validación robusta con Zod
+
+```javascript
+// schemas/ingredientSchema.js
+const { z } = require('zod');
+
+const IngredientSchema = z.object({
+  nombre: z.string()
+    .min(1, 'El nombre es obligatorio')
+    .max(255, 'El nombre no puede exceder 255 caracteres')
+    .transform(s => s.trim()),
+
+  precio: z.number()
+    .nonnegative('El precio no puede ser negativo')
+    .max(999999, 'El precio es demasiado alto')
+    .default(0),
+
+  unidad: z.enum(['kg', 'l', 'ud', 'g', 'ml', 'und', 'paq'])
+    .default('kg'),
+
+  stock_actual: z.number()
+    .nonnegative('El stock no puede ser negativo')
+    .default(0),
+
+  stock_minimo: z.number()
+    .nonnegative('El stock mínimo no puede ser negativo')
+    .default(0),
+
+  familia: z.enum(['alimento', 'bebida', 'suministro'])
+    .default('alimento'),
+
+  proveedor_id: z.number().int().positive().optional(),
+
+  formato_compra: z.string().max(100).optional(),
+
+  cantidad_por_formato: z.number().positive().optional()
+});
+
+// Middleware de validación
+const validate = (schema) => (req, res, next) => {
+  try {
+    req.body = schema.parse(req.body);
+    next();
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: 'Validación fallida',
+        details: error.errors.map(e => ({
+          field: e.path.join('.'),
+          message: e.message
+        }))
+      });
+    }
+    next(error);
+  }
+};
+```
+
+#### Fase B5: Testing Automatizado (Semana 5)
+
+```javascript
+// tests/unit/services/SaleService.test.js
+const { SaleService } = require('../../../src/services/SaleService');
+
+describe('SaleService', () => {
+  let saleService;
+  let mockSaleRepo, mockIngredientRepo, mockRecipeRepo;
+
+  beforeEach(() => {
+    mockSaleRepo = { create: jest.fn() };
+    mockIngredientRepo = { updateStock: jest.fn() };
+    mockRecipeRepo = { findById: jest.fn() };
+
+    saleService = new SaleService(
+      mockSaleRepo,
+      mockIngredientRepo,
+      mockRecipeRepo
+    );
+  });
+
+  describe('calculateStockDeductions', () => {
+    it('should calculate correct deductions for single portion recipe', () => {
+      const ingredientes = [
+        { ingredienteId: 1, cantidad: 0.5 },
+        { ingredienteId: 2, cantidad: 0.2 }
+      ];
+
+      const result = saleService.calculateStockDeductions(
+        ingredientes,
+        1,    // porciones
+        2,    // cantidad vendida
+        1.0   // factor
+      );
+
+      expect(result).toEqual([
+        { ingredienteId: 1, cantidad: 1.0 },  // 0.5 * 2 * 1
+        { ingredienteId: 2, cantidad: 0.4 }   // 0.2 * 2 * 1
+      ]);
+    });
+
+    it('should apply variant factor correctly', () => {
+      const ingredientes = [
+        { ingredienteId: 1, cantidad: 1.0 }  // Botella de vino
+      ];
+
+      const result = saleService.calculateStockDeductions(
+        ingredientes,
+        1,     // porciones
+        1,     // cantidad vendida (1 copa)
+        0.2    // factor copa
+      );
+
+      expect(result).toEqual([
+        { ingredienteId: 1, cantidad: 0.2 }  // 1 * 1 * 0.2 = 0.2 botellas
+      ]);
+    });
+  });
+});
+```
+
+### 7.3 Deuda Técnica del Backend
+
+| ID | Problema | Severidad | Esfuerzo | Prioridad |
+|----|----------|-----------|----------|-----------|
+| BT-001 | server.js monolítico (4,192 líneas) | 🔴 Alta | 3 días | 1 |
+| BT-002 | Sin schema validation | 🟡 Media | 2 días | 2 |
+| BT-003 | Sin tests automatizados | 🔴 Alta | 5 días | 3 |
+| BT-004 | Pool de conexiones fijo (max=10) | 🟡 Media | 1 día | 4 |
+| BT-005 | Console.log en producción | 🟢 Baja | 0.5 días | 5 |
+| BT-006 | Sin versionado de API | 🟡 Media | 1 día | 6 |
+| BT-007 | Transacciones no en todos los lugares críticos | 🟡 Media | 2 días | 7 |
+
+### 7.4 Métricas Objetivo del Backend
+
+| Métrica | Actual | Objetivo |
+|---------|--------|----------|
+| Archivos de código | 1 (server.js) | 25+ módulos |
+| Líneas por archivo max | 4,192 | <300 |
+| Test coverage | 0% | >70% |
+| Cyclomatic complexity | ~50 | <15 |
+| Response time p95 | ? | <200ms |
+| Error rate | ? | <0.1% |
 
 ---
 
