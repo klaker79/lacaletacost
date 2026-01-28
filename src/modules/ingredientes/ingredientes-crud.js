@@ -8,6 +8,8 @@ import { getElement, getInputValue } from '../../utils/dom-helpers.js';
 import { setEditandoIngredienteId } from './ingredientes-ui.js';
 // 🆕 Zustand store para gestión de estado
 import ingredientStore from '../../stores/ingredientStore.js';
+// 🆕 Validación centralizada
+import { validateIngrediente, showValidationErrors } from '../../utils/validation.js';
 
 /**
  * Guarda un ingrediente (crear o actualizar)
@@ -36,8 +38,8 @@ export async function guardarIngrediente(event) {
         unidad: getInputValue('ing-unidad'),
         familia: getInputValue('ing-familia') || 'alimento',
         // Solo enviar si tiene valor, undefined = backend preserva actual
-        stockActual: stockActualValue !== '' ? parseFloat(stockActualValue) : undefined,
-        stockMinimo: stockMinimoValue !== '' ? parseFloat(stockMinimoValue) : undefined,
+        stock_actual: stockActualValue !== '' ? parseFloat(stockActualValue) : undefined,
+        stock_minimo: stockMinimoValue !== '' ? parseFloat(stockMinimoValue) : undefined,
         formato_compra: getInputValue('ing-formato-compra') || null,
         // 🔒 FIX: Solo enviar cantidad_por_formato si el usuario la editó explícitamente
         // undefined = no cambiar, null = borrar intencionalmente
@@ -46,28 +48,14 @@ export async function guardarIngrediente(event) {
             : undefined,
     };
 
-    // Validaciones
-    if (!ingrediente.nombre || ingrediente.nombre.trim() === '') {
-        showToast('El nombre es obligatorio', 'error');
-        _guardandoIngrediente = false; // 🔒 Liberar flag en early return
-        return;
-    }
-    if (ingrediente.precio < 0) {
-        showToast('El precio no puede ser negativo', 'error');
+    // 🆕 Validación centralizada (reemplaza validación manual)
+    const validation = validateIngrediente(ingrediente);
+    if (!validation.valid) {
+        showValidationErrors(validation.errors);
         _guardandoIngrediente = false;
         return;
     }
-    // Solo validar si el campo tiene valor (undefined = no modificar)
-    if (ingrediente.stockActual !== undefined && ingrediente.stockActual < 0) {
-        showToast('El stock no puede ser negativo', 'error');
-        _guardandoIngrediente = false;
-        return;
-    }
-    if (ingrediente.stockMinimo !== undefined && ingrediente.stockMinimo < 0) {
-        showToast('El stock mínimo no puede ser negativo', 'error');
-        _guardandoIngrediente = false;
-        return;
-    }
+
 
     if (typeof window.showLoading === 'function') window.showLoading();
 
