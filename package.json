@@ -36,6 +36,7 @@
         "dompurify": "^3.3.1",
         "jspdf": "^4.0.0",
         "jspdf-autotable": "^5.0.3",
-        "xlsx-js-style": "^1.2.0"
+        "xlsx-js-style": "^1.2.0",
+        "zustand": "^5.0.10"
     }
 }

@@ -4,6 +4,9 @@
  */
 
 import { getApiUrl } from '../../config/app-config.js';
+// 🆕 Zustand stores for state management
+import ingredientStore from '../../stores/ingredientStore.js';
+import { initializeStores } from '../../stores/index.js';
 
 const API_BASE = getApiUrl();
 
@@ -85,6 +88,14 @@ async function _cargarDatosInternal() {
         // ⚡ Actualizar mapas de búsqueda optimizados
         if (window.dataMaps?.update) {
             window.dataMaps.update();
+        }
+
+        // 🆕 Sync to Zustand stores (gradual migration)
+        try {
+            ingredientStore.getState().setIngredients(window.ingredientes);
+            console.log('✅ Datos sincronizados con Zustand stores');
+        } catch (e) {
+            console.warn('⚠️ Zustand sync failed (non-critical):', e.message);
         }
     } catch (error) {
         console.error('Error cargando datos:', error);
