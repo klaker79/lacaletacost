@@ -11,8 +11,10 @@
  */
 
 import { createStore } from 'zustand/vanilla';
+import { getApiUrl } from '../config/app-config.js';
 
-const API_BASE = '/api';
+// 🔧 FIX: Usar URL completa del backend en lugar de /api relativo
+const API_BASE = getApiUrl();
 
 /**
  * Ingredient Store
