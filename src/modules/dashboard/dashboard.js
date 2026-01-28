@@ -94,7 +94,13 @@ async function actualizarKPIsPorPeriodo(periodo) {
 
         // Solo hacer fetch si no hay datos cargados (primera vez)
         if (!ventas || ventas.length === 0) {
-            ventas = await window.api.getSales();
+            // Defensive check - use window.api or window.API
+            const api = window.api || window.API;
+            if (!api?.getSales) {
+                console.warn('API not ready for dashboard getSales');
+                return;
+            }
+            ventas = await api.getSales();
             window.ventas = ventas;
             console.log('📊 Dashboard: Cargando ventas iniciales');
         }

@@ -54,7 +54,13 @@ export async function renderizarVentas() {
             select.parentElement.insertBefore(input, select);
         }
 
-        const ventas = await window.api.getSales();
+        // Defensive check - use window.api or window.API
+        const api = window.api || window.API;
+        if (!api?.getSales) {
+            console.warn('API not ready for getSales');
+            return;
+        }
+        const ventas = await api.getSales();
         const container = document.getElementById('tabla-ventas');
 
         if (ventas.length === 0) {
@@ -106,7 +112,12 @@ export async function renderizarVentas() {
  * Exporta ventas a Excel
  */
 export function exportarVentas() {
-    window.api.getSales().then(ventas => {
+    const api = window.api || window.API;
+    if (!api?.getSales) {
+        console.warn('API not ready for exportarVentas');
+        return;
+    }
+    api.getSales().then(ventas => {
         const columnas = [
             { header: 'ID', key: 'id' },
             { header: 'Fecha', value: v => new Date(v.fecha).toLocaleDateString('es-ES') },

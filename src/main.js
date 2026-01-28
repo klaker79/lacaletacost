@@ -28,6 +28,23 @@
 import './vendors.js';
 
 // ============================================
+// ZUSTAND STORES - Estado Global Reactivo
+// ⚡ Cargar PRIMERO para disponibilidad inmediata
+// ============================================
+import { initializeStores, authStore, ingredientStore, uiStore } from './stores/index.js';
+import { showToast as storeShowToast, showSuccess, showError, openModal, closeModal } from './stores/index.js';
+
+// Inicializar stores y sincronizar con window
+initializeStores();
+
+// Exponer stores para debugging y compatibilidad
+window.stores = { auth: authStore, ingredients: ingredientStore, ui: uiStore };
+window.showSuccess = showSuccess;
+window.showError = showError;
+window.openModal = openModal;
+window.closeModal = closeModal;
+
+// ============================================
 // CONFIGURACIÓN GLOBAL - Multi-tenant
 // ⚡ Exponer ANTES de cualquier código legacy
 // ============================================

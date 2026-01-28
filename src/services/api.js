@@ -504,3 +504,6 @@ window.API = {
     showToast,
     state: AppState,
 };
+
+// Alias lowercase for backwards compatibility with modules using window.api
+window.api = window.API;
