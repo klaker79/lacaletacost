@@ -3,6 +3,9 @@
  * Funciones de crear, editar, eliminar y recibir pedidos
  */
 
+// 🆕 Zustand store para gestión de estado
+import orderStore from '../../stores/orderStore.js';
+
 /**
  * Guarda un nuevo pedido
  * @param {Event} event - Evento del formulario
@@ -132,7 +135,10 @@ export async function guardarPedido(event) {
 
   try {
     // Guardar pedido
-    await window.api.createPedido(pedido);
+    // 🆕 Usar Zustand store en lugar de window.api
+    const store = orderStore.getState();
+    const result = await store.createOrder(pedido);
+    if (!result.success) throw new Error(result.error || 'Error creando pedido');
 
     // 🏪 Para compras del mercado: actualizar stock inmediatamente
     if (esCompraMercado) {
@@ -206,7 +212,12 @@ export async function eliminarPedido(id) {
   window.showLoading();
 
   try {
-    await window.api.deletePedido(id);
+    // 🆕 Usar Zustand store en lugar de window.api
+    const store = orderStore.getState();
+    const result = await store.deleteOrder(id);
+    if (!result.success) throw new Error(result.error || 'Error eliminando pedido');
+
+    // El store ya sincroniza window.pedidos
     await window.cargarDatos();
     window.renderizarPedidos();
     window.hideLoading();
