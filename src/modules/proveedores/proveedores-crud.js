@@ -5,6 +5,8 @@
 
 // 🆕 Zustand store para gestión de estado
 import supplierStore from '../../stores/supplierStore.js';
+// 🆕 Validación centralizada
+import { validateProveedor, showValidationErrors } from '../../utils/validation.js';
 
 /**
  * Guarda un proveedor (nuevo o editado)
@@ -26,6 +28,13 @@ export async function guardarProveedor(event) {
         notas: document.getElementById('prov-notas').value || '',
         ingredientes: ingredientesIds,
     };
+
+    // 🆕 Validación centralizada
+    const validation = validateProveedor(proveedor);
+    if (!validation.valid) {
+        showValidationErrors(validation.errors);
+        return;
+    }
 
     window.showLoading();
 

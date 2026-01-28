@@ -5,6 +5,8 @@
 
 // 🆕 Zustand store para gestión de estado
 import recipeStore from '../../stores/recipeStore.js';
+// 🆕 Validación centralizada
+import { validateReceta, showValidationErrors } from '../../utils/validation.js';
 
 /**
  * Guarda una receta (nueva o editada)
@@ -38,11 +40,6 @@ export async function guardarReceta(event) {
         }
     });
 
-    if (ingredientesReceta.length === 0) {
-        window.showToast('Añade ingredientes a la receta', 'warning');
-        return;
-    }
-
     const receta = {
         nombre: document.getElementById('rec-nombre').value,
         codigo: document.getElementById('rec-codigo').value,
@@ -51,6 +48,13 @@ export async function guardarReceta(event) {
         porciones: parseInt(document.getElementById('rec-porciones').value) || 1,
         ingredientes: ingredientesReceta,
     };
+
+    // 🆕 Validación centralizada
+    const validation = validateReceta(receta);
+    if (!validation.valid) {
+        showValidationErrors(validation.errors);
+        return;
+    }
 
     window.showLoading();
 
