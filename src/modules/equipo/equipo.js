@@ -38,7 +38,7 @@ export async function renderizarEquipo() {
     if (!container) return;
 
     try {
-        const res = await fetch(API_BASE + '/team', { headers: getAuthHeaders() });
+        const res = await fetch(API_BASE + '/team', { credentials: 'include', headers: getAuthHeaders() });
         const team = await res.json();
 
         if (!Array.isArray(team) || team.length === 0) {
@@ -117,6 +117,7 @@ export async function invitarUsuarioEquipo() {
     try {
         const res = await fetch(API_BASE + '/team/invite', {
             method: 'POST',
+            credentials: 'include',
             headers: getAuthHeaders(),
             body: JSON.stringify({ nombre, email, password, rol }),
         });
@@ -148,6 +149,7 @@ export async function eliminarUsuarioEquipo(id) {
     try {
         const res = await fetch(API_BASE + `/team/${id}`, {
             method: 'DELETE',
+            credentials: 'include',
             headers: getAuthHeaders(),
         });
 

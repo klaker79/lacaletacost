@@ -720,6 +720,7 @@ window.procesarArchivoVentas = async function (input) {
             // Llamar al endpoint del backend
             const response = await fetch(`${window.API_CONFIG?.baseUrl || 'https://lacaleta-api.mindloop.cloud'}/api/parse-pdf`, {
                 method: 'POST',
+                credentials: 'include', // Required for httpOnly cookies
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -1322,7 +1323,11 @@ window.cargarResumenMensual = async function () {
             // ⚡ Multi-tenant: usa config global si existe
             `${window.API_CONFIG?.baseUrl || 'https://lacaleta-api.mindloop.cloud'}/api/monthly/summary?mes=${mes}&ano=${ano}`,
             {
-                headers: { Authorization: `Bearer ${token}` },
+                credentials: 'include', // Required for httpOnly cookies
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
             }
         );
 

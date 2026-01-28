@@ -57,6 +57,7 @@ async function cargarEmpleados() {
     try {
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE}/empleados`, {
+                credentials: 'include',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -88,6 +89,7 @@ async function cargarHorariosSemana() {
 
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE}/horarios?desde=${desde}&hasta=${hasta}`, {
+                credentials: 'include',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -517,6 +519,7 @@ window.guardarEmpleado = async function () {
         if (empleadoEditando) {
             // Actualizar
             response = await fetch(`${API_BASE}/empleados/${empleadoEditando.id}`, {
+                credentials: 'include',
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -527,6 +530,7 @@ window.guardarEmpleado = async function () {
         } else {
             // Crear
             response = await fetch(`${API_BASE}/empleados`, {
+                credentials: 'include',
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -561,6 +565,7 @@ window.eliminarEmpleado = async function (id) {
     try {
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE}/empleados/${id}`, {
+                credentials: 'include',
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -638,6 +643,7 @@ async function asignarTurno(empleadoId, fecha) {
     try {
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE}/horarios`, {
+                credentials: 'include',
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -664,6 +670,7 @@ async function quitarTurno(empleadoId, fecha) {
     try {
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE}/horarios/empleado/${empleadoId}/fecha/${fecha}`, {
+                credentials: 'include',
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -725,6 +732,7 @@ window.borrarTodosHorarios = async function () {
 
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_BASE}/horarios/all`, {
+                credentials: 'include',
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -768,6 +776,7 @@ window.copiarSemana = async function () {
         const hasta = formatearFecha(finAnterior);
 
         const response = await fetch(`${API_BASE}/horarios?desde=${desde}&hasta=${hasta}`, {
+                credentials: 'include',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -801,6 +810,7 @@ window.copiarSemana = async function () {
 
             try {
                 const resp = await fetch(`${API_BASE}/horarios`, {
+                credentials: 'include',
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -850,6 +860,7 @@ window.generarHorarioIA = async function () {
             try {
                 const fechaH = horario.fecha.includes('T') ? horario.fecha.split('T')[0] : horario.fecha;
                 await fetch(`${API_BASE}/horarios/empleado/${horario.empleado_id}/fecha/${fechaH}`, {
+                credentials: 'include',
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -879,6 +890,7 @@ window.generarHorarioIA = async function () {
         for (const turno of turnosNuevos) {
             try {
                 const response = await fetch(`${API_BASE}/horarios`, {
+                credentials: 'include',
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -1160,6 +1172,7 @@ window.descargarHorarioMensual = async function () {
         const hasta = formatearFecha(ultimoDia);
 
         const response = await fetch(`${API_BASE}/horarios?desde=${desde}&hasta=${hasta}`, {
+                credentials: 'include',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
