@@ -440,6 +440,45 @@ export function proyeccionConsumo(ingredientes, ventas, recetas, diasProyeccion 
         .sort((a, b) => a.diasStock - b.diasStock);
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 🛡️ FUNCIONES DE SEGURIDAD Y VALIDACIÓN
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Escapa caracteres HTML para prevenir XSS
+ * CONSOLIDADO: Esta función existía duplicada en 13+ archivos
+ * @param {any} text - Texto a escapar
+ * @returns {string} Texto escapado
+ */
+export function escapeHTML(text) {
+    if (text === null || text === undefined) return '';
+    const str = String(text);
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+/**
+ * Convierte valor a número seguro
+ * CONSOLIDADO: Esta función existía duplicada en múltiples archivos
+ * @param {any} value - Valor a convertir
+ * @param {number} defaultValue - Valor por defecto si no es número válido
+ * @returns {number} Número válido
+ */
+export function safeNumber(value, defaultValue = 0) {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? defaultValue : parsed;
+}
+
+/**
+ * Formatea fecha en español (alias legacy)
+ * @param {string|Date} fecha - Fecha a formatear
+ * @returns {string} Fecha formateada (ej: "21/12/2025")
+ */
+export function formatearFecha(fecha) {
+    return formatDate(fecha);
+}
+
 // Exponer al scope global para compatibilidad
 if (typeof window !== 'undefined') {
     window.showToast = showToast;
@@ -461,4 +500,8 @@ if (typeof window !== 'undefined') {
     window.compararConSemanaAnterior = compararConSemanaAnterior;
     window.calcularDiasDeStock = calcularDiasDeStock;
     window.proyeccionConsumo = proyeccionConsumo;
+    // Funciones de seguridad y validación (consolidadas)
+    window.escapeHTML = escapeHTML;
+    window.safeNumber = safeNumber;
+    window.formatearFecha = formatearFecha;
 }
