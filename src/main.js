@@ -63,6 +63,8 @@ import * as DOM from './utils/dom-helpers.js';
 import * as Helpers from './utils/helpers.js';
 import * as Performance from './utils/performance.js';
 import { initSearchOptimizations } from './utils/search-optimization.js';
+// 🆕 Error handler global
+import './utils/error-handler.js';
 
 window.showToast = showToast;
 window.DOM = DOM;
